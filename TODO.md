@@ -10,7 +10,7 @@ TODO
 - [ ] Add a code of conduct
 - [ ] Set up GitHub pages
 - [ ] Point domain at GitHub pages
-- [ ] Write first specification
+- [x] Write first specification
 - [ ] Automate testing of specifications
 - [ ] Add design docs
 - [ ] Start on parser and grammar

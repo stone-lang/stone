@@ -24,8 +24,10 @@ module Stone
   private
 
     def run_eval
-      input = ARGF.read.chomp
-      puts "Number.Integer(#{input})"
+      input = ARGF.read
+      transform = Stone::Transform.new
+      parser = Stone::Parser.new
+      puts transform.apply(parser.parse(input))
     end
 
   end

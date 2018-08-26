@@ -14,8 +14,9 @@ TODO
 - [x] Automate testing of specifications
     - [ ] Allow testing of more than 1 result per code block
 - [ ] Add design docs
-- [ ] Start on parser and grammar
-    - [ ] Look into various choices for parsing
+- [x] Start on parser and grammar
+    - [x] Look into various choices for parsing
+    - [ ] Handle syntax errors gracefully
 - [ ] Self-hosting compiler (this one is WAY off)
 
 

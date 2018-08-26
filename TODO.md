@@ -24,7 +24,7 @@ Specifications
 --------------
 
 - [ ] Literals
-    - [ ] Integers
+    - [x] Integers
     - [ ] Strings
     - [ ] Fixed-point
     - [ ] Rationals

@@ -9,10 +9,16 @@ module Stone
       end
 
       def normalize!
-        @value.delete_prefix!("+")
-        @value.gsub!(/^0+/, "")
-        @value.gsub!(/^-0+/, "-")
-        @value = "0" if @value.match?(/^-?$/)
+        case @value
+        when /[-+]?0b.*/
+          @value = @value.sub("0b", "").to_i(2)
+        when /[-+]?0o.*/
+          @value = @value.sub("0o", "").to_i(8)
+        when /[-+]?0x.*/
+          @value = @value.sub("0x", "").to_i(16)
+        else
+          @value = @value.to_i
+        end
       end
 
     end

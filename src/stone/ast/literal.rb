@@ -29,4 +29,5 @@ module Stone
 end
 
 
+require "stone/ast/literal_boolean"
 require "stone/ast/literal_integer"

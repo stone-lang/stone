@@ -25,10 +25,11 @@ Specifications
 
 - [ ] Literals
     - [x] Integers
-    - [ ] Strings
+    - [x] Booleans
+    - [ ] Text strings
+    - [ ] Pair
     - [ ] Fixed-point
     - [ ] Rationals
-    - [ ] Pair
 - [ ] Expressions
     - [ ] Addition
     - [ ] Subtraction

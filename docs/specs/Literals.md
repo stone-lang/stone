@@ -6,10 +6,29 @@ Literal values are values (numbers, text, etc.) that are specified within the pr
 as opposed to values that are provided as input to the program, or computed by the program.
 
 
+Boolean
+-------
+
+The simplest literal is a Boolean value.
+A Boolean value is either true or false.
+These are represented by `TRUE` and `FALSE` in all capital letters.
+These are actually values defined on the `Boolean` class, but they're also exposed globally.
+
+~~~ stone
+TRUE
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+FALSE
+#= Boolean(Boolean.FALSE)
+~~~
+
+
 Integers
 --------
 
-The simplest literal is an integer.
+Integers are the simplest type of number that we can work with.
 Integers include all positive and negative whole numbers, plus 0.
 Integers do not contain fractional portions.
 
@@ -22,12 +41,12 @@ We normally specify integers in decimal format:
 
 We can specify negative numbers, by prefixing with the `-` character.
 
+NOTE: The `-` prefix is part of the integer literal; there is no unary `-` operator.
+
 ~~~ stone
 -123
 #= Number.Integer(-123)
 ~~~
-
-NOTE: The `-` prefix is part of the integer literal; there is no unary `-` operator.
 
 We can also include an optional `+` prefix:
 
@@ -66,7 +85,7 @@ Note that negative and positive 0 give the same result:
 ~~~
 
 Stone allows arbitrarily large numbers. The only limits are memory and computation time.
-TODO: Arbitrary-precision numbers are not yet implemented; add specs when they are.
+TODO: Arbitrary-precision numbers are not yet fully implemented; add specs when they are.
 
 
 ### Binary, Octal, and Hexadecimal Integers

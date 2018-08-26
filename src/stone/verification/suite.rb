@@ -27,12 +27,12 @@ module Stone
         @results = ALL_SPEC_FILES.flat_map{ |f| run_specs_in_file(f) }
       end
 
-      def run_specs_in_file(f)
-        specs_in_file(f).map(&:value).map{ |code| Stone::Verification::Spec.new(code).run }
+      def run_specs_in_file(file)
+        specs_in_file(file).map(&:value).map{ |code| Stone::Verification::Spec.new(code).run }
       end
 
-      def specs_in_file(f)
-        markdown = Kramdown::Document.new(File.read(f))
+      def specs_in_file(file)
+        markdown = Kramdown::Document.new(File.read(file))
         markdown.root.children.select{ |e| e.type == :codeblock && e.options[:lang] == "stone" }
       end
 

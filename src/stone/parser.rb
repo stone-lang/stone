@@ -35,8 +35,8 @@ module Stone
     rule(:unary_operator) { match["!¬"] }
     rule(:whitespace) { match["\n\s\r\t"].repeat(1) }
 
-    def parens(ex)
-      str("(").ignore >> ex >> str(")").ignore
+    def parens(exp)
+      str("(").ignore >> exp >> str(")").ignore
     end
 
   end

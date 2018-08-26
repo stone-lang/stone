@@ -2,22 +2,14 @@ require "stone/ast/literal"
 require "stone/ast/operation"
 
 require "parslet"
+require "stone/parser/parslet_extensions"
 
 
 module Stone
 
-  module ParsletExtensions
-
-    # A rule that outputs an AST node.
-    def rule!(name, opts = {}, &definition)
-      rule(name, opts) { self.instance_eval(&definition).as(name) }
-    end
-
-  end
-
   class Parser < Parslet::Parser
 
-    extend ParsletExtensions
+    include ParsletExtensions
 
     root(:top)
     rule(:top) { (expression | whitespace).repeat }
@@ -34,20 +26,6 @@ module Stone
     rule(:literal_binary_integer) { match["+-"].maybe >> str("0b") >> match["0-1"].repeat(1) }
     rule(:unary_operator) { match["!¬"] }
     rule(:whitespace) { match["\n\s\r\t"].repeat(1) }
-
-    def parens(exp)
-      str("(").ignore >> exp >> str(")").ignore
-    end
-
-  end
-
-
-  class Transform < Parslet::Transform
-
-    rule(literal_boolean: simple(:b)) { AST::LiteralBoolean.new(b) }
-    rule(literal_integer: simple(:i)) { AST::LiteralInteger.new(i) }
-    rule(literal_text: simple(:t)) { AST::LiteralText.new(t) }
-    rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) { AST::UnaryOperation.new(op, arg) }
 
   end
 

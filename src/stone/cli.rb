@@ -1,4 +1,5 @@
-require "stone/parser"
+require "stone/parser/parser"
+require "stone/parser/transform"
 
 
 module Stone
@@ -25,8 +26,8 @@ module Stone
 
     def run_eval
       input = ARGF.read
-      transform = Stone::Transform.new
       parser = Stone::Parser.new
+      transform = Stone::Transform.new
       puts transform.apply(parser.parse(input))
     end
 

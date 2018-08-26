@@ -9,7 +9,7 @@ module Stone
       end
 
       def normalize!
-        @value = @value == "TRUE"
+        @value = ["TRUE", "true", true].include?(@value)
       end
 
       def to_s

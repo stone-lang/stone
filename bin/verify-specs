@@ -1,0 +1,131 @@
+#! /usr/bin/env ruby
+
+require "kramdown"
+
+
+module Stone
+
+  module Verification
+
+    class Suite
+
+      ALL_SPEC_FILES = Dir["docs/specs/*.md"].reject{ |f| /README/.match(f) }
+
+      attr_reader :results
+
+      def self.run
+        new.run
+      end
+
+      def run
+        run_all_specs
+        print_results
+      end
+
+    private
+
+      def run_all_specs
+        @results = ALL_SPEC_FILES.flat_map{ |f| run_specs_in_file(f) }
+      end
+
+      def run_specs_in_file(f)
+        specs_in_file(f).map(&:value).map{ |code| Stone::Verification::Spec.new(code).run }
+      end
+
+      def specs_in_file(f)
+        markdown = Kramdown::Document.new(File.read(f))
+        markdown.root.children.select{ |e| e.type == :codeblock && e.options[:lang] == "stone" }
+      end
+
+      def print_results
+        puts "#{results.size} tests: #{successes.size} passed, #{failures.size} failed"
+        failures.each do |failure|
+          puts "Expected '#{failure.expected}' but got '#{failure.actual}' in:\n#{failure.code}"
+        end
+      end
+
+      def failures
+        @failures ||= results.select{ |r| r.is_a?(Failure) }
+      end
+
+      def successes
+        @successes ||= results.reject{ |r| r.is_a?(Failure) }
+      end
+
+    end
+
+    class Spec
+
+      attr_reader :code_block
+
+      def initialize(code_block)
+        @code_block = code_block
+      end
+
+      def run
+        if expected.start_with?("#=")
+          check_for_expected_result(expected.sub(/\A#=\s+/, ""))
+        elsif expected.start_with?("#!")
+          check_for_expected_exception(expected.sub(/\A#!\s+/, ""))
+        else
+          fail "Didn't find a recognizable expected result in code block:\n#{code}"
+        end
+      end
+
+    private
+
+      def check_for_expected_result(expected_result)
+        if result == expected_result
+          code
+        else
+          Failure.new(code, expected_result, result)
+        end
+      end
+
+      def check_for_expected_exception(expected_exception)
+        # TODO: Should also make sure the `stone eval` command exited with a non-0 status code.
+        if result == expected_exception
+          code
+        else
+          Failure.new(code, expected_exception, result)
+        end
+      end
+
+      def lines
+        @lines ||= code_block.split("\n")
+      end
+
+      def expected
+        lines.last
+      end
+
+      def code
+        lines[0..-2].join("\n")
+      end
+
+      def result
+        # TODO: Escape any single quotes or backslashes in the code.
+        @result ||= %x[echo '#{code}' | bin/stone eval -].chomp
+      end
+
+    end
+
+
+    class Failure
+
+      attr_reader :code, :expected, :actual
+
+      def initialize(code, expected, actual)
+        @code = code
+        @expected = expected
+        @actual = actual
+      end
+
+    end
+
+  end
+
+end
+
+
+Stone::Verification::Suite.run

@@ -11,7 +11,8 @@ TODO
 - [ ] Set up GitHub pages
 - [ ] Point domain at GitHub pages
 - [x] Write first specification
-- [ ] Automate testing of specifications
+- [x] Automate testing of specifications
+    - [ ] Allow testing of more than 1 result per code block
 - [ ] Add design docs
 - [ ] Start on parser and grammar
     - [ ] Look into various choices for parsing

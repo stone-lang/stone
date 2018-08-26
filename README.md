@@ -14,6 +14,29 @@ all the example code is checked to ensure that it evaluates to the expected resu
 These can be found in [docs/specs].
 
 
+Building
+--------
+
+We're using standard `make` to build the system.
+
+Currently, we're using Ruby for all pieces of Stone,
+so you won't need to actually run a build step to get a `stone` binary.
+
+You can verify that the specs are all passing:
+
+~~~ shell
+make verify-specs
+~~~
+
+
+Running
+-------
+
+Binaries are located in the `bin` directory:
+
+* `stone` - the main executable
+
+
 License
 -------
 

@@ -122,3 +122,28 @@ These are prefixed with `0b`, `0o`, and `0x`, respectively:
 -0xface
 #= Number.Integer(-64206)
 ~~~
+
+
+Text
+----
+
+Stone can represent text (what most languages call "strings").
+Text is enclosed in double quotes:
+
+~~~ stone
+"abc"
+#= Text("abc")
+~~~
+
+~~~ stone
+""
+#= Text("")
+~~~
+
+NOTE: There is no escaping or interpolation of any kind for text literals.
+The `Text` class has methods to support those features.
+
+TODO: How can we include a double-quote character?
+Maybe allow escaping of only double-quote and the escape character.
+(I think that's what Bash single-quote strings do.)
+Or allow a secondary type of quoting.

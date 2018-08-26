@@ -26,7 +26,7 @@ Specifications
 - [ ] Literals
     - [x] Integers
     - [x] Booleans
-    - [ ] Text strings
+    - [x] Text strings
     - [ ] Pair
     - [ ] Fixed-point
     - [ ] Rationals

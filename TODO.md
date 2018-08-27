@@ -40,13 +40,18 @@ Specifications
     - [ ] Rationals
 - [ ] Expressions
     - [ ] Parenthetical expressions
-    - [ ] Addition
-    - [ ] Subtraction
-    - [ ] Multiplication
-    - [ ] Mixing operators (gives an error in most cases)
+    - [ ] Arithmetic operators
+        - [x] Addition
+        - [x] Subtraction
+        - [x] Multiplication
+        - [ ] Multiple operands
+        - [ ] Mixing operators (gives an error in most cases)
+        - [ ] Division
+        - [ ] Unicode operators
     - [ ] Comparison operators
     - [ ] Boolean operators
         - [x] Not
+            - [ ] Repeated Not (`!!value`)
         - [ ] And
         - [ ] Or
     - [ ] Text operators

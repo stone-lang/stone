@@ -13,6 +13,8 @@ TODO
 - [x] Write first specification
 - [x] Automate testing of specifications
     - [ ] Allow testing of more than 1 result per code block
+    - [x] Show progress
+    - [ ] Allow debugging
 - [ ] Add design docs
 - [x] Start on parser and grammar
     - [x] Look into various choices for parsing

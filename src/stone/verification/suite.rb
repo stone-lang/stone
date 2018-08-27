@@ -28,7 +28,11 @@ module Stone
       end
 
       def run_specs_in_file(file)
-        specs_in_file(file).map(&:value).map{ |code| Stone::Verification::Spec.new(code).run }
+        specs_in_file(file).map(&:value).map{ |code| run_spec(code) }
+      end
+
+      def run_spec(code)
+        Stone::Verification::Spec.new(code).run.tap { |result| print_result(result) }
       end
 
       def specs_in_file(file)
@@ -36,19 +40,34 @@ module Stone
         markdown.root.children.select{ |e| e.type == :codeblock && e.options[:lang] == "stone" }
       end
 
+      def print_result(result)
+        if result.success?
+          print "."
+        else
+          print "F"
+        end
+      end
+
       def print_results
+        puts
+        print_failures
         puts "#{results.size} tests: #{successes.size} passed, #{failures.size} failed"
+      end
+
+      def print_failures
         failures.each do |failure|
-          puts "Expected '#{failure.expected}' but got '#{failure.actual}' in:\n#{failure.code}"
+          puts failure.code
+          puts "    Expected: #{failure.expected}"
+          puts "    Actual:   #{failure.actual}"
         end
       end
 
       def failures
-        @failures ||= results.select{ |r| r.is_a?(Failure) }
+        @failures ||= results.reject(&:success?)
       end
 
       def successes
-        @successes ||= results.reject{ |r| r.is_a?(Failure) }
+        @successes ||= results.select(&:success?)
       end
 
     end

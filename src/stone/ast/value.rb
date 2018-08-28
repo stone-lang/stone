@@ -1,8 +1,11 @@
+require "stone/ast/error"
+
+
 module Stone
 
   module AST
 
-    class Value
+    class Value < Base
 
       attr_reader :value
 
@@ -13,10 +16,6 @@ module Stone
 
       def evaluate
         self
-      end
-
-      def type
-        fail NotImplementedError
       end
 
       def to_s

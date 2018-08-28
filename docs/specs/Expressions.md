@@ -40,6 +40,13 @@ Operators may be repeated:
 #= Number.Integer(24)
 ~~~
 
+However, operators may *not* be mixed, without using parentheses:
+
+~~~ stone
+1 + 2 * 3
+#! MixedOperatorsError: Add parentheses where appropriate.
+~~~
+
 
 ### Boolean Operators
 

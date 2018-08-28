@@ -1,3 +1,5 @@
+require "stone/ast/base"
+
 require "extensions/enumerable"
 require "parslet"
 

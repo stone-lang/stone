@@ -47,7 +47,8 @@ Specifications
         - [x] Subtraction
         - [x] Multiplication
         - [x] Multiple operands
-        - [ ] Mixing operators (gives an error in most cases)
+        - [x] Mixing operators (gives an error in most cases)
+            - [ ] Allowed mixed operators
         - [ ] Division
         - [ ] Unicode operators
     - [ ] Comparison operators
@@ -57,6 +58,11 @@ Specifications
         - [ ] And
         - [ ] Or
     - [ ] Text operators
+- [x] Exceptions
+- [ ] Comments
+    - [ ] Per-line
+    - [ ] Bracketed
+    - [ ] Nested
 - [ ] Functions
     - [ ] Function definition
     - [ ] Function call

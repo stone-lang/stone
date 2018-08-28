@@ -16,7 +16,9 @@ module Stone
         @operands = operands
       end
 
-      def to_s
+      def evaluate
+        return error?(operands) if error?(operands)
+        return Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
         case operators.first
         when PLUS
           add(operands)
@@ -25,7 +27,7 @@ module Stone
         when TIMES
           multiply(operands)
         else
-          fail "Unknown binary operator: #{operator}"
+          Error.new("UnknownOperator", operators.first)
         end
       end
 
@@ -39,6 +41,14 @@ module Stone
 
       def multiply(operands)
         Integer.new(operands.map(&:value).inject(1, &:*)).to_s
+      end
+
+      def disallowed_mixed_operators?
+        mixed_operators?
+      end
+
+      def mixed_operators?
+        operators.uniq.size > 1
       end
 
     end

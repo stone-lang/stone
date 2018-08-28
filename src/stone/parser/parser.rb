@@ -1,6 +1,3 @@
-require "stone/ast/value"
-require "stone/ast/operation"
-
 require "parslet"
 require "stone/parser/parslet_extensions"
 

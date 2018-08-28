@@ -16,23 +16,20 @@ module Stone
         @operand = operand
       end
 
-      def to_s
+      def evaluate
+        return error?(operands) if error?(operands)
         case operator
         when BOOLEAN_NOT
           boolean_not
         else
-          fail "Unknown unary operator: #{operator}"
+          Error.new("UnknownOperator", operator)
         end
       end
 
       def boolean_not
-        fail "Boolean NOT operand must be a Boolean value: #{operand}" unless operand.is_a?(Boolean)
+        return Error.new("TypeError", "Boolean NOT operand must be a Boolean value: #{operand}") unless operand.is_a?(Boolean)
         return operand.to_s if operator.size.even?
-        if operand.value == true
-          Boolean.new(false).to_s
-        else
-          Boolean.new(true).to_s
-        end
+        Boolean.new(!operand.value)
       end
 
     end

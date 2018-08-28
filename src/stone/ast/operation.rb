@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Operation
+    class Operation < Base
 
       attr_reader :operator
       attr_reader :operands

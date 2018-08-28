@@ -26,12 +26,12 @@ module Stone
       end
 
       def boolean_not
-        fail "Boolean NOT operand must be a Boolean value: #{operand}" unless operand.is_a?(LiteralBoolean)
+        fail "Boolean NOT operand must be a Boolean value: #{operand}" unless operand.is_a?(Boolean)
         return operand.to_s if operator.size.even?
         if operand.value == true
-          LiteralBoolean.new(false).to_s
+          Boolean.new(false).to_s
         else
-          LiteralBoolean.new(true).to_s
+          Boolean.new(true).to_s
         end
       end
 

@@ -1,4 +1,4 @@
-require "stone/ast/literal"
+require "stone/ast/value"
 require "stone/ast/operation"
 
 require "parslet"

@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class LiteralText < Literal
+    class Text < Value
 
       def type
         "Text"

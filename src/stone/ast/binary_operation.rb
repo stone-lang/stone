@@ -30,15 +30,15 @@ module Stone
       end
 
       def add(operands)
-        LiteralInteger.new(operands.map(&:value).inject(0, &:+)).to_s
+        Integer.new(operands.map(&:value).inject(0, &:+)).to_s
       end
 
       def subtract(operands)
-        LiteralInteger.new(operands[1..-1].map(&:value).inject(operands.first.value, &:-)).to_s
+        Integer.new(operands[1..-1].map(&:value).inject(operands.first.value, &:-)).to_s
       end
 
       def multiply(operands)
-        LiteralInteger.new(operands.map(&:value).inject(1, &:*)).to_s
+        Integer.new(operands.map(&:value).inject(1, &:*)).to_s
       end
 
     end

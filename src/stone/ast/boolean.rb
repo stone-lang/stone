@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class LiteralBoolean < Literal
+    class Boolean < Value
 
       def type
         "Boolean"

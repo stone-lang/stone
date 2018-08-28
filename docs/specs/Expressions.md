@@ -28,11 +28,25 @@ Note that Stone *requires* whitespace around infix operators.
 #= Number.Integer(6)
 ~~~
 
+Operators may be repeated:
+
+~~~ stone
+1 + 2 + 3
+#= Number.Integer(6)
+~~~
+
+~~~ stone
+2 * 3 * 4
+#= Number.Integer(24)
+~~~
+
 
 ### Boolean Operators
 
 The simplest operation we can perform is Boolean negation (usually pronounced "not").
-This is done using the `!` character as a [unary](#unary) [prefix](#prefix) operator:
+This is done using the `!` character as a [unary](#unary) [prefix](#prefix) operator.
+
+Note that white space is *not* allowed between the operator and the [operand](#operand).
 
 ~~~ stone
 !TRUE

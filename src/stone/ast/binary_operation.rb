@@ -8,16 +8,16 @@ module Stone
       MINUS = /[-−➖]/
       TIMES = /[*×·✖️]/
 
-      attr_reader :operator
+      attr_reader :operators
       attr_reader :operands
 
-      def initialize(operator, operands)
-        @operator = operator.to_s
+      def initialize(operators, operands)
+        @operators = operators.map(&:to_s)
         @operands = operands
       end
 
       def to_s
-        case operator
+        case operators.first
         when PLUS
           add(operands)
         when MINUS

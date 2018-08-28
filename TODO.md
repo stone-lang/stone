@@ -46,7 +46,7 @@ Specifications
         - [x] Addition
         - [x] Subtraction
         - [x] Multiplication
-        - [ ] Multiple operands
+        - [x] Multiple operands
         - [ ] Mixing operators (gives an error in most cases)
         - [ ] Division
         - [ ] Unicode operators

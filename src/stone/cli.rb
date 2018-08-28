@@ -29,6 +29,8 @@ module Stone
       parser = Stone::Parser.new
       transform = Stone::Transform.new
       puts transform.apply(parser.parse(input))
+    rescue Parslet::ParseFailed => e
+      puts e.parse_failure_cause.ascii_tree
     end
 
   end

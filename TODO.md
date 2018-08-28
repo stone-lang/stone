@@ -19,6 +19,8 @@ TODO
 - [x] Start on parser and grammar
     - [x] Look into various choices for parsing
     - [ ] Handle syntax errors gracefully
+        - [ ] Handle specific issues users will likely encounter
+            - [ ] No space around operators
 - [ ] Run checks before commits
     - [ ] Make sure all specs are passing
     - [ ] RuboCop

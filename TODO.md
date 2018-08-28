@@ -51,7 +51,7 @@ Specifications
     - [ ] Comparison operators
     - [ ] Boolean operators
         - [x] Not
-            - [ ] Repeated Not (`!!value`)
+            - [x] Repeated Not (`!!value`)
         - [ ] And
         - [ ] Or
     - [ ] Text operators

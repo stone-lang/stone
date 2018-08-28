@@ -44,6 +44,16 @@ This is done using the `!` character as a [unary](#unary) [prefix](#prefix) oper
 #= Boolean(Boolean.TRUE)
 ~~~
 
+~~~ stone
+!!TRUE
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+!!FALSE
+#= Boolean(Boolean.FALSE)
+~~~
+
 The `¬` (Unicode "not sign") may also be used:
 
 ~~~ stone
@@ -53,6 +63,16 @@ The `¬` (Unicode "not sign") may also be used:
 
 ~~~ stone
 ¬FALSE
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+¬¬TRUE
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+!¬TRUE
 #= Boolean(Boolean.TRUE)
 ~~~
 

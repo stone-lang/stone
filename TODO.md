@@ -48,7 +48,7 @@ Specifications
         - [x] Multiplication
         - [x] Multiple operands
         - [x] Mixing operators (gives an error in most cases)
-            - [ ] Allowed mixed operators
+            - [x] Allowed mixed operators
         - [ ] Division
         - [ ] Unicode operators
     - [ ] Comparison operators

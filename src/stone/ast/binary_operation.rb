@@ -19,6 +19,14 @@ module Stone
       def evaluate
         return error?(operands) if error?(operands)
         return Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
+        if mixed_operators?
+          evaluate_mixed_operations
+        else
+          evaluate_operation
+        end
+      end
+
+      def evaluate_operation
         case operators.first
         when PLUS
           add(operands)
@@ -31,20 +39,28 @@ module Stone
         end
       end
 
+      def evaluate_mixed_operations
+        operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
+          BinaryOperation.new(x.map(&:first), [a] + x.map(&:last)).evaluate
+        end
+      end
+
       def add(operands)
-        Integer.new(operands.map(&:value).inject(0, &:+)).to_s
+        Integer.new(operands.map(&:value).inject(0, &:+))
       end
 
       def subtract(operands)
-        Integer.new(operands[1..-1].map(&:value).inject(operands.first.value, &:-)).to_s
+        Integer.new(operands.rest.map(&:value).inject(operands.first.value, &:-))
       end
 
       def multiply(operands)
-        Integer.new(operands.map(&:value).inject(1, &:*)).to_s
+        Integer.new(operands.map(&:value).inject(1, &:*))
       end
 
+      ALLOWED_OPERATOR_MIXTURES = [%w[+ -], %w[* /]]
+
       def disallowed_mixed_operators?
-        mixed_operators?
+        mixed_operators? && !ALLOWED_OPERATOR_MIXTURES.include?(operators.sort.uniq)
       end
 
       def mixed_operators?

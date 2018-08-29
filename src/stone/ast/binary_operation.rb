@@ -46,15 +46,15 @@ module Stone
       end
 
       def add(operands)
-        Integer.new(operands.map(&:value).inject(0, &:+))
+        Integer.new(operands.map(&:evaluate).map(&:value).inject(0, &:+))
       end
 
       def subtract(operands)
-        Integer.new(operands.rest.map(&:value).inject(operands.first.value, &:-))
+        Integer.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.value, &:-))
       end
 
       def multiply(operands)
-        Integer.new(operands.map(&:value).inject(1, &:*))
+        Integer.new(operands.map(&:evaluate).map(&:value).inject(1, &:*))
       end
 
       ALLOWED_OPERATOR_MIXTURES = [%w[+ -], %w[* /]]

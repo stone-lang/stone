@@ -47,6 +47,17 @@ However, operators may *not* be mixed, without using parentheses:
 #! MixedOperatorsError: Add parentheses where appropriate.
 ~~~
 
+~~~ stone
+(1 + 2) * 3
+#= Number.Integer(9)
+~~~
+
+~~~ stone
+1 + (2 * 3)
+#= Number.Integer(7)
+~~~
+
+
 There are only a few exceptions to the mixed operators rule:
 
 ~~~ stone

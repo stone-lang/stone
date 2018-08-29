@@ -44,7 +44,7 @@ Specifications
     - [ ] Fixed-point
     - [ ] Rationals
 - [ ] Expressions
-    - [ ] Parenthetical expressions
+    - [x] Parenthetical expressions
     - [ ] Arithmetic operators
         - [x] Addition
         - [x] Subtraction

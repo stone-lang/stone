@@ -8,13 +8,13 @@ module Stone
 
   class Transform < Parslet::Transform
 
-    rule(literal_boolean: simple(:b)) {
+    rule(boolean: simple(:b)) {
       AST::Boolean.new(b)
     }
-    rule(literal_integer: simple(:i)) {
+    rule(integer: simple(:i)) {
       AST::Integer.new(i)
     }
-    rule(literal_text: simple(:t)) {
+    rule(text: simple(:t)) {
       AST::Text.new(t)
     }
     rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) {

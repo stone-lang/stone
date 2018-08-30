@@ -140,6 +140,16 @@ Text is enclosed in double quotes:
 #= Text("")
 ~~~
 
+~~~ stone
+"#10 Downing Street"
+#= Text("#10 Downing Street")
+~~~
+
+~~~ stone
+"We do block comments /* like this */"
+#= Text("We do block comments /* like this */")
+~~~
+
 NOTE: There is no escaping or interpolation of any kind for text literals.
 The `Text` class has methods to support those features.
 

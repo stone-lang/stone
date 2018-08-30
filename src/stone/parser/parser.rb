@@ -9,7 +9,7 @@ module Stone
     include ParsletExtensions
 
     root(:top)
-    rule(:top) { ((line_comment | (expression >> line_comment.repeat(0))) >> (newline | eof)).repeat }
+    rule(:top) { ((line_comment | (expression >> line_comment.repeat(0))) >> (newline.present? | whitespace?) >> (newline | eof)).repeat }
     rule(:line_comment) { (newline.absent? >> whitespace?) >> (str("#") >> (newline.absent? >> any).repeat).as(:comment) >> (newline.present? | eof.present?) }
     rule(:expression) { operation | literal | parens(whitespace? >> expression >> whitespace?) }
     rule(:binary_operand) { unary_operation | literal | parens(whitespace? >> expression >> whitespace?) }
@@ -29,10 +29,12 @@ module Stone
     rule(:binary_integer) { match["+-"].maybe >> str("0b") >> match["0-1"].repeat(1) }
     rule(:unary_operator) { match["!¬"] }
     rule(:binary_operator) { match["+➕\\-−➖\*×·✖️"] }
-    rule(:whitespace) { match('\s').repeat(1) }
-    rule(:whitespace?) { match('\s').repeat(0) }
+    rule(:whitespace) { (block_comment | match('\s')).repeat(1) }
+    rule(:whitespace?) { (block_comment | match('\s')).repeat(0) }
     rule(:newline) { match('\n').repeat(1) }
     rule(:eof) { any.absent? }
+    rule(:block_comment) { str("/*") >> (str("*/").absent? >> any).repeat >> str("*/") }
+
 
   end
 

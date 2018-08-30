@@ -64,7 +64,7 @@ Specifications
 - [x] Exceptions
 - [ ] Comments
     - [x] Per-line
-    - [ ] Bracketed
+    - [x] Bracketed
     - [ ] Nested
 - [ ] Functions
     - [ ] Function definition

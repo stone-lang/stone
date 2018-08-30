@@ -1,10 +1,12 @@
 Basics
 ======
 
+
 Comments
 --------
 
-Comments begin with a `#` character and continue to the end of the line.
+Comments are available in 2 varieties.
+Perl-style comments begin with a `#` and continue to the end of the line.
 
 ~~~ stone
 123 # This is a comment.
@@ -24,7 +26,9 @@ Comments begin with a `#` character and continue to the end of the line.
 #= Number.Integer(123)
 ~~~
 
-Or you can use C-style comments:
+C-style block comments start with `/*` and end with `*/`.
+Note that C-style comments cannot be nested;
+the first `*/` will always end the comment and return to processing code.
 
 ~~~ stone
 123 /* This is a comment. */

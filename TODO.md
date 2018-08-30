@@ -40,7 +40,6 @@ Specifications
     - [x] Integers
     - [x] Booleans
     - [x] Text strings
-    - [ ] Pair
     - [ ] Fixed-point
     - [ ] Rationals
 - [ ] Expressions
@@ -52,6 +51,10 @@ Specifications
         - [x] Multiple operands
         - [x] Mixing operators (gives an error in most cases)
             - [x] Allowed mixed operators
+                - [x] `+` and `-`
+                - [ ] `*` and `/`
+                - [ ] `<` and `<=`
+                - [ ] `>` and `>=`
         - [ ] Division
         - [x] Comparison
     - [x] Equality operators
@@ -69,6 +72,8 @@ Specifications
     - [x] Per-line
     - [x] Bracketed
     - [ ] Nested
+- [ ] Control logic
+    - [ ] If
 - [ ] Functions
     - [ ] Function definition
     - [ ] Function call
@@ -87,6 +92,7 @@ Specifications
     - [ ] Constructor
     - [ ] Destructor
 - [ ] Collections
+    - [ ] Pair
     - [ ] List
     - [ ] Map
 

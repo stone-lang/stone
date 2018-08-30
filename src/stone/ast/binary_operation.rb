@@ -12,6 +12,8 @@ module Stone
         "·" => "*",
         "✖️" => "*",
         "≠" => "!=",
+        "≤" => "<=",
+        "≥" => ">=",
       }
       OPERATIONS = {
         "+"   => ->(operands){ Integer.new(operands.map(&:evaluate).map(&:value).inject(0, &:+)) },
@@ -19,6 +21,10 @@ module Stone
         "*"   => ->(operands){ Integer.new(operands.map(&:evaluate).map(&:value).inject(1, &:*)) },
         "=="  => ->(operands){ Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length == 1) },
         "!="  => ->(operands){ Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length != 1) },
+        "<"   => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:<)) },
+        "<="  => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:<=)) },
+        ">"   => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:>)) },
+        ">="  => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:>=)) },
       }
 
       attr_reader :operators

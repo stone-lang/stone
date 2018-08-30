@@ -53,14 +53,17 @@ Specifications
         - [x] Mixing operators (gives an error in most cases)
             - [x] Allowed mixed operators
         - [ ] Division
-        - [ ] Unicode operators
-    - [ ] Comparison operators
+        - [x] Comparison
+    - [x] Equality operators
     - [ ] Boolean operators
         - [x] Not
             - [x] Repeated Not (`!!value`)
         - [ ] And
         - [ ] Or
+        - [ ] Comparison
     - [ ] Text operators
+        - [x] Comparison
+        - [ ] Concatenation
 - [x] Exceptions
 - [ ] Comments
     - [x] Per-line

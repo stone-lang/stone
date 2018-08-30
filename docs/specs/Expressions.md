@@ -7,11 +7,13 @@ When writing a program, we often use expressions of various kinds to compute val
 Operators
 ---------
 
-### Comparison Operators
+Note that Stone *requires* whitespace around infix operators.
+
+
+### Equality Operators
 
 Stone has the normal [infix](#infix) operators that you'd expect
-for equality, inequality, greater than, and less than.
-Note that Stone *requires* whitespace around infix operators.
+for equality and inequality.
 
 ~~~ stone
 TRUE == TRUE
@@ -60,6 +62,72 @@ FALSE == 123
 
 ~~~ stone
 "123" ≠ 123
+#= Boolean(Boolean.TRUE)
+~~~
+
+
+### Comparison Operators
+
+Stone has the normal [infix](#infix) operators that you'd expect
+for greater than and less than.
+
+~~~ stone
+1 < 2
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+2 <= 2
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+2 <= 3
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+1 > 2
+#= Boolean(Boolean.FALSE)
+~~~
+
+~~~ stone
+2 >= 2
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+3 >= 2
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+1 < 2
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+2 <= 2
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+2 ≤ 2
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+1 ≥ 2
+#= Boolean(Boolean.FALSE)
+~~~
+
+~~~ stone
+"abc" <= "abc"
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+"abc" <= "abcd"
 #= Boolean(Boolean.TRUE)
 ~~~
 

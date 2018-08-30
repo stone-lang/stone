@@ -9,7 +9,8 @@ module Stone
     include ParsletExtensions
 
     root(:top)
-    rule(:top) { (expression >> (newline | eof)).repeat }
+    rule(:top) { ((line_comment | (expression >> line_comment.repeat(0))) >> (newline | eof)).repeat }
+    rule(:line_comment) { (newline.absent? >> whitespace?) >> (str("#") >> (newline.absent? >> any).repeat).as(:comment) >> (newline.present? | eof.present?) }
     rule(:expression) { operation | literal | parens(whitespace? >> expression >> whitespace?) }
     rule(:binary_operand) { unary_operation | literal | parens(whitespace? >> expression >> whitespace?) }
     rule(:unary_operand) { literal | parens(whitespace? >> expression >> whitespace?) }

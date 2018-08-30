@@ -63,7 +63,7 @@ Specifications
     - [ ] Text operators
 - [x] Exceptions
 - [ ] Comments
-    - [ ] Per-line
+    - [x] Per-line
     - [ ] Bracketed
     - [ ] Nested
 - [ ] Functions

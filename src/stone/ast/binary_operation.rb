@@ -15,23 +15,29 @@ module Stone
         "≤" => "<=",
         "≥" => ">=",
       }
+      OPERATION_RESULT_TYPES = {
+        "+"   => Integer,
+        "-"   => Integer,
+        "*"   => Integer,
+        "=="  => Boolean,
+        "!="  => Boolean,
+        "<"   => Boolean,
+        "<="  => Boolean,
+        ">"   => Boolean,
+        ">="  => Boolean,
+      }
       OPERATIONS = {
-        "+"   => ->(operands){ Integer.new(operands.map(&:evaluate).map(&:value).inject(0, &:+)) },
-        "-"   => ->(operands){ Integer.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:-)) },
-        "*"   => ->(operands){ Integer.new(operands.map(&:evaluate).map(&:value).inject(1, &:*)) },
-        "=="  => ->(operands){ Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length == 1) },
-        "!="  => ->(operands){ Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length != 1) },
-        "<"   => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:<)) },
-        "<="  => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:<=)) },
-        ">"   => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:>)) },
-        ">="  => ->(operands){ Boolean.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:>=)) },
+        "=="  => ->(_operator, operands){ operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length == 1 },
+        "!="  => ->(_operator, operands){ operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length != 1 },
+        DEFAULT: ->(operator, operands){ operands.rest.map(&:evaluate).map(&:value).reduce(operands.first.evaluate.value, operator.to_sym) }
       }
 
-      attr_reader :operators
+      attr_reader :operators, :operator
       attr_reader :operands
 
       def initialize(operators, operands)
         @operators = operators.map(&:to_s).map{ |o| OPERATOR_MAP.fetch(o){ o } }
+        @operator = @operators.first
         @operands = operands
       end
 
@@ -46,12 +52,10 @@ module Stone
       end
 
       def evaluate_operation
-        operation = OPERATIONS[operators.first]
-        if operation
-          operation.call(operands)
-        else
-          Error.new("UnknownOperator", operators.first)
-        end
+        return Error.new("UnknownOperator", operator) unless known_operator?
+        operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
+        result_type = OPERATION_RESULT_TYPES[operator]
+        result_type.new(operation.call(operator, operands))
       end
 
       def evaluate_mixed_operations
@@ -68,6 +72,10 @@ module Stone
 
       def mixed_operators?
         operators.uniq.size > 1
+      end
+
+      def known_operator?
+        OPERATION_RESULT_TYPES.include?(operator)
       end
 
     end

@@ -4,17 +4,28 @@ module Stone
 
     class BinaryOperation < Operation
 
-      PLUS = /[+➕]/
-      MINUS = /[-−➖]/
-      TIMES = /[*×·✖️]/
-      EQUALS = /==/ # Comment here as work-around for Ruby parsing bug in Atom.
-      NOT_EQUALS = /!=|≠/
+      OPERATOR_MAP = {
+        "➕" => "+",
+        "−" => "-",
+        "➖" => "-",
+        "×" => "*",
+        "·" => "*",
+        "✖️" => "*",
+        "≠" => "!=",
+      }
+      OPERATIONS = {
+        "+"   => ->(operands){ Integer.new(operands.map(&:evaluate).map(&:value).inject(0, &:+)) },
+        "-"   => ->(operands){ Integer.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.evaluate.value, &:-)) },
+        "*"   => ->(operands){ Integer.new(operands.map(&:evaluate).map(&:value).inject(1, &:*)) },
+        "=="  => ->(operands){ Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length == 1) },
+        "!="  => ->(operands){ Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length != 1) },
+      }
 
       attr_reader :operators
       attr_reader :operands
 
       def initialize(operators, operands)
-        @operators = operators.map(&:to_s)
+        @operators = operators.map(&:to_s).map{ |o| OPERATOR_MAP.fetch(o){ o } }
         @operands = operands
       end
 
@@ -29,17 +40,9 @@ module Stone
       end
 
       def evaluate_operation
-        case operators.first
-        when PLUS
-          add(operands)
-        when MINUS
-          subtract(operands)
-        when TIMES
-          multiply(operands)
-        when EQUALS
-          equal(operands)
-        when NOT_EQUALS
-          !equal(operands)
+        operation = OPERATIONS[operators.first]
+        if operation
+          operation.call(operands)
         else
           Error.new("UnknownOperator", operators.first)
         end
@@ -49,22 +52,6 @@ module Stone
         operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
           BinaryOperation.new(x.map(&:first), [a] + x.map(&:last)).evaluate
         end
-      end
-
-      def add(operands)
-        Integer.new(operands.map(&:evaluate).map(&:value).inject(0, &:+))
-      end
-
-      def subtract(operands)
-        Integer.new(operands.rest.map(&:evaluate).map(&:value).inject(operands.first.value, &:-))
-      end
-
-      def multiply(operands)
-        Integer.new(operands.map(&:evaluate).map(&:value).inject(1, &:*))
-      end
-
-      def equal(operands)
-        Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length == 1)
       end
 
       ALLOWED_OPERATOR_MIXTURES = [%w[+ -], %w[* /]]

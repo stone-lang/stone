@@ -61,6 +61,12 @@ module Stone
       match["!¬"]
     }
     rule(:binary_operator) {
+      equality_operator | arithmetic_operator
+    }
+    rule(:equality_operator) {
+      str("==") | str("!=") | str("≠")
+    }
+    rule(:arithmetic_operator) {
       match["+➕\\-−➖\*×·✖️"]
     }
     rule(:whitespace) {

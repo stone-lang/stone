@@ -16,6 +16,10 @@ module Stone
         "#{type}(Boolean.#{@value.to_s.upcase})"
       end
 
+      def !
+        Boolean.new(!value)
+      end
+
     end
 
   end

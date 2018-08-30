@@ -7,6 +7,8 @@ module Stone
       PLUS = /[+➕]/
       MINUS = /[-−➖]/
       TIMES = /[*×·✖️]/
+      EQUALS = /==/ # Comment here as work-around for Ruby parsing bug in Atom.
+      NOT_EQUALS = /!=|≠/
 
       attr_reader :operators
       attr_reader :operands
@@ -34,6 +36,10 @@ module Stone
           subtract(operands)
         when TIMES
           multiply(operands)
+        when EQUALS
+          equal(operands)
+        when NOT_EQUALS
+          !equal(operands)
         else
           Error.new("UnknownOperator", operators.first)
         end
@@ -55,6 +61,10 @@ module Stone
 
       def multiply(operands)
         Integer.new(operands.map(&:evaluate).map(&:value).inject(1, &:*))
+      end
+
+      def equal(operands)
+        Boolean.new(operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length == 1)
       end
 
       ALLOWED_OPERATOR_MIXTURES = [%w[+ -], %w[* /]]

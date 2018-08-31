@@ -25,6 +25,7 @@ module Stone
         "<="  => Boolean,
         ">"   => Boolean,
         ">="  => Boolean,
+        "++"  => Text,
       }
       OPERATIONS = {
         "<"   => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value < r.value }.all? },
@@ -33,6 +34,7 @@ module Stone
         ">="  => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value >= r.value }.all? },
         "=="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length == 1 },
         "!="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length != 1 },
+        "++"  => ->(_operator, operands){ operands.map(&:value).join("") },
         DEFAULT: ->(operator, operands){ operands.rest.map(&:value).reduce(operands.first.value, operator.to_sym) }
       }
       ALLOWED_ARITHMETIC_MIXTURES = [%w[+ -], %w[* /]]

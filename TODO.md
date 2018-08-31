@@ -61,19 +61,19 @@ Specifications
     - [ ] Boolean operators
         - [x] Not
             - [x] Repeated Not (`!!value`)
-        - [ ] And
-        - [ ] Or
-        - [ ] Comparison
-    - [ ] Text operators
+        - [ ] And/or (non-short-circuiting)
+        - [ ] Comparison (give an error?)
+    - [x] Text operators
         - [x] Comparison
-        - [ ] Concatenation
+        - [x] Concatenation
 - [x] Exceptions
-- [ ] Comments
+- [x] Comments
     - [x] Per-line
     - [x] Bracketed
-    - [ ] Nested
+    - [ ] Nested (would be nice to have)
 - [ ] Control logic
     - [ ] If
+    - [ ] Short-circuit and/or
 - [ ] Functions
     - [ ] Function definition
     - [ ] Function call

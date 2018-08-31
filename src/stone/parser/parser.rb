@@ -61,7 +61,7 @@ module Stone
       match["!¬"]
     }
     rule(:binary_operator) {
-      equality_operator | arithmetic_operator | comparison_operator
+      text_operator | equality_operator | arithmetic_operator | comparison_operator
     }
     rule(:equality_operator) {
       str("==") | str("!=") | str("≠")
@@ -71,6 +71,9 @@ module Stone
     }
     rule(:comparison_operator) {
       str("<=") | str("≤") | str("<") | str(">=") | str("≥") | str(">")
+    }
+    rule(:text_operator) {
+      str("++")
     }
     rule(:whitespace) {
       (block_comment | match('\s')).repeat(1)

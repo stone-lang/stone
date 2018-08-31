@@ -271,3 +271,18 @@ The `¬` (Unicode "not sign") may also be used:
 !¬TRUE
 #= Boolean(Boolean.TRUE)
 ~~~
+
+
+### Text Operators
+
+We can use the `++` operator to concatenate strings.
+
+~~~ stone
+"abc" ++ "def"
+#= Text("abcdef")
+~~~
+
+~~~ stone
+"abc" ++ "def" ++ "ghi"
+#= Text("abcdefghi")
+~~~

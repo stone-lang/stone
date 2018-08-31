@@ -35,6 +35,9 @@ module Stone
         "!="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length != 1 },
         DEFAULT: ->(operator, operands){ operands.rest.map(&:value).reduce(operands.first.value, operator.to_sym) }
       }
+      ALLOWED_ARITHMETIC_MIXTURES = [%w[+ -], %w[* /]]
+      ALLOWED_COMPARISON_MIXTURES = [%w[< <=], %w[> >=]]
+      ALLOWED_OPERATOR_MIXTURES = ALLOWED_ARITHMETIC_MIXTURES + ALLOWED_COMPARISON_MIXTURES
 
       attr_reader :operators, :operator
       attr_reader :operands # Note that these are already evaluated.
@@ -63,12 +66,21 @@ module Stone
       end
 
       def evaluate_mixed_operations
-        operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
-          BinaryOperation.new(x.map(&:first), [a] + x.map(&:last)).evaluate
+        if ALLOWED_ARITHMETIC_MIXTURES.flatten.include?(operator)
+          # You're not expected to understand how this works. I wrote it, and I don't understand how it works.
+          operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
+            BinaryOperation.new(x.map(&:first), [a] + x.map(&:last)).evaluate
+          end
+        elsif ALLOWED_COMPARISON_MIXTURES.flatten.include?(operator)
+          # This is almost as bad. Maybe worse in some ways.
+          result = operands.each_cons(2).zip(operators).reduce(true) do |a, x|
+            a && BinaryOperation.new([x.last], x.first).evaluate.value
+          end
+          Boolean.new(result)
+        else
+          fail "Forgot to handle the case of mixing these operators: #{operators}"
         end
       end
-
-      ALLOWED_OPERATOR_MIXTURES = [%w[+ -], %w[* /]]
 
       def disallowed_mixed_operators?
         mixed_operators? && !ALLOWED_OPERATOR_MIXTURES.include?(operators.sort.uniq)

@@ -53,8 +53,8 @@ Specifications
             - [x] Allowed mixed operators
                 - [x] `+` and `-`
                 - [ ] `*` and `/`
-                - [ ] `<` and `<=`
-                - [ ] `>` and `>=`
+                - [x] `<` and `<=`
+                - [x] `>` and `>=`
         - [ ] Division
         - [x] Comparison
     - [x] Equality operators

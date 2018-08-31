@@ -62,6 +62,16 @@ There are only a few exceptions to the mixed operators rule:
 #= Number.Integer(-2)
 ~~~
 
+~~~ stone
+1 < 2 <= 3
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+3 >= 4 > 3
+#= Boolean(Boolean.FALSE)
+~~~
+
 
 ### Equality Operators
 

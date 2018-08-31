@@ -182,6 +182,18 @@ Stone has the normal infix operators that you'd expect for greater-than and less
 #= Boolean(Boolean.TRUE)
 ~~~
 
+One thing that's relatively unique to Stone is that you can chain comparison operators.
+
+~~~ stone
+1 < 2 < 3
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+3 >= 3 >= 2
+#= Boolean(Boolean.TRUE)
+~~~
+
 
 ### Numeric Operators
 

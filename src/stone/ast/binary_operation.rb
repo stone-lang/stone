@@ -27,18 +27,22 @@ module Stone
         ">="  => Boolean,
       }
       OPERATIONS = {
-        "=="  => ->(_operator, operands){ operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length == 1 },
-        "!="  => ->(_operator, operands){ operands.map(&:evaluate).map{ |o| [o.type, o.value] }.uniq.length != 1 },
-        DEFAULT: ->(operator, operands){ operands.rest.map(&:evaluate).map(&:value).reduce(operands.first.evaluate.value, operator.to_sym) }
+        "<"   => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value < r.value }.all? },
+        "<="  => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value <= r.value }.all? },
+        ">"   => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value > r.value }.all? },
+        ">="  => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value >= r.value }.all? },
+        "=="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length == 1 },
+        "!="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length != 1 },
+        DEFAULT: ->(operator, operands){ operands.rest.map(&:value).reduce(operands.first.value, operator.to_sym) }
       }
 
       attr_reader :operators, :operator
-      attr_reader :operands
+      attr_reader :operands # Note that these are already evaluated.
 
       def initialize(operators, operands)
         @operators = operators.map(&:to_s).map{ |o| OPERATOR_MAP.fetch(o){ o } }
         @operator = @operators.first
-        @operands = operands
+        @operands = operands.map(&:evaluate)
       end
 
       def evaluate

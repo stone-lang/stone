@@ -1,3 +1,4 @@
+require "pry"
 require "parslet"
 require "stone/parser/parslet_extensions"
 
@@ -9,8 +10,15 @@ module Stone
     include ParsletExtensions
 
     root(:top)
+
     rule(:top) {
-      ((line_comment | (expression >> line_comment.repeat(0))) >> (newline.present? | whitespace?) >> (newline | eof)).repeat
+      (line | empty_line).repeat
+    }
+    rule(:line) {
+      whitespace? >> expression >> whitespace? >> eol
+    }
+    rule(:empty_line) {
+      whitespace >> eol
     }
     rule(:expression) {
       function_call | operation | literal | parens(whitespace? >> expression >> whitespace?)
@@ -82,22 +90,22 @@ module Stone
       match["[:alpha:]"].repeat(1)
     }
     rule(:whitespace) {
-      (block_comment | match('\s')).repeat(1)
+      (block_comment | line_comment | (eol.absent? >> match('\s'))).repeat(1)
     }
     rule(:whitespace?) {
-      (block_comment | match('\s')).repeat(0)
+      whitespace.maybe
     }
-    rule(:newline) {
-      match('\n').repeat(1)
+    rule(:eol) {
+      match('\n') | eof
     }
     rule(:eof) {
       any.absent?
     }
     rule(:line_comment) {
-      (newline.absent? >> whitespace?) >> (str("#") >> (newline.absent? >> any).repeat).as(:comment) >> (newline.present? | eof.present?)
+      str("#") >> (eol.absent? >> any).repeat(0)
     }
     rule(:block_comment) {
-      str("/*") >> (str("*/").absent? >> any).repeat >> str("*/")
+      str("/*") >> (str("*/").absent? >> any).repeat(0) >> str("*/")
     }
 
   end

@@ -20,6 +20,12 @@ module Stone
     rule(text: simple(:t)) {
       AST::Text.new(t)
     }
+    rule(function_call: subtree(:s)) {
+      s2 = s.is_a?(Hash) ? [s] : s
+      identifier = s2.first[:identifier]
+      arguments = s2.map{ |a| a[:argument] }.compact
+      AST::FunctionCall.new(identifier, arguments)
+    }
     rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) {
       AST::UnaryOperation.new(op, arg)
     }

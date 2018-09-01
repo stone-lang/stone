@@ -74,9 +74,10 @@ Specifications
 - [ ] Control logic
     - [ ] If
     - [ ] Short-circuit and/or
+- [ ] Variables
 - [ ] Functions
     - [ ] Function definition
-    - [ ] Function call
+    - [x] Function call
     - [ ] Varargs
 - [ ] Classes
     - [ ] Class definition

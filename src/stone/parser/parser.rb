@@ -16,7 +16,13 @@ module Stone
       (newline.absent? >> whitespace?) >> (str("#") >> (newline.absent? >> any).repeat).as(:comment) >> (newline.present? | eof.present?)
     }
     rule(:expression) {
-      operation | literal | parens(whitespace? >> expression >> whitespace?)
+      function_call | operation | literal | parens(whitespace? >> expression >> whitespace?)
+    }
+    rule!(:function_call) {
+      identifier >> str("(") >> argument_list >> str(")")
+    }
+    rule(:argument_list) {
+      expression.as(:argument) >> (str(",") >> whitespace >> expression.as(:argument)).repeat(0)
     }
     rule(:binary_operand) {
       unary_operation | literal | parens(whitespace? >> expression >> whitespace?)
@@ -65,6 +71,9 @@ module Stone
     }
     rule(:equality_operator) {
       str("==") | str("!=") | str("≠")
+    }
+    rule!(:identifier) {
+      match["[:alpha:]"].repeat(1)
     }
     rule(:arithmetic_operator) {
       match["+➕\\-−➖\*×·✖️"]

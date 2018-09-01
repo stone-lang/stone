@@ -6,6 +6,7 @@ These are the executable specifications for the Stone programming language.
 * [Basics](Basics.md)
 * [Literals](Literals.md)
 * [Expressions](Expressions.md)
+* [Functions](Functions.md)
 
 
 ## Conventions

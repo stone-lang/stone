@@ -30,3 +30,4 @@ end
 require "stone/ast/comment"
 require "stone/ast/value"
 require "stone/ast/operation"
+require "stone/ast/function_call"

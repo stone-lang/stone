@@ -56,12 +56,12 @@ module Stone
         if mixed_operators?
           evaluate_mixed_operations
         else
-          evaluate_operation
+          evaluate_operation(operator, operands)
         end
       end
 
-      def evaluate_operation
-        return Error.new("UnknownOperator", operator) unless known_operator?
+      def evaluate_operation(operator, operands)
+        return Error.new("UnknownOperator", operator) unless known_operator?(operator)
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
         result_type = OPERATION_RESULT_TYPES[operator]
         result_type.new(operation.call(operator, operands))
@@ -69,18 +69,11 @@ module Stone
 
       def evaluate_mixed_operations
         if ALLOWED_ARITHMETIC_MIXTURES.flatten.include?(operator)
-          # You're not expected to understand how this works. I wrote it, and I don't understand how it works.
-          operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
-            BinaryOperation.new(x.map(&:first), [a] + x.map(&:last)).evaluate
-          end
+          evaluate_mixed_arithmethic_operations
         elsif ALLOWED_COMPARISON_MIXTURES.flatten.include?(operator)
-          # This is almost as bad. Maybe worse in some ways.
-          result = operands.each_cons(2).zip(operators).reduce(true) do |a, x|
-            a && BinaryOperation.new([x.last], x.first).evaluate.value
-          end
-          Boolean.new(result)
+          evaluate_mixed_comparison_operations
         else
-          fail "Forgot to handle the case of mixing these operators: #{operators}"
+          fail "Compiler needs logic added to handle the case of mixing these operators: #{operators}"
         end
       end
 
@@ -92,8 +85,22 @@ module Stone
         operators.uniq.size > 1
       end
 
-      def known_operator?
+      def known_operator?(operator)
         OPERATION_RESULT_TYPES.include?(operator)
+      end
+
+      # You're not expected to understand how this works. I wrote it, and I don't really understand how it works.
+      def evaluate_mixed_arithmethic_operations
+        operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
+          evaluate_operation(x.first.first, [a] + x.map(&:last))
+        end
+      end
+
+      # This is almost as bad. Maybe worse in some ways.
+      def evaluate_mixed_comparison_operations
+        Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
+          a && BinaryOperation.new([x.last], x.first).evaluate.value
+        })
       end
 
     end

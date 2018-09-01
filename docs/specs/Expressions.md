@@ -37,7 +37,7 @@ Most importantly, operator precedence adds complexity to what you have to learn 
 
 ~~~ stone
 1 + 2 * 3
-#! MixedOperatorsError: Add parentheses where appropriate.
+#! MixedOperatorsError: Add parentheses where appropriate
 ~~~
 
 ~~~ stone

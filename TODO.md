@@ -72,9 +72,11 @@ Specifications
     - [x] Bracketed
     - [ ] Nested (would be nice to have)
 - [ ] Control logic
-    - [ ] If
+    - [ ] Conditionals - if/then/else
     - [ ] Short-circuit and/or
 - [ ] Variables
+    - [ ] Assignment
+    - [ ] Referencing
 - [ ] Functions
     - [ ] Function definition
     - [x] Function call
@@ -96,6 +98,8 @@ Specifications
     - [ ] Pair
     - [ ] List
     - [ ] Map
+- [ ] Types
+    - [ ] Annotations
 
 
 Design Docs

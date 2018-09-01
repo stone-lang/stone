@@ -12,8 +12,8 @@ module Stone
 
       def initialize(operator, operand)
         @operator = operator.to_s
-        @operands = [operand]
         @operand = operand
+        @operands = [operand] # Keep parent class happy.
       end
 
       def evaluate

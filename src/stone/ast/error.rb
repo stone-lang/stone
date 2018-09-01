@@ -22,7 +22,11 @@ module Stone
       end
 
       def to_s
-        "#{type}: #{description}."
+        if description
+          "#{type}: #{description}"
+        else
+          type
+        end
       end
 
     end

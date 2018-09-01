@@ -12,9 +12,6 @@ module Stone
     rule(:top) {
       ((line_comment | (expression >> line_comment.repeat(0))) >> (newline.present? | whitespace?) >> (newline | eof)).repeat
     }
-    rule(:line_comment) {
-      (newline.absent? >> whitespace?) >> (str("#") >> (newline.absent? >> any).repeat).as(:comment) >> (newline.present? | eof.present?)
-    }
     rule(:expression) {
       function_call | operation | literal | parens(whitespace? >> expression >> whitespace?)
     }
@@ -24,17 +21,11 @@ module Stone
     rule(:argument_list) {
       expression.as(:argument) >> (str(",") >> whitespace >> expression.as(:argument)).repeat(0)
     }
-    rule(:binary_operand) {
-      unary_operation | literal | parens(whitespace? >> expression >> whitespace?)
-    }
-    rule(:unary_operand) {
-      literal | parens(whitespace? >> expression >> whitespace?)
+    rule(:operation) {
+      unary_operation | binary_operation
     }
     rule(:literal) {
       boolean | integer | text
-    }
-    rule(:operation) {
-      unary_operation | binary_operation
     }
     rule!(:boolean) {
       str("TRUE") | str("FALSE")
@@ -69,20 +60,26 @@ module Stone
     rule(:binary_operator) {
       text_operator | equality_operator | arithmetic_operator | comparison_operator
     }
+    rule(:binary_operand) {
+      unary_operation | literal | parens(whitespace? >> expression >> whitespace?)
+    }
+    rule(:unary_operand) {
+      literal | parens(whitespace? >> expression >> whitespace?)
+    }
     rule(:equality_operator) {
       str("==") | str("!=") | str("≠")
     }
-    rule!(:identifier) {
-      match["[:alpha:]"].repeat(1)
-    }
     rule(:arithmetic_operator) {
-      match["+➕\\-−➖\*×·✖️"]
+      match["+➕"] | match["\\-−➖"] | match["\*×·✖️"]
     }
     rule(:comparison_operator) {
       str("<=") | str("≤") | str("<") | str(">=") | str("≥") | str(">")
     }
     rule(:text_operator) {
       str("++")
+    }
+    rule!(:identifier) {
+      match["[:alpha:]"].repeat(1)
     }
     rule(:whitespace) {
       (block_comment | match('\s')).repeat(1)
@@ -95,6 +92,9 @@ module Stone
     }
     rule(:eof) {
       any.absent?
+    }
+    rule(:line_comment) {
+      (newline.absent? >> whitespace?) >> (str("#") >> (newline.absent? >> any).repeat).as(:comment) >> (newline.present? | eof.present?)
     }
     rule(:block_comment) {
       str("/*") >> (str("*/").absent? >> any).repeat >> str("*/")

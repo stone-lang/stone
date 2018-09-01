@@ -47,16 +47,17 @@ module Stone
       def initialize(operators, operands)
         @operators = operators.map(&:to_s).map{ |o| OPERATOR_MAP.fetch(o){ o } }
         @operator = @operators.first
-        @operands = operands.map(&:evaluate)
+        @operands = operands
       end
 
-      def evaluate
-        return error?(operands) if error?(operands)
+      def evaluate(context)
+        evaluated_operands = operands.map{ |o| o.evaluate(context) }
+        return error?(evaluated_operands) if error?(evaluated_operands)
         return Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
         if mixed_operators?
-          evaluate_mixed_operations
+          evaluate_mixed_operations(operators, evaluated_operands)
         else
-          evaluate_operation(operator, operands)
+          evaluate_operation(operator, evaluated_operands)
         end
       end
 
@@ -67,11 +68,11 @@ module Stone
         result_type.new(operation.call(operator, operands))
       end
 
-      def evaluate_mixed_operations
-        if ALLOWED_ARITHMETIC_MIXTURES.flatten.include?(operator)
-          evaluate_mixed_arithmethic_operations
-        elsif ALLOWED_COMPARISON_MIXTURES.flatten.include?(operator)
-          evaluate_mixed_comparison_operations
+      def evaluate_mixed_operations(operators, operands)
+        if ALLOWED_ARITHMETIC_MIXTURES.flatten.include?(operators.first)
+          evaluate_mixed_arithmethic_operations(operators, operands)
+        elsif ALLOWED_COMPARISON_MIXTURES.flatten.include?(operators.first)
+          evaluate_mixed_comparison_operations(operators, operands)
         else
           fail "Compiler needs logic added to handle the case of mixing these operators: #{operators}"
         end
@@ -90,16 +91,16 @@ module Stone
       end
 
       # You're not expected to understand how this works. I wrote it, and I don't really understand how it works.
-      def evaluate_mixed_arithmethic_operations
+      def evaluate_mixed_arithmethic_operations(operators, operands)
         operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
           evaluate_operation(x.first.first, [a] + x.map(&:last))
         end
       end
 
       # This is almost as bad. Maybe worse in some ways.
-      def evaluate_mixed_comparison_operations
+      def evaluate_mixed_comparison_operations(operators, operands)
         Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
-          a && BinaryOperation.new([x.last], x.first).evaluate.value
+          a && evaluate_operation(x.last, x.first).value
         })
       end
 

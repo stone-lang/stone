@@ -47,3 +47,19 @@ the first `*/` will always end the comment and return to processing code.
      */
 #= Number.Integer(123)
 ~~~
+
+
+Variables
+---------
+
+~~~ stone
+a := 123
+a
+#= Number.Integer(123)
+~~~
+
+~~~ stone
+a := 123
+b
+#! UndefinedVariable: b
+~~~

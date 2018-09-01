@@ -18,7 +18,7 @@ module Stone
         text
       end
 
-      def evaluate
+      def evaluate(_context)
         nil
       end
 

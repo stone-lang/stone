@@ -33,6 +33,12 @@ module Stone
       operands = s.map_dig(:operand)
       AST::BinaryOperation.new(operators, operands)
     }
+    rule(assignment: subtree(:s)) {
+      AST::Assignment.new(s[:lvalue], s[:rvalue])
+    }
+    rule(variable_reference: simple(:v)) {
+      AST::VariableReference.new(v)
+    }
 
   end
 

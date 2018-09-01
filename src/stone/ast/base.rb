@@ -4,7 +4,7 @@ module Stone
 
     class Base
 
-      def evaluate
+      def evaluate(_context)
         fail NotImplementedError
       end
 
@@ -17,7 +17,7 @@ module Stone
       end
 
       def error?(children)
-        children.find{ |child| child.is_a?(Error) }
+        [children].flatten.find{ |child| child.is_a?(Error) }
       end
 
     end
@@ -31,3 +31,5 @@ require "stone/ast/comment"
 require "stone/ast/value"
 require "stone/ast/operation"
 require "stone/ast/function_call"
+require "stone/ast/assignment"
+require "stone/ast/variable_reference"

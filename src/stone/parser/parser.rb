@@ -15,22 +15,28 @@ module Stone
       (line | empty_line).repeat
     }
     rule(:line) {
-      whitespace? >> expression >> whitespace? >> eol
+      whitespace? >> (assignment | expression) >> whitespace? >> eol
     }
     rule(:empty_line) {
       whitespace >> eol
     }
     rule(:expression) {
-      function_call | operation | literal | parens(whitespace? >> expression >> whitespace?)
+      function_call | operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
+    }
+    rule!(:assignment) {
+      identifier.as(:lvalue) >> whitespace >> str(":=") >> whitespace >> expression.as(:rvalue)
     }
     rule!(:function_call) {
-      identifier >> str("(") >> argument_list >> str(")")
+      identifier.as(:identifier) >> str("(") >> argument_list >> str(")")
     }
     rule(:argument_list) {
       expression.as(:argument) >> (str(",") >> whitespace >> expression.as(:argument)).repeat(0)
     }
     rule(:operation) {
       unary_operation | binary_operation
+    }
+    rule!(:variable_reference) {
+      identifier
     }
     rule(:literal) {
       boolean | integer | text
@@ -69,10 +75,10 @@ module Stone
       text_operator | equality_operator | arithmetic_operator | comparison_operator
     }
     rule(:binary_operand) {
-      unary_operation | literal | parens(whitespace? >> expression >> whitespace?)
+      unary_operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
     }
     rule(:unary_operand) {
-      literal | parens(whitespace? >> expression >> whitespace?)
+      literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
     }
     rule(:equality_operator) {
       str("==") | str("!=") | str("≠")
@@ -86,7 +92,7 @@ module Stone
     rule(:text_operator) {
       str("++")
     }
-    rule!(:identifier) {
+    rule(:identifier) {
       match["[:alpha:]"].repeat(1)
     }
     rule(:whitespace) {

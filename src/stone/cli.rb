@@ -28,7 +28,8 @@ module Stone
       input = ARGF.read
       parser = Stone::Parser.new
       transform = Stone::Transform.new
-      puts transform.apply(parser.parse(input)).map(&:evaluate).compact
+      top_context = {}
+      puts transform.apply(parser.parse(input)).map{ |x| x.evaluate(top_context) }.compact
     rescue Parslet::ParseFailed => e
       puts e.parse_failure_cause.ascii_tree
     end

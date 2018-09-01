@@ -9,16 +9,17 @@ module Stone
 
       def initialize(name, arguments)
         @name = name.to_s.to_sym
-        @arguments = arguments.map(&:evaluate)
+        @arguments = arguments
       end
 
       def to_s
         "#{name}(#{arguments.join(', ')})"
       end
 
-      def evaluate
-        return error?(arguments) if error?(arguments)
-        __send__(name, arguments)
+      def evaluate(context)
+        evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
+        return error?(evaluated_arguments) if error?(evaluated_arguments)
+        __send__(name, evaluated_arguments)
       rescue NoMethodError
         Error.new("UnknownFunction", name)
       end

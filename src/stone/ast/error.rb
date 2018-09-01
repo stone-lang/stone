@@ -13,7 +13,7 @@ module Stone
         @description = description
       end
 
-      def evaluate
+      def evaluate(_context)
         self
       end
 

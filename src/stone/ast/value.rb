@@ -14,7 +14,7 @@ module Stone
         normalize!
       end
 
-      def evaluate
+      def evaluate(_context)
         self
       end
 

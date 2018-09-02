@@ -33,9 +33,9 @@ module Stone
       block
     }
     rule(:block) {
-      str("{") >> (whitespace | eol).repeat(0) >> block_body >> (whitespace | eol).repeat(0) >> str("}")
+      str("{") >> (whitespace | eol).repeat(0) >> block_body.as(:block) >> (whitespace | eol).repeat(0) >> str("}")
     }
-    rule!(:block_body) {
+    rule(:block_body) {
       (assignment | expression) >> (whitespace | eol).repeat(0)
     }
     rule!(:assignment) {
@@ -45,7 +45,7 @@ module Stone
       identifier.as(:identifier) >> str("(") >> argument_list >> str(")")
     }
     rule(:argument_list) {
-      expression.as(:argument) >> (str(",") >> whitespace >> expression.as(:argument)).repeat(0)
+      (expression | block).as(:argument) >> (str(",") >> whitespace >> (expression | block).as(:argument)).repeat(0)
     }
     rule(:operation) {
       unary_operation | binary_operation

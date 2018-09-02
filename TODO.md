@@ -72,7 +72,7 @@ Specifications
     - [x] Bracketed
     - [ ] Nested (would be nice to have)
 - [ ] Control logic
-    - [ ] Conditionals - if/then/else
+    - [x] Conditionals - if/then/else
     - [ ] Short-circuit and/or
 - [x] Variables
     - [x] Assignment
@@ -81,10 +81,13 @@ Specifications
 - [ ] Functions
     - [x] Function definition
     - [x] Function call
+    - [ ] Arity checking
     - [ ] Default arguments
     - [ ] Named arguments
     - [ ] Varargs
     - [ ] Closures
+    - [ ] Recursion
+    - [ ] First-class functions
 - [ ] Classes
     - [ ] Class definition
     - [ ] Class instantiation
@@ -98,6 +101,10 @@ Specifications
     - [ ] Method call
     - [ ] Constructor
     - [ ] Destructor
+- [ ] Sequences
+    - [ ] Range
+    - [ ] Iteration (map/each)
+    - [ ] Reduce
 - [ ] Collections
     - [ ] Pair
     - [ ] List

@@ -24,15 +24,15 @@ module Stone
     rule(function_call: subtree(:s)) {
       identifier = [s].flatten.first[:identifier]
       arguments = [s].flatten.map{ |a| a[:argument] }.compact
+      arguments = arguments.map{ |a| a.is_a?(Hash) && a.has_key?(:block) ? AST::Block.new(a[:block]) : a }
       AST::FunctionCall.new(identifier, arguments)
     }
     rule(function_definition: subtree(:s)) {
       name = s[:name]
       params = [s[:parameter_list]].flatten.map{ |p| p[:parameter].to_s }
-      body = s[:block_body]
+      body = s[:block]
       AST::Function.new(name, params, body)
     }
-
     rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) {
       AST::UnaryOperation.new(op, arg)
     }

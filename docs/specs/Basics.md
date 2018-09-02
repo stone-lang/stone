@@ -63,3 +63,23 @@ a := 123
 b
 #! UndefinedVariable: b
 ~~~
+
+
+Conditionals
+------------
+
+Stone uses blocks to indicate code that *might* run later.
+This allows `if` to be written as a function.
+The `then` clause of an `if` conditional is passed as the 2nd argument.
+
+~~~ stone
+if(TRUE, { 1 })
+#! Number.Integer(1)
+~~~
+
+The `if` function takes an optional 3rd argument, which acts as the `else` clause.
+
+~~~ stone
+if(2 < 1, { "2 is less than 1" }, { "2 is NOT less than 1" })
+#! Text("2 is NOT less than 1")
+~~~

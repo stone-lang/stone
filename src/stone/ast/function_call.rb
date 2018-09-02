@@ -4,6 +4,8 @@ module Stone
 
     class FunctionCall < Base
 
+      BUILTIN_FUNCTIONS = %i[identity min max]
+
       attr_reader :name
       attr_reader :arguments
 
@@ -19,12 +21,20 @@ module Stone
       def evaluate(context)
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
-        __send__(name, evaluated_arguments)
-      rescue NoMethodError
-        Error.new("UnknownFunction", name)
+        if context[name].is_a?(Function)
+          context[name].call(evaluated_arguments)
+        elsif builtin_function?(name)
+          __send__(name, evaluated_arguments)
+        else
+          Error.new("UnknownFunction", name)
+        end
       end
 
     private
+
+      def builtin_function?(name)
+        BUILTIN_FUNCTIONS.include?(name)
+      end
 
       def identity(args)
         return Error.new("ArityError", "expecting 1 argument, got #{args.size}") unless args.size == 1

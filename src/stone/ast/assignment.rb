@@ -8,7 +8,7 @@ module Stone
       attr_reader :rvalue
 
       def initialize(name, rvalue)
-        @name = name.to_s
+        @name = name.to_s.to_sym
         @rvalue = rvalue
       end
 

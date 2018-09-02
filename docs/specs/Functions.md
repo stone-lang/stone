@@ -32,3 +32,17 @@ min(1, 2)
 max(1, 2, 3)
 #= Number.Integer(3)
 ~~~
+
+
+Function Definition
+-------------------
+
+You can define your own functions.
+
+~~~ stone
+square(x) := function {
+    x * x
+}
+square(4)
+#= Number.Integer(16)
+~~~

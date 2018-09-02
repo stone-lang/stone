@@ -74,13 +74,17 @@ Specifications
 - [ ] Control logic
     - [ ] Conditionals - if/then/else
     - [ ] Short-circuit and/or
-- [ ] Variables
-    - [ ] Assignment
-    - [ ] Referencing
+- [x] Variables
+    - [x] Assignment
+    - [x] Referencing
+    - [ ] References to enclosing scopes
 - [ ] Functions
-    - [ ] Function definition
+    - [x] Function definition
     - [x] Function call
+    - [ ] Default arguments
+    - [ ] Named arguments
     - [ ] Varargs
+    - [ ] Closures
 - [ ] Classes
     - [ ] Class definition
     - [ ] Class instantiation

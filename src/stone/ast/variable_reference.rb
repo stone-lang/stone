@@ -7,7 +7,7 @@ module Stone
       attr_reader :name
 
       def initialize(name)
-        @name = name.to_s
+        @name = name.to_s.to_sym
       end
 
       def evaluate(context)
@@ -15,7 +15,7 @@ module Stone
       end
 
       def to_s
-        name
+        name.to_s
       end
 
     end

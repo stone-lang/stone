@@ -2,6 +2,7 @@ require "stone/ast/base"
 
 require "extensions/enumerable"
 require "parslet"
+require "pry"
 
 
 module Stone
@@ -25,6 +26,13 @@ module Stone
       arguments = [s].flatten.map{ |a| a[:argument] }.compact
       AST::FunctionCall.new(identifier, arguments)
     }
+    rule(function_definition: subtree(:s)) {
+      name = s[:name]
+      params = [s[:parameter_list]].flatten.map{ |p| p[:parameter].to_s }
+      body = s[:block_body]
+      AST::Function.new(name, params, body)
+    }
+
     rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) {
       AST::UnaryOperation.new(op, arg)
     }

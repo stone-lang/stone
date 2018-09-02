@@ -15,13 +15,28 @@ module Stone
       (line | empty_line).repeat
     }
     rule(:line) {
-      whitespace? >> (assignment | expression) >> whitespace? >> eol
+      whitespace? >> (assignment | function_definition | expression) >> whitespace? >> eol
     }
     rule(:empty_line) {
       whitespace >> eol
     }
     rule(:expression) {
       function_call | operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
+    }
+    rule!(:function_definition) {
+      identifier.as(:name) >> str("(") >> parameter_list >> str(")") >> whitespace >> str(":=") >> whitespace >> str("function") >> whitespace? >> function_body
+    }
+    rule!(:parameter_list) {
+      identifier.as(:parameter) >> (str(",") >> whitespace >> identifier.as(:parameter)).repeat(0)
+    }
+    rule(:function_body) {
+      block
+    }
+    rule(:block) {
+      str("{") >> (whitespace | eol).repeat(0) >> block_body >> (whitespace | eol).repeat(0) >> str("}")
+    }
+    rule!(:block_body) {
+      (assignment | expression) >> (whitespace | eol).repeat(0)
     }
     rule!(:assignment) {
       identifier.as(:lvalue) >> whitespace >> str(":=") >> whitespace >> expression.as(:rvalue)

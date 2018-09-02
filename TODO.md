@@ -57,6 +57,7 @@ Specifications
                 - [x] `>` and `>=`
         - [ ] Division
         - [x] Comparison
+        - [x] Minimum/maximum (`<!` and `>!`)
     - [x] Equality operators
     - [ ] Boolean operators
         - [x] Not

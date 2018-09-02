@@ -224,6 +224,21 @@ Stone has the normal infix numeric operators that you'd expect for addition, sub
 #= Number.Integer(6)
 ~~~
 
+Stone is perhaps unique in having symbolic minimum and maximum operators.
+The `<!` operator returns the minimum of the operands.
+
+~~~ stone
+2 <! 3
+#= Number.Integer(2)
+~~~
+
+The `>!` operator returns the maximum of the operands.
+
+~~~ stone
+2 >! 6 >! 1
+#= Number.Integer(6)
+~~~
+
 
 ### Boolean Operators
 

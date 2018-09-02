@@ -19,6 +19,8 @@ module Stone
         "+"   => Integer,
         "-"   => Integer,
         "*"   => Integer,
+        "<!"  => Integer,
+        ">!"  => Integer,
         "=="  => Boolean,
         "!="  => Boolean,
         "<"   => Boolean,
@@ -35,6 +37,8 @@ module Stone
         "=="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length == 1 },
         "!="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length != 1 },
         "++"  => ->(_operator, operands){ operands.map(&:value).join("") },
+        ">!"  => ->(_operator, operands){ operands.map(&:value).max },
+        "<!"  => ->(_operator, operands){ operands.map(&:value).min },
         DEFAULT: ->(operator, operands){ operands.rest.map(&:value).reduce(operands.first.value, operator.to_sym) }
       }
       ALLOWED_ARITHMETIC_MIXTURES = [%w[+ -], %w[* /]]

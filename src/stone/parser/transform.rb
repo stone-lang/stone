@@ -9,7 +9,7 @@ module Stone
 
   class Transform < Parslet::Transform
 
-    rule(comment: simple(:c)) {
+    rule(line_comment: simple(:c)) {
       AST::Comment.new(c)
     }
     rule(boolean: simple(:b)) {

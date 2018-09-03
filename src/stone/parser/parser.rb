@@ -12,12 +12,12 @@ module Stone
     root(:top)
 
     rule(:top) {
-      (line | empty_line).repeat
+      (line | blank_line).repeat
     }
     rule(:line) {
       whitespace? >> (assignment | function_definition | expression) >> whitespace? >> eol
     }
-    rule(:empty_line) {
+    rule(:blank_line) {
       whitespace >> eol
     }
     rule(:expression) {
@@ -114,7 +114,7 @@ module Stone
       match["[:alpha:]"].repeat(1)
     }
     rule(:whitespace) {
-      (block_comment | line_comment | (eol.absent? >> match('\s'))).repeat(1)
+      (comment | (eol.absent? >> match('\s'))).repeat(1)
     }
     rule(:whitespace?) {
       whitespace.maybe
@@ -125,7 +125,10 @@ module Stone
     rule(:eof) {
       any.absent?
     }
-    rule(:line_comment) {
+    rule(:comment) {
+      line_comment | block_comment
+    }
+    rule!(:line_comment) {
       str("#") >> (eol.absent? >> any).repeat(0)
     }
     rule(:block_comment) {

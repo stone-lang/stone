@@ -30,7 +30,10 @@ Operators may be repeated:
 #= Number.Integer(24)
 ~~~
 
-However, operators may *not* be mixed, without using parentheses.
+Note that when an operator is repeated, the expression is treated as a single operation.
+The operator receives all the operands in a single "call".
+
+Operators may *not* be mixed, without using parentheses.
 Most programming languages have operator precedence rules; Stone does not.
 Operator precedence adds complexity to a language, without much value.
 Most importantly, operator precedence adds complexity to what you have to learn about a language.
@@ -286,6 +289,44 @@ The `¬` (Unicode "not sign") may also be used:
 !¬TRUE
 #= Boolean(Boolean.TRUE)
 ~~~
+
+We can also perform conjunction ("and") and disjunction ("or") operations on Booleans.
+You can use the Unicode `∧` and `∨` symbols:
+
+~~~ stone
+TRUE ∧ FALSE
+#= Boolean(Boolean.FALSE)
+~~~
+
+~~~ stone
+TRUE ∨ FALSE
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+(4 > 2) ∧ (6 <= 3)
+#= Boolean(Boolean.FALSE)
+~~~
+
+Or you can use `+` for "or" and `*` (or `×` or `·`) for "and".
+(These make sense if you think of `TRUE` as a `1` and `FALSE` as a `0`.)
+
+~~~ stone
+TRUE * FALSE
+#= Boolean(Boolean.FALSE)
+~~~
+
+~~~ stone
+TRUE + FALSE
+#= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+(4 > 2) × (6 <= 3)
+#= Boolean(Boolean.FALSE)
+~~~
+
+Note that these operators do *not* short-cut; operations always evaluate all of their operands.
 
 
 ### Text Operators

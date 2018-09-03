@@ -62,7 +62,7 @@ Specifications
     - [ ] Boolean operators
         - [x] Not
             - [x] Repeated Not (`!!value`)
-        - [ ] And/or (non-short-circuiting)
+        - [x] And/or (non-short-circuiting)
         - [ ] Comparison (give an error?)
     - [x] Text operators
         - [x] Comparison

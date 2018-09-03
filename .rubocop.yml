@@ -163,3 +163,10 @@ Metrics/BlockLength:
 Style/SafeNavigation:
   Enabled: false
 
+# Allow `!!` to force a boolean result.
+Style/DoubleNegation:
+  Enabled: false
+
+# Allow non-ASCII identifiers.
+Style/AsciiIdentifiers:
+  Enabled: false

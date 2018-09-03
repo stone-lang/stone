@@ -1,3 +1,6 @@
+require "extensions/boolean"
+
+
 module Stone
 
   module AST
@@ -15,6 +18,14 @@ module Stone
         "≤" => "<=",
         "≥" => ">=",
       }
+      BOOLEAN_OPERATOR_MAP = {
+        "*" => "∧",
+        "×" => "∧",
+        "·" => "∧",
+        "✖️" => "∧",
+        "+" => "∨",
+        "➕" => "∨",
+      }
       OPERATION_RESULT_TYPES = {
         "+"   => Integer,
         "-"   => Integer,
@@ -27,6 +38,8 @@ module Stone
         "<="  => Boolean,
         ">"   => Boolean,
         ">="  => Boolean,
+        "∧"  => Boolean,
+        "∨"  => Boolean,
         "++"  => Text,
       }
       OPERATIONS = {
@@ -46,7 +59,7 @@ module Stone
       ALLOWED_OPERATOR_MIXTURES = ALLOWED_ARITHMETIC_MIXTURES + ALLOWED_COMPARISON_MIXTURES
 
       attr_reader :operators, :operator
-      attr_reader :operands # Note that these are already evaluated.
+      attr_reader :operands
 
       def initialize(operators, operands)
         @operators = operators.map(&:to_s).map{ |o| OPERATOR_MAP.fetch(o){ o } }
@@ -67,6 +80,7 @@ module Stone
 
       def evaluate_operation(operator, operands)
         return Error.new("UnknownOperator", operator) unless known_operator?(operator)
+        operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
         result_type = OPERATION_RESULT_TYPES[operator]
         result_type.new(operation.call(operator, operands))

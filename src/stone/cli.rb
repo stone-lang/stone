@@ -26,6 +26,7 @@ module Stone
 
     def run_eval
       input = ARGF.read
+      input += "\n" unless input.end_with?("\n")
       parser = Stone::Parser.new
       transform = Stone::Transform.new
       top_context = {}

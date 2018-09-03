@@ -15,10 +15,10 @@ module Stone
       (line | blank_line).repeat
     }
     rule(:line) {
-      whitespace? >> (assignment | function_definition | expression) >> whitespace? >> eol
+      whitespace? >> (assignment | function_definition | expression) >> whitespace? >> (eol | line_comment.present?)
     }
     rule(:blank_line) {
-      whitespace >> eol
+      whitespace? >> line_comment.maybe.as(:comment) >> eol
     }
     rule(:expression) {
       function_call | operation | literal | variable_reference | block | parens(whitespace? >> expression >> whitespace?)
@@ -115,21 +115,18 @@ module Stone
       match["[:alpha:]"].repeat(1)
     }
     rule(:whitespace) {
-      (comment | (eol.absent? >> match('\s'))).repeat(1)
+      (block_comment | (eol.absent? >> match('\s'))).repeat(1)
     }
     rule(:whitespace?) {
       whitespace.maybe
     }
     rule(:eol) {
-      match('\n') | eof
+      str("\n")
     }
     rule(:eof) {
       any.absent?
     }
-    rule(:comment) {
-      line_comment | block_comment
-    }
-    rule!(:line_comment) {
+    rule(:line_comment) {
       str("#") >> (eol.absent? >> any).repeat(0)
     }
     rule(:block_comment) {

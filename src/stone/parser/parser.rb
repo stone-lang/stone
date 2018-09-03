@@ -21,7 +21,7 @@ module Stone
       whitespace >> eol
     }
     rule(:expression) {
-      function_call | operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
+      function_call | operation | literal | variable_reference | block | parens(whitespace? >> expression >> whitespace?)
     }
     rule!(:function_definition) {
       identifier.as(:name) >> str("(") >> parameter_list >> str(")") >> whitespace >> str(":=") >> whitespace >> str("function") >> whitespace? >> function_body
@@ -45,7 +45,7 @@ module Stone
       identifier.as(:identifier) >> str("(") >> argument_list >> str(")")
     }
     rule(:argument_list) {
-      (expression | block).as(:argument) >> (str(",") >> whitespace >> (expression | block).as(:argument)).repeat(0)
+      expression.as(:argument) >> (str(",") >> whitespace >> expression.as(:argument)).repeat(0)
     }
     rule(:operation) {
       unary_operation | binary_operation
@@ -90,10 +90,11 @@ module Stone
       text_operator | equality_operator | arithmetic_operator | comparison_operator | boolean_operator
     }
     rule(:binary_operand) {
-      unary_operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
+      # Would prefer `(block | binary_operation).absent? >> expression`, but that blows the stack.
+      function_call | unary_operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
     }
     rule(:unary_operand) {
-      literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
+      (block | operation).absent? >> expression
     }
     rule(:equality_operator) {
       str("==") | str("!=") | str("≠")

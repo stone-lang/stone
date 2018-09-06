@@ -2,6 +2,9 @@ ruby "2.5.1"
 
 source "https://rubygems.org"
 
+# Building
+gem "rubocop", "~>0.58", require: false
+
 # Specifications
 gem "kramdown"
 

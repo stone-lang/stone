@@ -3,6 +3,7 @@
 
 # Provide more details in output.
 AllCops:
+  TargetRubyVersion: 2.5
   DisplayCopNames: true
   DisplayStyleGuide: true
   ExtraDetails: true
@@ -168,5 +169,35 @@ Style/DoubleNegation:
   Enabled: false
 
 # Allow non-ASCII identifiers.
-Style/AsciiIdentifiers:
+Naming/AsciiIdentifiers:
+  Enabled: false
+
+
+## Exceptions.
+
+# Some of our classes are going to be long.
+Metrics/ClassLength:
+  Max: 250
+
+# Not sure why `∧` and `∨` are problematic, even after allowing non-ASCII identifiers.
+Naming/MethodName:
+  Exclude:
+  - src/extensions/boolean.rb
+
+# Allow some methods to get longer and more complex.
+Metrics/AbcSize:
+  Exclude:
+  - src/stone/ast/function_call.rb
+Metrics/CyclomaticComplexity:
+  Exclude:
+  - src/stone/ast/function_call.rb
+Metrics/PerceivedComplexity:
+  Exclude:
+  - src/stone/ast/function_call.rb
+Metrics/MethodLength:
+  Exclude:
+  - src/stone/verification/suite.rb
+
+# Disabling this only because it's breaking RuboCop (at least 0.53 to 0.58.2).
+Style/PercentLiteralDelimiters:
   Enabled: false

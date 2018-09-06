@@ -37,6 +37,14 @@ square(x) := function {
 }
 square(4)
 #= Number.Integer(16)
+
+sumofsquares(x, y) := function {
+    xx := x * x
+    yy := y * y
+    xx + yy
+}
+sumofsquares(3, 4)
+#= Number.Integer(25)
 ~~~
 
 Functions are first-class — you can pass a function to a function.

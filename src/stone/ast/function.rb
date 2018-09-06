@@ -25,7 +25,7 @@ module Stone
         parameters.zip(arguments).each do |param, arg|
           context[param] = arg
         end
-        body.evaluate(context)
+        body.map{ |x| x.evaluate(context) }.compact.last
       end
 
       def to_s

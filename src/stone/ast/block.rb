@@ -17,7 +17,7 @@ module Stone
 
       def call
         context = {} # TODO: Need scopes for this to work right. Verify that we should start a new context here.
-        body.evaluate(context)
+        body.map{ |x| x.evaluate(context) }.compact.last
       end
 
       def to_s

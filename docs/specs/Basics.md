@@ -64,8 +64,8 @@ The `if` function takes an optional 3rd argument, which acts as the `else` claus
 
 ~~~ stone
 if(TRUE, { 1 })
-#! Number.Integer(1)
+#= Number.Integer(1)
 
 if(2 < 1, { "2 is less than 1" }, { "2 is NOT less than 1" })
-#! Text("2 is NOT less than 1")
+#= Text("2 is NOT less than 1")
 ~~~

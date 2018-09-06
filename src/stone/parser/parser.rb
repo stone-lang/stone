@@ -36,7 +36,7 @@ module Stone
       str("{") >> (whitespace | eol).repeat(0) >> block_body.as(:block) >> (whitespace | eol).repeat(0) >> str("}")
     }
     rule(:block_body) {
-      (assignment | expression) >> (whitespace | eol).repeat(0)
+      ((assignment | expression) >> (whitespace | eol).repeat(0)).repeat(0)
     }
     rule!(:assignment) {
       identifier.as(:lvalue) >> whitespace >> str(":=") >> whitespace >> expression.as(:rvalue)

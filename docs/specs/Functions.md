@@ -38,3 +38,16 @@ square(x) := function {
 square(4)
 #= Number.Integer(16)
 ~~~
+
+Functions are first-class — you can pass a function to a function.
+
+~~~ stone
+add(x, y) := function {
+    x + y
+}
+apply(f, x, y) := function {
+    f(x, y)
+}
+apply(add, 1, 2)
+#= Number.Integer(3)
+~~~

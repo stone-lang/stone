@@ -15,10 +15,13 @@ module Stone
       (line | blank_line).repeat
     }
     rule(:line) {
-      whitespace? >> (assignment | function_definition | expression) >> whitespace? >> (eol | line_comment.present?)
+      whitespace? >> statement >> whitespace? >> (eol | line_comment.present?)
     }
     rule(:blank_line) {
       whitespace? >> line_comment.as(:comment).maybe >> eol
+    }
+    rule(:statement) {
+      assignment | function_definition | expression
     }
     rule(:expression) {
       function_call | operation | literal | variable_reference | block | parens(whitespace? >> expression >> whitespace?)
@@ -36,7 +39,7 @@ module Stone
       str("{") >> (whitespace | eol).repeat(0) >> block_body.as(:block) >> (whitespace | eol).repeat(0) >> str("}")
     }
     rule(:block_body) {
-      ((assignment | expression) >> (whitespace | eol).repeat(0)).repeat(0)
+      (statement >> (whitespace | eol).repeat(0)).repeat(1)
     }
     rule!(:assignment) {
       identifier.as(:lvalue) >> whitespace >> str(":=") >> whitespace >> expression.as(:rvalue)

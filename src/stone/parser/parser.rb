@@ -112,7 +112,7 @@ module Stone
       str("∧") | str("∨")
     }
     rule(:identifier) {
-      match["[:alpha:]"].repeat(1)
+      match["[:alpha:]_"] >> match["[:alnum:]_"].repeat(0)
     }
     rule(:whitespace) {
       (block_comment | (eol.absent? >> match('\s'))).repeat(1)

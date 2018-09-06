@@ -38,12 +38,12 @@ square(x) := function {
 square(4)
 #= Number.Integer(16)
 
-sumofsquares(x, y) := function {
+sum_of_squares(x, y) := function {
     xx := x * x
     yy := y * y
     xx + yy
 }
-sumofsquares(3, 4)
+sum_of_squares(3, 4)
 #= Number.Integer(25)
 ~~~
 

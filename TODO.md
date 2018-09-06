@@ -25,9 +25,12 @@ TODO
     - [ ] Handle syntax errors gracefully
         - [ ] Handle specific issues users will likely encounter
             - [ ] No space around operators
-- [ ] Run checks before commits
-    - [ ] Make sure all specs are passing
-    - [ ] RuboCop
+            - [ ] Using `=` instead of `:=` or `==`
+- [x] Run checks before commits
+    - [x] Make sure all specs are passing
+    - [x] RuboCop
+    - [ ] Bundler audit (for vulnerable gem versions)
+    - [ ] Code smell analyzer -  RubyCritic
 - [ ] Compile to LLVM
 - [ ] REPL
 - [ ] Static type tracking/checking

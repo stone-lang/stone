@@ -2,10 +2,17 @@ GEM
   remote: https://rubygems.org/
   specs:
     ast (2.4.0)
+    childprocess (0.9.0)
+      ffi (~> 1.0, >= 1.0.11)
     coderay (1.1.2)
+    ffi (1.9.25)
+    iniparse (1.4.4)
     jaro_winkler (1.5.1)
     kramdown (1.17.0)
     method_source (0.9.0)
+    overcommit (0.46.0)
+      childprocess (~> 0.6, >= 0.6.3)
+      iniparse (~> 1.4)
     parallel (1.12.1)
     parser (2.5.1.2)
       ast (~> 2.4.0)
@@ -31,6 +38,7 @@ PLATFORMS
 
 DEPENDENCIES
   kramdown
+  overcommit
   parslet
   pry
   rubocop (~> 0.58)

@@ -1,0 +1,37 @@
+gemfile: Gemfile
+
+
+PreCommit:
+
+  ALL:
+    on_warn: fail
+
+  BundleCheck:
+    enabled: true
+
+  RuboCop:
+    enabled: true
+    command: ["bundle", "exec", "rubocop"]
+
+  YamlSyntax:
+    enabled: true
+
+  CustomScript:
+    enabled: true
+    description: "Verify specs all pass"
+    command: ["make", "verify-specs"]
+
+
+CommitMsg:
+
+  HardTabs:
+    enabled: true
+
+  RussianNovel:
+    enabled: true
+
+
+PrePush:
+
+  ProtectedBranches:
+    enabled: true

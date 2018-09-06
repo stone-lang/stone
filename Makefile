@@ -3,7 +3,7 @@ BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
 
 
 verify-specs: bundle
-	bundle exec bin/verify-specs
+	bin/stone verify docs/specs/*.md
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)

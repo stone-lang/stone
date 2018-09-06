@@ -35,6 +35,8 @@ Running
 Binaries are located in the `bin` directory:
 
 * `stone` - the main executable
+    * `stone eval` - output the result of each top-level expression
+    * `stone verify` - check that results of top-level expressions match expectations in comments
 
 
 License

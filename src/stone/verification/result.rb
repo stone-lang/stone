@@ -4,19 +4,19 @@ module Stone
 
     class Result
 
-      attr_reader :code, :expected, :actual, :exception, :expecting_exception
+      attr_reader :code, :expected, :actual, :error, :expecting_error
 
-      def initialize(code, expected, actual, exception = nil, expecting_exception: false)
+      def initialize(code, expected, actual, error = nil, expecting_error: false)
         @code = code
         @expected = expected
         @actual = actual
-        @exception = exception
-        @expecting_exception = expecting_exception
+        @error = error
+        @expecting_error = expecting_error
       end
 
       def success?
-        if expecting_exception
-          expected == exception
+        if expecting_error
+          expected == error
         else
           expected == actual
         end

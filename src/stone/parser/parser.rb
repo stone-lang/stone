@@ -18,7 +18,7 @@ module Stone
       whitespace? >> (assignment | function_definition | expression) >> whitespace? >> (eol | line_comment.present?)
     }
     rule(:blank_line) {
-      whitespace? >> line_comment.maybe.as(:comment) >> eol
+      whitespace? >> line_comment.as(:comment).maybe >> eol
     }
     rule(:expression) {
       function_call | operation | literal | variable_reference | block | parens(whitespace? >> expression >> whitespace?)

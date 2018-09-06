@@ -17,9 +17,7 @@ These are actually values defined on the `Boolean` class, but they're also expos
 ~~~ stone
 TRUE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 FALSE
 #= Boolean(Boolean.FALSE)
 ~~~
@@ -40,46 +38,30 @@ We normally specify integers in decimal format:
 ~~~
 
 We can specify negative numbers, by prefixing with the `-` character.
+We can also include an optional `+` prefix.
+Leading zeros are allowed.
 
-NOTE: The `-` prefix is part of the integer literal; there is no unary `-` operator.
+NOTE: The `-` and `+` prefixes are part of the integer literal; there is no unary `-` or `+` operator.
 
 ~~~ stone
 -123
 #= Number.Integer(-123)
-~~~
 
-We can also include an optional `+` prefix:
-
-~~~ stone
 +123
 #= Number.Integer(123)
-~~~
 
-Leading zeros are allowed:
-
-~~~ stone
 00123
 #= Number.Integer(123)
-~~~
 
-Note that negative and positive 0 give the same result:
-
-~~~ stone
 0
 #= Number.Integer(0)
-~~~
 
-~~~ stone
 00000
 #= Number.Integer(0)
-~~~
 
-~~~ stone
 -0
 #= Number.Integer(0)
-~~~
 
-~~~ stone
 +0
 #= Number.Integer(0)
 ~~~
@@ -96,29 +78,19 @@ These are prefixed with `0b`, `0o`, and `0x`, respectively:
 ~~~ stone
 0b10011001
 #= Number.Integer(153)
-~~~
 
-~~~ stone
 -0b0000
 #= Number.Integer(0)
-~~~
 
-~~~ stone
 0o644
 #= Number.Integer(420)
-~~~
 
-~~~ stone
 -0o1234567
 #= Number.Integer(-342391)
-~~~
 
-~~~ stone
 0xDEADBEEF
 #= Number.Integer(3735928559)
-~~~
 
-~~~ stone
 -0xface
 #= Number.Integer(-64206)
 ~~~
@@ -133,19 +105,13 @@ Text is enclosed in double quotes:
 ~~~ stone
 "abc"
 #= Text("abc")
-~~~
 
-~~~ stone
 ""
 #= Text("")
-~~~
 
-~~~ stone
 "#10 Downing Street"
 #= Text("#10 Downing Street")
-~~~
 
-~~~ stone
 "We do block comments /* like this */"
 #= Text("We do block comments /* like this */")
 ~~~

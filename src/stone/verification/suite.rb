@@ -8,45 +8,21 @@ module Stone
 
     class Suite
 
-      ALL_SPEC_FILES = Dir["docs/specs/*.md"].reject{ |f| /README/.match(f) }
+      attr_accessor :results
 
-      attr_reader :results
-
-      def self.run
-        new.run
+      def initialize
+        @results = []
       end
 
-      def run
-        run_all_specs
+      def run(source_code)
+        self.results += process_ast(source_code, yield).compact
+      end
+
+      def complete
         print_results
       end
 
     private
-
-      def run_all_specs
-        @results = ALL_SPEC_FILES.flat_map{ |f| run_specs_in_file(f) }
-      end
-
-      def run_specs_in_file(file)
-        specs_in_file(file).map(&:value).map{ |code| run_spec(code) }
-      end
-
-      def run_spec(code)
-        Stone::Verification::Spec.new(code).run.tap { |result| print_result(result) }
-      end
-
-      def specs_in_file(file)
-        markdown = Kramdown::Document.new(File.read(file))
-        markdown.root.children.select{ |e| e.type == :codeblock && e.options[:lang] == "stone" }
-      end
-
-      def print_result(result)
-        if result.success?
-          print "."
-        else
-          print "F"
-        end
-      end
 
       def print_results
         puts
@@ -55,11 +31,14 @@ module Stone
       end
 
       def print_failures
+        return if failures.empty?
+        puts "\nFailed specs:\n\n"
         failures.each do |failure|
           puts failure.code
           puts "    Expected: #{failure.expected}"
           puts "    Actual:   #{failure.actual}"
         end
+        puts
       end
 
       def failures
@@ -68,6 +47,32 @@ module Stone
 
       def successes
         @successes ||= results.select(&:success?)
+      end
+
+      def process_ast(source_code, ast)
+        last_comment = nil
+        top_context = {}
+        last_node = nil
+        last_result = nil
+        ast.map{ |node|
+          if node.is_a?(Stone::AST::Comment)
+            spec = Stone::Verification::Spec.new(code_between(source_code, node, last_comment), node, last_result)
+            last_comment = node
+            spec.run.tap { |result| spec.print_result(result) unless result.nil? }
+          else
+            last_node = node
+            last_result = node.evaluate(top_context)
+            nil
+          end
+        }
+      end
+
+      def code_between(source_code, comment, last_comment)
+        if last_comment.nil?
+          source_code.split("\n")[0..(comment.source_line - 2)].join("\n")
+        else
+          source_code.split("\n")[last_comment.source_line..(comment.source_line - 2)].join("\n")
+        end
       end
 
     end

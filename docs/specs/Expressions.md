@@ -23,9 +23,7 @@ Operators may be repeated:
 ~~~ stone
 1 + 2 + 3
 #= Number.Integer(6)
-~~~
 
-~~~ stone
 2 * 3 * 4
 #= Number.Integer(24)
 ~~~
@@ -41,14 +39,10 @@ Most importantly, operator precedence adds complexity to what you have to learn 
 ~~~ stone
 1 + 2 * 3
 #! MixedOperatorsError: Add parentheses where appropriate
-~~~
 
-~~~ stone
 (1 + 2) * 3
 #= Number.Integer(9)
-~~~
 
-~~~ stone
 1 + (2 * 3)
 #= Number.Integer(7)
 ~~~
@@ -58,19 +52,13 @@ There are only a few exceptions to the mixed operators rule:
 ~~~ stone
 1 + 2 - 3
 #= Number.Integer(0)
-~~~
 
-~~~ stone
 1 - 2 + 3 - 4
 #= Number.Integer(-2)
-~~~
 
-~~~ stone
 1 < 2 <= 3
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 3 >= 4 > 3
 #= Boolean(Boolean.FALSE)
 ~~~
@@ -83,49 +71,31 @@ Stone has the normal infix operators that you'd expect for equality and inequali
 ~~~ stone
 TRUE == TRUE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 TRUE != FALSE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 123 == 123
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 123 != 123
 #= Boolean(Boolean.FALSE)
-~~~
 
-~~~ stone
 123 != 456
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 "yes" != "Yes"
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 "Yes" == "Yes"
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 FALSE == 123
 #= Boolean(Boolean.FALSE)
-~~~
 
-~~~ stone
 "123" == 123
 #= Boolean(Boolean.FALSE)
-~~~
 
-~~~ stone
 "123" ≠ 123
 #= Boolean(Boolean.TRUE)
 ~~~
@@ -134,75 +104,48 @@ FALSE == 123
 ### Comparison Operators
 
 Stone has the normal infix operators that you'd expect for greater-than and less-than.
-
-~~~ stone
-1 < 2
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-2 <= 2
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-2 <= 3
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-1 > 2
-#= Boolean(Boolean.FALSE)
-~~~
-
-~~~ stone
-2 >= 2
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-3 >= 2
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-1 < 2
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-2 <= 2
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-2 ≤ 2
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-1 ≥ 2
-#= Boolean(Boolean.FALSE)
-~~~
-
-~~~ stone
-"abc" <= "abc"
-#= Boolean(Boolean.TRUE)
-~~~
-
-~~~ stone
-"abc" <= "abcd"
-#= Boolean(Boolean.TRUE)
-~~~
-
 One thing that's relatively unique to Stone is that you can chain comparison operators.
 
 ~~~ stone
+1 < 2
+#= Boolean(Boolean.TRUE)
+
+2 <= 2
+#= Boolean(Boolean.TRUE)
+
+2 <= 3
+#= Boolean(Boolean.TRUE)
+
+1 > 2
+#= Boolean(Boolean.FALSE)
+
+2 >= 2
+#= Boolean(Boolean.TRUE)
+
+3 >= 2
+#= Boolean(Boolean.TRUE)
+
+1 < 2
+#= Boolean(Boolean.TRUE)
+
+2 <= 2
+#= Boolean(Boolean.TRUE)
+
+2 ≤ 2
+#= Boolean(Boolean.TRUE)
+
+1 ≥ 2
+#= Boolean(Boolean.FALSE)
+
+"abc" <= "abc"
+#= Boolean(Boolean.TRUE)
+
+"abc" <= "abcd"
+#= Boolean(Boolean.TRUE)
+
 1 < 2 < 3
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 3 >= 3 >= 2
 #= Boolean(Boolean.TRUE)
 ~~~
@@ -215,29 +158,22 @@ Stone has the normal infix numeric operators that you'd expect for addition, sub
 ~~~ stone
 1 + 2
 #= Number.Integer(3)
-~~~
 
-~~~ stone
 1 - 2
 #= Number.Integer(-1)
-~~~
 
-~~~ stone
 2 * 3
 #= Number.Integer(6)
 ~~~
 
 Stone is perhaps unique in having symbolic minimum and maximum operators.
 The `<!` operator returns the minimum of the operands.
+The `>!` operator returns the maximum of the operands.
 
 ~~~ stone
 2 <! 3
 #= Number.Integer(2)
-~~~
 
-The `>!` operator returns the maximum of the operands.
-
-~~~ stone
 2 >! 6 >! 1
 #= Number.Integer(6)
 ~~~
@@ -247,45 +183,30 @@ The `>!` operator returns the maximum of the operands.
 
 The simplest operation we can perform is Boolean negation (usually pronounced "not").
 This is done using the `!` character as a unary prefix operator.
+The `¬` (Unicode "not sign") may also be used.
 
 ~~~ stone
 !TRUE
 #= Boolean(Boolean.FALSE)
-~~~
 
-~~~ stone
 !FALSE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 !!TRUE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 !!FALSE
 #= Boolean(Boolean.FALSE)
-~~~
 
-The `¬` (Unicode "not sign") may also be used:
-
-~~~ stone
 ¬TRUE
 #= Boolean(Boolean.FALSE)
-~~~
 
-~~~ stone
 ¬FALSE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 ¬¬TRUE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 !¬TRUE
 #= Boolean(Boolean.TRUE)
 ~~~
@@ -296,14 +217,10 @@ You can use the Unicode `∧` and `∨` symbols:
 ~~~ stone
 TRUE ∧ FALSE
 #= Boolean(Boolean.FALSE)
-~~~
 
-~~~ stone
 TRUE ∨ FALSE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 (4 > 2) ∧ (6 <= 3)
 #= Boolean(Boolean.FALSE)
 ~~~
@@ -314,14 +231,10 @@ Or you can use `+` for "or" and `*` (or `×` or `·`) for "and".
 ~~~ stone
 TRUE * FALSE
 #= Boolean(Boolean.FALSE)
-~~~
 
-~~~ stone
 TRUE + FALSE
 #= Boolean(Boolean.TRUE)
-~~~
 
-~~~ stone
 (4 > 2) × (6 <= 3)
 #= Boolean(Boolean.FALSE)
 ~~~
@@ -336,9 +249,8 @@ We can use the `++` operator to concatenate strings.
 ~~~ stone
 "abc" ++ "def"
 #= Text("abcdef")
-~~~
 
-~~~ stone
+
 "abc" ++ "def" ++ "ghi"
 #= Text("abcdefghi")
 ~~~

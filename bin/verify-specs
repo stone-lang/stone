@@ -1,8 +1,0 @@
-#! /usr/bin/env bundle exec ruby
-
-
-$LOAD_PATH << "src"
-require "stone/verification/suite"
-
-
-Stone::Verification::Suite.run

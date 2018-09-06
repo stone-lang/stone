@@ -15,9 +15,10 @@ TODO
 - [ ] Point domain at GitHub pages
 - [x] Write first specification
 - [x] Automate testing of specifications
-    - [ ] Allow testing of more than 1 result per code block
+    - [x] Allow testing of more than 1 result per code block
     - [x] Show progress
-    - [ ] Allow debugging
+    - [x] Allow debugging
+    - [ ] Add some colorization
 - [ ] Add design docs
 - [x] Start on parser and grammar
     - [x] Look into various choices for parsing
@@ -28,9 +29,12 @@ TODO
     - [ ] Make sure all specs are passing
     - [ ] RuboCop
 - [ ] Compile to LLVM
+- [ ] REPL
 - [ ] Static type tracking/checking
     - [ ] Complex types
 - [ ] Self-hosting compiler (this one is WAY off)
+- [ ] Docs via `--help`
+- [ ] Manual page
 
 
 Specifications

@@ -9,49 +9,41 @@ module Stone
 
     class Spec
 
-      attr_reader :code_block
+      attr_reader :code
+      attr_reader :comment
+      attr_reader :actual_result
 
-      def initialize(code_block)
-        @code_block = code_block
+      def initialize(code, comment, actual_result)
+        @code = code
+        @comment = comment.to_s
+        @actual_result = actual_result.to_s
       end
 
       def run
-        fail "Didn't find a recognizable expected result in code block:\n#{code}" unless expected_result || expected_exception
-        Result.new(code, expected_result || expected_exception, actual_result, actual_exception, expecting_exception: expected_exception)
+        return nil unless expected_result || expected_error
+        Result.new(code, expected_result || expected_error, actual_result, actual_error, expecting_error: expected_error)
+      end
+
+      def print_result(result)
+        if result.success?
+          print "."
+        else
+          print "F"
+        end
       end
 
     private
 
-      def actual_result
-        @actual_result ||= Tempfile.open("example.stone") { |file|
-          file.write(code)
-          file.fsync
-          %x[bin/stone eval #{file.path} 2>/dev/null].chomp
-        }
-      end
-
-      def actual_exception
-        actual_result unless $CHILD_STATUS&.exitstatus&.zero?
-      end
-
-      def lines
-        @lines ||= code_block.split("\n")
-      end
-
-      def expectation
-        @expectation ||= lines.last
+      def actual_error
+        actual_result
       end
 
       def expected_result
-        expectation.sub(/\A#=\s+/, "") if expectation.match?(/\A#=\s+/)
+        comment.sub(/\A#=\s+/, "") if comment.match?(/\A#=\s+/)
       end
 
-      def expected_exception
-        expectation.sub(/\A#!\s+/, "") if expectation.match?(/\A#!\s+/)
-      end
-
-      def code
-        lines[0..-2].join("\n")
+      def expected_error
+        comment.sub(/\A#!\s+/, "") if comment.match?(/\A#!\s+/)
       end
 
     end

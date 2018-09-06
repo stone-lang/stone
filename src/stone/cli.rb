@@ -34,6 +34,12 @@ module Stone
 
   private
 
+    def run_parse
+      each_input_file do |input|
+        puts parse(input)
+      end
+    end
+
     def run_eval
       each_input_file do |input|
         top_context = {}

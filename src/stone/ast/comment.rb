@@ -6,8 +6,9 @@ module Stone
 
       attr_reader :text
 
-      def initialize(text)
-        @text = text
+      def initialize(comment_text_slice)
+        @source_location = comment_text_slice.line_and_column
+        @text = comment_text_slice.to_s
       end
 
       def type

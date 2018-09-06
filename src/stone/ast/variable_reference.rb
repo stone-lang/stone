@@ -7,6 +7,7 @@ module Stone
       attr_reader :name
 
       def initialize(name)
+        @source_location = name.line_and_column
         @name = name.to_s.to_sym
       end
 

@@ -9,6 +9,7 @@ module Stone
       attr_reader :body
 
       def initialize(name, parameters, body)
+        @source_location = name.line_and_column
         @name = name.to_s.to_sym
         @body = body
         @parameters = parameters.map(&:to_sym)
@@ -21,7 +22,9 @@ module Stone
 
       def call(arguments)
         context = {}
-        parameters.zip(arguments).each{ |param, arg| context[param] = arg }
+        parameters.zip(arguments).each do |param, arg|
+          context[param] = arg
+        end
         body.evaluate(context)
       end
 

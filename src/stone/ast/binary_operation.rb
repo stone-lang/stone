@@ -62,6 +62,7 @@ module Stone
       attr_reader :operands
 
       def initialize(operators, operands)
+        @source_location = operands.first.source_location
         @operators = operators.map(&:to_s).map{ |o| OPERATOR_MAP.fetch(o){ o } }
         @operator = @operators.first
         @operands = operands

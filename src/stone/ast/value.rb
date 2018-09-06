@@ -9,8 +9,9 @@ module Stone
 
       attr_reader :value
 
-      def initialize(parslet_slice)
-        @value = parslet_slice.to_s
+      def initialize(slice_or_string)
+        @source_location = get_source_location(slice_or_string)
+        @value = slice_or_string.to_s
         normalize!
       end
 

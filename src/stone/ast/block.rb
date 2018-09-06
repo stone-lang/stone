@@ -7,6 +7,7 @@ module Stone
       attr_reader :body
 
       def initialize(body)
+        @source_location = get_source_location(body)
         @body = body
       end
 

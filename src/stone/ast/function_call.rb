@@ -10,6 +10,7 @@ module Stone
       attr_reader :arguments
 
       def initialize(name, arguments)
+        @source_location = name.line_and_column
         @name = name.to_s.to_sym
         @arguments = arguments
       end

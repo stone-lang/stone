@@ -11,6 +11,7 @@ module Stone
       attr_reader :operand
 
       def initialize(operator, operand)
+        @source_location = operator.line_and_column
         @operator = operator.to_s
         @operand = operand
         @operands = [operand] # Keep parent class happy.

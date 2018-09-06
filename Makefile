@@ -2,10 +2,11 @@ SHELL := /bin/bash
 BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
 
 
+verify-specs: bundle
+	bin/stone verify docs/specs/*.md
+
 setup: .git/hooks/overcommit-hook
 
-verify-specs: bundle setup
-	bin/stone verify docs/specs/*.md
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)

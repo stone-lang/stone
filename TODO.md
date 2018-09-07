@@ -85,7 +85,7 @@ Specifications
 - [x] Variables
     - [x] Assignment
     - [x] Referencing
-    - [ ] References to enclosing scopes
+    - [x] References to enclosing scopes
 - [ ] Functions
     - [x] Function definition
     - [x] Function call

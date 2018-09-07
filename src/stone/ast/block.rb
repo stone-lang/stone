@@ -15,8 +15,8 @@ module Stone
         self
       end
 
-      def call
-        context = {} # TODO: Need scopes for this to work right. Verify that we should start a new context here.
+      def call(parent_context)
+        context = Hash.new{ |_h, k| parent_context[k] }
         body.map{ |x| x.evaluate(context) }.compact.last
       end
 

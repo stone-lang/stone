@@ -20,8 +20,8 @@ module Stone
         nil
       end
 
-      def call(arguments)
-        context = {}
+      def call(parent_context, arguments)
+        context = Hash.new{ |_h, k| parent_context[k] }
         parameters.zip(arguments).each do |param, arg|
           context[param] = arg
         end

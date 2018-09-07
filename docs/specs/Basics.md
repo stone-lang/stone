@@ -51,6 +51,10 @@ a
 
 b
 #! UndefinedVariable: b
+
+c := "Hello"
+if(TRUE, { c })
+#= Text("Hello")
 ~~~
 
 

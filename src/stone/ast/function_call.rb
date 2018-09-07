@@ -24,9 +24,9 @@ module Stone
         return error?(evaluated_arguments) if error?(evaluated_arguments)
         if context[name].is_a?(Function)
           # TODO: Check arity and types.
-          context[name].call(evaluated_arguments)
+          context[name].call(context, evaluated_arguments)
         elsif builtin_function?(name)
-          call_builtin_function(name, evaluated_arguments)
+          call_builtin_function(name, context, evaluated_arguments)
         else
           Error.new("UnknownFunction", name)
         end
@@ -39,35 +39,35 @@ module Stone
         BUILTIN_FUNCTIONS.include?(name)
       end
 
-      def call_builtin_function(name, evaluated_arguments)
+      def call_builtin_function(name, context, evaluated_arguments)
         name = :iff if name == :if
-        __send__(name, evaluated_arguments)
+        __send__(name, context, evaluated_arguments)
       end
 
-      def iff(args)
+      def iff(context, args)
         return Error.new("ArityError", "expecting 2 or 3 arguments, got #{args.size}") unless [2, 3].include?(args.size)
         condition, consequent, alternative = args
         return Error.new("TypeError", "`if` condition must be a Boolean") unless condition.is_a?(Boolean)
         return Error.new("TypeError", "`if` consequent (`then`) must be a block") unless consequent.is_a?(Block)
         return Error.new("TypeError", "`if` alternative (`else`) must be a block") unless alternative.is_a?(Block) || alternative.nil?
         if condition.value
-          consequent.call
+          consequent.call(context)
         elsif alternative
-          alternative.call
+          alternative.call(context)
         end
       end
 
-      def identity(args)
+      def identity(_context, args)
         return Error.new("ArityError", "expecting 1 argument, got #{args.size}") unless args.size == 1
         args.first
       end
 
-      def min(args)
+      def min(_context, args)
         # TODO: Check types.
         Integer.new(args.map(&:value).min)
       end
 
-      def max(args)
+      def max(_context, args)
         # TODO: Check types.
         Integer.new(args.map(&:value).max)
       end

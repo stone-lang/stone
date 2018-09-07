@@ -40,6 +40,7 @@ We normally specify integers in decimal format:
 We can specify negative numbers, by prefixing with the `-` character.
 We can also include an optional `+` prefix.
 Leading zeros are allowed.
+Underscores are allowed between digits to enhance readability.
 
 NOTE: The `-` and `+` prefixes are part of the integer literal; there is no unary `-` or `+` operator.
 
@@ -64,6 +65,9 @@ NOTE: The `-` and `+` prefixes are part of the integer literal; there is no unar
 
 +0
 #= Number.Integer(0)
+
+1_000_000
+#= Number.Integer(1000000)
 ~~~
 
 Stone allows arbitrarily large numbers. The only limits are memory and computation time.
@@ -73,7 +77,8 @@ TODO: Arbitrary-precision numbers are not yet fully implemented; add specs when 
 ### Binary, Octal, and Hexadecimal Integers
 
 Integers may also be expressed in binary, octal, or hexadecimal.
-These are prefixed with `0b`, `0o`, and `0x`, respectively:
+These are prefixed with `0b`, `0o`, and `0x`, respectively.
+Like decimals, underscores are allowed between digits.
 
 ~~~ stone
 0b10011001
@@ -82,13 +87,22 @@ These are prefixed with `0b`, `0o`, and `0x`, respectively:
 -0b0000
 #= Number.Integer(0)
 
+0b00000000_00000001_11110110_00000000
+#= Number.Integer(128512)
+
 0o644
 #= Number.Integer(420)
 
 -0o1234567
 #= Number.Integer(-342391)
 
+0o11_644
+#= Number.Integer(5028)
+
 0xDEADBEEF
+#= Number.Integer(3735928559)
+
+0xDEAD_BEEF
 #= Number.Integer(3735928559)
 
 -0xface

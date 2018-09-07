@@ -75,16 +75,16 @@ module Stone
       binary_operand.as(:operand) >> (whitespace >> binary_operator.as(:operator) >> whitespace >> binary_operand.as(:operand)).repeat(1) >> whitespace?
     }
     rule(:decimal_integer) {
-      match["+-"].maybe >> match["0-9"].repeat(1)
+      match["+-"].maybe >> match["0-9_"].repeat(1)
     }
     rule(:hexadecimal_integer) {
-      match["+-"].maybe >> str("0x") >> match["0-9a-fA-F"].repeat(1)
+      match["+-"].maybe >> str("0x") >> match["[:xdigit:]"] >> match["[:xdigit:]_"].repeat(0)
     }
     rule(:octal_integer) {
-      match["+-"].maybe >> str("0o") >> match["0-7"].repeat(1)
+      match["+-"].maybe >> str("0o") >> match["0-7"] >> match["0-7_"].repeat(0)
     }
     rule(:binary_integer) {
-      match["+-"].maybe >> str("0b") >> match["0-1"].repeat(1)
+      match["+-"].maybe >> str("0b") >> match["0-1"] >> match["0-1_"].repeat(0)
     }
     rule(:unary_operator) {
       match["!¬"]

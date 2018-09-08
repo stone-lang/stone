@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class List < Value
+    class List < Object
 
       def initialize(slice_or_string_or_list, type_specifier: Any)
         if slice_or_string_or_list.is_a?(Array)
@@ -11,6 +11,7 @@ module Stone
           super(slice_or_string_or_list)
         end
         @type_specifier = type_specifier
+        set_properties!
       end
 
       def type
@@ -27,6 +28,14 @@ module Stone
 
       def normalize!
         @value = @value.split(/,\s*/) if @value.is_a?(String)
+      end
+
+      def set_properties!
+        @properties = {
+          size: Integer.new(@value.size),
+          length: Integer.new(@value.size),
+          empty?: Boolean.new(@value.size.zero?)
+        }
       end
 
       def to_s

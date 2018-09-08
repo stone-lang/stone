@@ -28,3 +28,28 @@ List(1, 1 + 1, 1 + 1 + 1)
 List(1, "abc", FALSE)
 #= List[Any](Number.Integer(1), Text("abc"), Boolean(Boolean.FALSE))
 ~~~
+
+
+### List Properties
+
+You can query a List for several properties, including the size/length of the list,
+and whether it is empty.
+
+~~~ stone
+list := List(1, 2, 3)
+empty := List()
+
+list.length
+#= Number.Integer(3)
+list.size
+#= Number.Integer(3)
+list.empty?
+#= Boolean(Boolean.FALSE)
+
+empty.length
+#= Number.Integer(0)
+empty.size
+#= Number.Integer(0)
+empty.empty?
+#= Boolean(Boolean.TRUE)
+~~~

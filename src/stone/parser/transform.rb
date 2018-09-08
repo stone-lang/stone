@@ -27,6 +27,9 @@ module Stone
       arguments = arguments.map{ |a| a.is_a?(Hash) && a.has_key?(:block) ? AST::Block.new(a[:block]) : a }
       AST::FunctionCall.new(identifier, arguments)
     }
+    rule(property_access: {object: simple(:object), property: simple(:property)}) {
+      AST::PropertyAccess.new(object, property)
+    }
     rule(function_definition: subtree(:s)) {
       name = s[:name]
       params = [s[:parameter_list]].flatten.map{ |p| p[:parameter].to_s }

@@ -100,7 +100,7 @@ Specifications
     - [ ] Class definition
     - [ ] Class instantiation
     - [ ] Property definition
-    - [ ] Property access
+    - [x] Property access
     - [ ] Computed property definition
     - [ ] Computed property access
     - [ ] Class method definition

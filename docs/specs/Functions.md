@@ -59,3 +59,15 @@ apply(f, x, y) := function {
 apply(add, 1, 2)
 #= Number.Integer(3)
 ~~~
+
+Functions can implement recursion.
+
+~~~ stone
+fib(n) := function {
+    if(n < 2, { n }, { fib(n - 1) + fib(n - 2) })
+}
+fib(1)
+#= Number.Integer(1)
+fib(11)
+#= Number.Integer(89)
+~~~

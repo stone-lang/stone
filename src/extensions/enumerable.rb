@@ -4,7 +4,13 @@ module Enumerable
 
   # Allow Scheme-style `rest`.
   def rest(count = 1)
-    self.drop(count)
+    drop(count)
+  end
+
+  # Allow Scheme-style `tail`.
+  def tail
+    return self if size.zero?
+    last(size - 1)
   end
 
   # Returns `true` iff all the elements are equal. Returns `false` if there are no elements.

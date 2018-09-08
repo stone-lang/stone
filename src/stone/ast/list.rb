@@ -1,3 +1,6 @@
+require "extensions/enumerable"
+
+
 module Stone
 
   module AST
@@ -33,13 +36,18 @@ module Stone
         @properties ||= {
           size: Integer.new(@value.size),
           length: Integer.new(@value.size),
-          empty?: Boolean.new(@value.size.zero?)
+          empty?: Boolean.new(@value.size.zero?),
+          first: @value.first,
+          head: @value.first,
+          last: @value.last,
+          rest: List.new(@value.rest),
+          tail: List.new(@value.tail),
         }
       end
 
       def methods
         @methods ||= {
-          includes?: ->(element) { Boolean.new(@value.map(&:value).include?(element.value)) }
+          includes?: ->(element) { Boolean.new(@value.map(&:value).include?(element.value)) },
         }
       end
 

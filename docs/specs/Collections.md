@@ -60,6 +60,28 @@ empty.empty?
 
 ~~~ stone
 list := List(1, 2, 3)
+
+list.first
+#= Number.Integer(1)
+
+list.head
+#= Number.Integer(1)
+
+list.last
+#= Number.Integer(3)
+
+list.rest
+#= List[Number.Integer](Number.Integer(2), Number.Integer(3))
+
+list.tail
+#= List[Number.Integer](Number.Integer(2), Number.Integer(3))
+~~~
+
+
+### List Methods
+
+~~~ stone
+list := List(1, 2, 3)
 empty := List()
 
 list.includes?(1)

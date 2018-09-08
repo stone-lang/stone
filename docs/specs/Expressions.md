@@ -164,6 +164,9 @@ Stone has the normal infix numeric operators that you'd expect for addition, sub
 
 2 * 3
 #= Number.Integer(6)
+
+identity(1) + identity(2)
+#= Number.Integer(3)
 ~~~
 
 Stone is perhaps unique in having symbolic minimum and maximum operators.

@@ -51,7 +51,7 @@ module Stone
     rule!(:function_call) {
       identifier.as(:identifier) >> str("(") >> argument_list.maybe >> str(")")
     }
-    rule(:argument_list) {
+    rule!(:argument_list) {
       expression.as(:argument) >> (str(",") >> whitespace >> expression.as(:argument)).repeat(0)
     }
     rule(:operation) {

@@ -43,6 +43,8 @@ module Stone
 end
 
 
+require "stone/ast/type"
+
 require "stone/ast/comment"
 require "stone/ast/value"
 require "stone/ast/operation"

@@ -4,7 +4,7 @@ module Stone
 
     class FunctionCall < Base
 
-      BUILTIN_FUNCTIONS = %i[iff identity min max]
+      BUILTIN_FUNCTIONS = %i[if identity min max List]
 
       attr_reader :name
       attr_reader :arguments
@@ -35,16 +35,18 @@ module Stone
     private
 
       def builtin_function?(name)
-        name = :iff if name == :if
         BUILTIN_FUNCTIONS.include?(name)
       end
 
       def call_builtin_function(name, context, evaluated_arguments)
-        name = :iff if name == :if
-        __send__(name, context, evaluated_arguments)
+        __send__("builtin_#{name}".to_sym, context, evaluated_arguments)
       end
 
-      def iff(context, args)
+      def builtin_List(_context, args)
+        List.new(args)
+      end
+
+      def builtin_if(context, args)
         return Error.new("ArityError", "expecting 2 or 3 arguments, got #{args.size}") unless [2, 3].include?(args.size)
         condition, consequent, alternative = args
         return Error.new("TypeError", "`if` condition must be a Boolean") unless condition.is_a?(Boolean)
@@ -57,17 +59,17 @@ module Stone
         end
       end
 
-      def identity(_context, args)
+      def builtin_identity(_context, args)
         return Error.new("ArityError", "expecting 1 argument, got #{args.size}") unless args.size == 1
         args.first
       end
 
-      def min(_context, args)
+      def builtin_min(_context, args)
         # TODO: Check types.
         Integer.new(args.map(&:value).min)
       end
 
-      def max(_context, args)
+      def builtin_max(_context, args)
         # TODO: Check types.
         Integer.new(args.map(&:value).max)
       end

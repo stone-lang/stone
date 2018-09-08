@@ -36,3 +36,5 @@ end
 require "stone/ast/boolean"
 require "stone/ast/integer"
 require "stone/ast/text"
+
+require "stone/ast/list"

@@ -116,6 +116,13 @@ Specifications
 - [ ] Collections
     - [ ] Pair
     - [ ] List
+        - [x] Creation
+        - [ ] Basics (empty?, includes?, size/length)
+        - [ ] Access (first/head/take, rest/tail/drop, last)
+        - [ ] Iteration (map/each/fold/foldl)
+        - [ ] Reducing (reduce/inject)
+        - [ ] Re-ordering (reversed, sorted)
+        - [ ] Misc (slice, split, join, ...)
     - [ ] Map
 - [ ] Types
     - [ ] Annotations

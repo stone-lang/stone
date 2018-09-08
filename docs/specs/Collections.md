@@ -16,6 +16,9 @@ If the values in the List are all of different types, the type specifier will by
 You won't normally need to explicitly include the type specifier, but you'll see it in output.
 
 ~~~ stone
+List()
+#= List[Any]()
+
 List(1, 2, 3)
 #= List[Number.Integer](Number.Integer(1), Number.Integer(2), Number.Integer(3))
 

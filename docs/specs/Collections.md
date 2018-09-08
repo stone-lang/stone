@@ -41,15 +41,33 @@ empty := List()
 
 list.length
 #= Number.Integer(3)
+
 list.size
 #= Number.Integer(3)
+
 list.empty?
 #= Boolean(Boolean.FALSE)
 
 empty.length
 #= Number.Integer(0)
+
 empty.size
 #= Number.Integer(0)
+
 empty.empty?
 #= Boolean(Boolean.TRUE)
+~~~
+
+~~~ stone
+list := List(1, 2, 3)
+empty := List()
+
+list.includes?(1)
+#= Boolean(Boolean.TRUE)
+
+list.includes?(9)
+#= Boolean(Boolean.FALSE)
+
+empty.includes?(1)
+#= Boolean(Boolean.FALSE)
 ~~~

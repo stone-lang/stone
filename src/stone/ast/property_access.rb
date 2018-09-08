@@ -14,6 +14,7 @@ module Stone
 
       def evaluate(context)
         evaluated_object = object.evaluate(context)
+        return evaluated_object if error?(evaluated_object)
         property_value = evaluated_object.properties[property_name]
         if property_value.nil?
           Error.new("InvalidProperty", property_name.to_s)

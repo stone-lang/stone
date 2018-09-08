@@ -4,7 +4,13 @@ module Stone
 
     class Object < Value
 
-      attr_reader :properties
+      def properties
+        {}
+      end
+
+      def methods
+        {}
+      end
 
     end
 

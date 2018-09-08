@@ -24,7 +24,7 @@ module Stone
       assignment | function_definition | expression
     }
     rule(:expression) {
-      function_call | operation | literal | property_access | variable_reference | block | parens(whitespace? >> expression >> whitespace?)
+      function_call | operation | literal | method_call | property_access | variable_reference | block | parens(whitespace? >> expression >> whitespace?)
     }
     rule!(:function_definition) {
       identifier.as(:name) >> str("(") >> parameter_list >> str(")") >> whitespace >> str(":=") >> whitespace >> str("function") >> whitespace? >> function_body
@@ -43,6 +43,10 @@ module Stone
     }
     rule!(:assignment) {
       identifier.as(:lvalue) >> whitespace >> str(":=") >> whitespace >> expression.as(:rvalue)
+    }
+    rule!(:method_call) {
+      # TODO: This should really be an expression instead of a variable reference.
+      variable_reference.as(:object) >> str(".") >> identifier.as(:method) >> str("(") >> argument_list >> str(")")
     }
     rule!(:property_access) {
       # TODO: This should really be an expression instead of a variable reference.

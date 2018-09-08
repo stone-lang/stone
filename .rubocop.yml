@@ -190,6 +190,7 @@ Naming/MethodName:
 Metrics/AbcSize:
   Exclude:
   - src/stone/ast/function_call.rb
+  - src/stone/ast/method_call.rb
 Metrics/CyclomaticComplexity:
   Exclude:
   - src/stone/ast/function_call.rb

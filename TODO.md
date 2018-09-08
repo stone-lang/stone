@@ -104,7 +104,7 @@ Specifications
     - [ ] Computed property definition
     - [ ] Computed property access
     - [ ] Class method definition
-    - [ ] Class method call
+    - [x] Class method call
     - [ ] Method definition
     - [ ] Method call
     - [ ] Constructor
@@ -117,7 +117,7 @@ Specifications
     - [ ] Pair
     - [ ] List
         - [x] Creation
-        - [ ] Basics (empty?, includes?, size/length)
+        - [x] Basics (empty?, includes?, size/length)
         - [ ] Access (first/head/take, rest/tail/drop, last)
         - [ ] Iteration (map/each/fold/foldl)
         - [ ] Reducing (reduce/inject)

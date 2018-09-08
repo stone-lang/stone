@@ -11,7 +11,6 @@ module Stone
           super(slice_or_string_or_list)
         end
         @type_specifier = type_specifier
-        set_properties!
       end
 
       def type
@@ -30,11 +29,17 @@ module Stone
         @value = @value.split(/,\s*/) if @value.is_a?(String)
       end
 
-      def set_properties!
-        @properties = {
+      def properties
+        @properties ||= {
           size: Integer.new(@value.size),
           length: Integer.new(@value.size),
           empty?: Boolean.new(@value.size.zero?)
+        }
+      end
+
+      def methods
+        @methods ||= {
+          includes?: ->(element) { Boolean.new(@value.map(&:value).include?(element.value)) }
         }
       end
 

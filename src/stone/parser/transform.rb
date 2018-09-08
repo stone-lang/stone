@@ -29,6 +29,9 @@ module Stone
       args = args.map{ |a| a.is_a?(Hash) && a.has_key?(:block) ? AST::Block.new(a[:block]) : a }
       AST::FunctionCall.new(function_name, args)
     }
+    rule(method_call: {object: simple(:object), method: simple(:method), argument_list: {argument: simple(:arg)}}) {
+      AST::MethodCall.new(object, method, [arg])
+    }
     rule(property_access: {object: simple(:object), property: simple(:property)}) {
       AST::PropertyAccess.new(object, property)
     }

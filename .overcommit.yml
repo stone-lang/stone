@@ -21,8 +21,20 @@ PreCommit:
     description: "Verify specs all pass"
     command: ["make", "verify-specs"]
 
+  LineEndings:
+    enabled: true
+
+  TrailingWhitespace:
+    enabled: true
+
 
 CommitMsg:
+
+  TextWidth:
+    enabled: true
+    max_subject_width: 72
+    min_subject_width: 10
+    max_body_width: 80
 
   HardTabs:
     enabled: true

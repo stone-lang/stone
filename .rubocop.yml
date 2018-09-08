@@ -180,9 +180,11 @@ Metrics/ClassLength:
   Max: 250
 
 # Not sure why `∧` and `∨` are problematic, even after allowing non-ASCII identifiers.
+# Also allow `builtin_ClassName` methods.
 Naming/MethodName:
   Exclude:
   - src/extensions/boolean.rb
+  - src/stone/ast/function_call.rb
 
 # Allow some methods to get longer and more complex.
 Metrics/AbcSize:

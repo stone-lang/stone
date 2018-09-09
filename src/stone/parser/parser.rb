@@ -30,7 +30,10 @@ module Stone
       identifier.as(:name) >> str("(") >> parameter_list >> str(")") >> whitespace >> str(":=") >> whitespace >> str("function") >> whitespace? >> function_body
     }
     rule!(:parameter_list) {
-      identifier.as(:parameter) >> (str(",") >> whitespace >> identifier.as(:parameter)).repeat(0)
+      (parameter >> (str(",") >> whitespace >> parameter).repeat(0)).repeat(0)
+    }
+    rule!(:parameter) {
+      identifier
     }
     rule(:function_body) {
       block
@@ -56,7 +59,10 @@ module Stone
       identifier.as(:identifier) >> str("(") >> argument_list.maybe >> str(")")
     }
     rule!(:argument_list) {
-      expression.as(:argument) >> (str(",") >> whitespace >> expression.as(:argument)).repeat(0)
+      (argument >> (str(",") >> whitespace >> argument).repeat(0)).repeat(0)
+    }
+    rule!(:argument) {
+      expression
     }
     rule(:operation) {
       unary_operation | binary_operation
@@ -80,7 +86,7 @@ module Stone
       unary_operator.repeat(1).as(:operator) >> unary_operand.as(:operand) >> whitespace?
     }
     rule!(:binary_operation) {
-      binary_operand.as(:operand) >> (whitespace >> binary_operator.as(:operator) >> whitespace >> binary_operand.as(:operand)).repeat(1) >> whitespace?
+      binary_operand >> (whitespace >> binary_operator >> whitespace >> binary_operand).repeat(1) >> whitespace?
     }
     rule(:decimal_integer) {
       match["+-"].maybe >> match["0-9_"].repeat(1)
@@ -97,11 +103,11 @@ module Stone
     rule(:unary_operator) {
       match["!¬"]
     }
-    rule(:binary_operator) {
+    rule!(:binary_operator) {
       text_operator | equality_operator | arithmetic_operator | comparison_operator | boolean_operator
     }
-    rule(:binary_operand) {
-      # Would prefer `(block | binary_operation).absent? >> expression`, but that blows the stack.
+    rule!(:binary_operand) {
+      # TODO: This should really be an expression (other than a binary_operation).
       function_call | unary_operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
     }
     rule(:unary_operand) {

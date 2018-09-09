@@ -21,30 +21,33 @@ module Stone
     rule(text: simple(:t)) {
       AST::Text.new(t)
     }
-    rule(function_call: {identifier: simple(:function_name)}) {
-      AST::FunctionCall.new(function_name, [])
+    rule(argument: simple(:argument)) {
+      argument
     }
-    rule(function_call: {identifier: simple(:function_name), argument_list: subtree(:arguments)}) {
-      args = [arguments].flatten.map{ |a| a[:argument] }
-      args = args.map{ |a| a.is_a?(Hash) && a.has_key?(:block) ? AST::Block.new(a[:block]) : a }
-      AST::FunctionCall.new(function_name, args)
+    rule(function_call: {identifier: simple(:function_name), argument_list: sequence(:arguments)}) {
+      AST::FunctionCall.new(function_name, arguments)
     }
-    rule(method_call: {object: simple(:object), method: simple(:method), argument_list: {argument: simple(:arg)}}) {
-      AST::MethodCall.new(object, method, [arg])
+    rule(block: sequence(:block_body)) {
+      AST::Block.new(block_body)
+    }
+    rule(method_call: {object: simple(:object), method: simple(:method), argument_list: sequence(:arguments)}) {
+      AST::MethodCall.new(object, method, arguments)
     }
     rule(property_access: {object: simple(:object), property: simple(:property)}) {
       AST::PropertyAccess.new(object, property)
     }
-    rule(function_definition: {name: simple(:name), parameter_list: subtree(:parameters), block: sequence(:body)}) {
-      params = [parameters].flatten.map{ |p| p[:parameter] }
-      AST::Function.new(name, params, body)
+    rule(parameter: simple(:parameter)) {
+      parameter
+    }
+    rule(function_definition: {name: simple(:name), parameter_list: sequence(:parameters), block: sequence(:body)}) {
+      AST::Function.new(name, parameters, body)
     }
     rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) {
       AST::UnaryOperation.new(op, arg)
     }
     rule(binary_operation: subtree(:s)) {
-      operators = s.rest.map_dig(:operator)
-      operands = s.map_dig(:operand)
+      operators = s.rest.map_dig(:binary_operator)
+      operands = s.map_dig(:binary_operand)
       AST::BinaryOperation.new(operators, operands)
     }
     rule(assignment: {lvalue: simple(:lvalue), rvalue: simple(:rvalue)}) {

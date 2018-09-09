@@ -37,6 +37,8 @@ module Stone
     def run_parse
       each_input_file do |input|
         puts parse(input)
+      rescue Parslet::ParseFailed => e
+        puts e.parse_failure_cause.ascii_tree
       end
     end
 
@@ -46,15 +48,19 @@ module Stone
         puts transform(parse(input)).map{ |node|
           node.evaluate(top_context)
         }.compact
+      rescue Parslet::ParseFailed => e
+        puts e.parse_failure_cause.ascii_tree
       end
     end
 
     def run_verify
       suite = Stone::Verification::Suite.new
       each_input_file do |input|
-        suite.run(input) {
+        suite.run(input) do
           transform(parse(input))
-        }
+        end
+      rescue Parslet::ParseFailed => e
+        puts e.parse_failure_cause.ascii_tree
       end
       suite.complete
     end
@@ -87,10 +93,7 @@ module Stone
 
     def parse(input)
       parser = Stone::Parser.new
-      parser.parse(input)
-    rescue Parslet::ParseFailed => e
-      puts e.parse_failure_cause.ascii_tree
-      exit(16)
+      parser.parse(input, reporter: Parslet::ErrorReporter::Contextual.new)
     end
 
     def transform(parse_tree)

@@ -19,7 +19,7 @@ module Stone
         "#{name}(#{arguments.join(', ')})"
       end
 
-      def evaluate(context)
+      def evaluate(context) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
         if context[name].is_a?(Function)
@@ -46,7 +46,7 @@ module Stone
         List.new(args)
       end
 
-      def builtin_if(context, args)
+      def builtin_if(context, args) # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
         return Error.new("ArityError", "expecting 2 or 3 arguments, got #{args.size}") unless [2, 3].include?(args.size)
         condition, consequent, alternative = args
         return Error.new("TypeError", "`if` condition must be a Boolean") unless condition.is_a?(Boolean)

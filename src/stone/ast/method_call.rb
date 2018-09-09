@@ -14,7 +14,7 @@ module Stone
         @arguments = arguments
       end
 
-      def evaluate(context)
+      def evaluate(context) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         evaluated_object = object.evaluate(context)
         return error?(evaluated_object) if error?(evaluated_object)
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }

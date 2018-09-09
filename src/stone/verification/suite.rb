@@ -49,7 +49,7 @@ module Stone
         @successes ||= results.select(&:success?)
       end
 
-      def process_ast(source_code, ast)
+      def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength
         last_comment = nil
         top_context = {}
         last_node = nil

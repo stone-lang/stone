@@ -186,21 +186,6 @@ Naming/MethodName:
   - src/extensions/boolean.rb
   - src/stone/ast/function_call.rb
 
-# Allow some methods to get longer and more complex.
-Metrics/AbcSize:
-  Exclude:
-  - src/stone/ast/function_call.rb
-  - src/stone/ast/method_call.rb
-Metrics/CyclomaticComplexity:
-  Exclude:
-  - src/stone/ast/function_call.rb
-Metrics/PerceivedComplexity:
-  Exclude:
-  - src/stone/ast/function_call.rb
-Metrics/MethodLength:
-  Exclude:
-  - src/stone/verification/suite.rb
-
 # Disabling this only because it's breaking RuboCop (at least 0.53 to 0.58.2).
 Style/PercentLiteralDelimiters:
   Enabled: false

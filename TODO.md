@@ -89,7 +89,7 @@ Specifications
 - [ ] Functions
     - [x] Function definition
     - [x] Function call
-    - [ ] Arity checking
+        - [x] Arity checking
     - [ ] Default arguments
     - [ ] Named arguments
     - [ ] Varargs
@@ -104,9 +104,11 @@ Specifications
     - [ ] Computed property definition
     - [ ] Computed property access
     - [ ] Class method definition
-    - [x] Class method call
+    - [ ] Class method call
+        - [ ] Arity checking
     - [ ] Method definition
-    - [ ] Method call
+    - [x] Method call
+        - [x] Arity checking
     - [ ] Constructor
     - [ ] Destructor
 - [ ] Sequences

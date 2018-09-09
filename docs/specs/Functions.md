@@ -23,6 +23,9 @@ min(1, 2)
 
 max(1, 2, 3)
 #= Number.Integer(3)
+
+identity(1, 2)
+#! ArityError: 'identity' expects 1 argument, got 2
 ~~~
 
 
@@ -45,6 +48,12 @@ sum_of_squares(x, y) := function {
 }
 sum_of_squares(3, 4)
 #= Number.Integer(25)
+
+square(3, 4)
+#! ArityError: 'square' expects 1 argument, got 2
+
+sum_of_squares(3)
+#! ArityError: 'sum_of_squares' expects 2 arguments, got 1
 ~~~
 
 Functions are first-class — you can pass a function to a function.

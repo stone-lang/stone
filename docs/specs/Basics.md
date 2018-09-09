@@ -72,4 +72,13 @@ if(TRUE, { 1 })
 
 if(2 < 1, { "2 is less than 1" }, { "2 is NOT less than 1" })
 #= Text("2 is NOT less than 1")
+
+if(TRUE)
+#! ArityError: 'if' expects 2 or 3 arguments, got 1
+
+if(TRUE, 1)
+#! TypeError: 'if' consequent ('then') must be a block
+
+if(TRUE, { 1 }, 2)
+#! TypeError: 'if' alternative ('else') must be a block
 ~~~

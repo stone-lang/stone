@@ -22,8 +22,10 @@ module Stone
         method = evaluated_object.methods[method_name]
         if method.nil?
           Error.new("MethodNotFound", method_name.to_s)
+        elsif arguments.count != method.arity
+          Error.new("ArityError", "'#{method_name}' expects #{method.arity} arguments, got #{arguments.count}")
         else
-          # TODO: Check arity.
+          # TODO: Check argument types.
           method.call(*evaluated_arguments)
         end
       end

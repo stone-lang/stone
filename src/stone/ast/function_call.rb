@@ -23,9 +23,15 @@ module Stone
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
         if context[name].is_a?(Function)
-          # TODO: Check arity and types.
-          context[name].call(context, evaluated_arguments)
+          # TODO: Check argument types.
+          if context[name].arity == arguments.count
+            context[name].call(context, evaluated_arguments)
+          else
+            Error.new("ArityError", "'#{name}' expects #{context[name].arity} #{context[name].arity == 1 ? 'argument' : 'arguments'}, got #{arguments.count}")
+          end
         elsif builtin_function?(name)
+          # TODO: Check argument types.
+          # NOTE: The builtin functions currently check arity themselves.
           call_builtin_function(name, context, evaluated_arguments)
         else
           Error.new("UnknownFunction", name)
@@ -47,11 +53,11 @@ module Stone
       end
 
       def builtin_if(context, args) # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
-        return Error.new("ArityError", "expecting 2 or 3 arguments, got #{args.size}") unless [2, 3].include?(args.size)
+        return Error.new("ArityError", "'if' expects 2 or 3 arguments, got #{args.count}") unless [2, 3].include?(args.count)
         condition, consequent, alternative = args
-        return Error.new("TypeError", "`if` condition must be a Boolean") unless condition.is_a?(Boolean)
-        return Error.new("TypeError", "`if` consequent (`then`) must be a block") unless consequent.is_a?(Block)
-        return Error.new("TypeError", "`if` alternative (`else`) must be a block") unless alternative.is_a?(Block) || alternative.nil?
+        return Error.new("TypeError", "'if' condition must be a Boolean") unless condition.is_a?(Boolean)
+        return Error.new("TypeError", "'if' consequent ('then') must be a block") unless consequent.is_a?(Block)
+        return Error.new("TypeError", "'if' alternative ('else') must be a block") unless alternative.is_a?(Block) || alternative.nil?
         if condition.value
           consequent.call(context)
         elsif alternative
@@ -60,7 +66,7 @@ module Stone
       end
 
       def builtin_identity(_context, args)
-        return Error.new("ArityError", "expecting 1 argument, got #{args.size}") unless args.size == 1
+        return Error.new("ArityError", "'identity' expects 1 argument, got #{args.count}") unless args.count == 1
         args.first
       end
 

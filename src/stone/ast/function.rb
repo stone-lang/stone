@@ -28,6 +28,10 @@ module Stone
         body.map{ |x| x.evaluate(context) }.compact.last
       end
 
+      def arity
+        parameters.count
+      end
+
       def to_s
         "#{name}(#{parameters.join(", ")}) := {\n    #{body}\n}"
       end

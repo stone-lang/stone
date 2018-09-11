@@ -82,6 +82,7 @@ Specifications
 - [ ] Control logic
     - [x] Conditionals - if/then/else
     - [ ] Short-circuit and/or
+    - [ ] While/until
 - [x] Variables
     - [x] Assignment
     - [x] Referencing
@@ -113,8 +114,11 @@ Specifications
     - [ ] Destructor
 - [ ] Sequences
     - [ ] Range
-    - [ ] Iteration (map/each)
-    - [ ] Reduce
+    - [ ] Basics (empty?, includes?, length)
+    - [ ] Iteration (map/each/fold/foldl)
+    - [ ] Reducing (reduce/inject)
+    - [ ] Filtering (filter/select, reject, ...)
+    - [ ] Misc (uniq, all?, any? ...)
 - [ ] Collections
     - [ ] Pair
     - [ ] List
@@ -128,6 +132,13 @@ Specifications
     - [ ] Map
 - [ ] Types
     - [ ] Annotations
+    - [ ] Ensure `if` returns same type for all paths
+- [ ] I/O
+    - [ ] STDOUT
+    - [ ] STDIN
+    - [ ] Files
+    - [ ] Get random number
+    - [ ] Get date/time
 
 
 Design Docs

@@ -5,7 +5,7 @@ Stone is a multi-paradigm programming language. It combines the ideas of object-
 functional, and actor-based languages. It is a typed language, with immutability by default.
 
 This is a *very* new language, but I've been thinking about the design of the language for
-quite some time. The design documents can be found in [/docs/design](/docs/design).
+quite some time. The design documents can be found in [docs/design](docs/design).
 
 The language is described in Markdown, with code blocks showing example code.
 The code blocks also show the expected result of evaluating the code.

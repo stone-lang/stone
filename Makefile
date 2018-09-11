@@ -3,7 +3,7 @@ BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
 
 
 verify-specs: bundle
-	bin/stone verify docs/specs/*.md
+	bin/stone verify --debug docs/specs/*.md
 
 setup: .git/hooks/overcommit-hook
 

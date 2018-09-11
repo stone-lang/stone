@@ -54,7 +54,7 @@ module Stone
     end
 
     def run_verify
-      suite = Stone::Verification::Suite.new
+      suite = Stone::Verification::Suite.new(debug: debug_option?)
       each_input_file do |input|
         suite.run(input) do
           transform(parse(input))
@@ -75,7 +75,7 @@ module Stone
 
     def each_input_file
       ARGF.each_file do |file|
-        if ARGF.filename.end_with?(".md") || (ARGF.filename == "-" && options.include?("--markdown"))
+        if ARGF.filename.end_with?(".md") || (ARGF.filename == "-" && markdown_option?)
           markdown_code_blocks(file).each do |code_block|
             yield code_block
           end
@@ -99,6 +99,14 @@ module Stone
     def transform(parse_tree)
       transformer = Stone::Transform.new
       transformer.apply(parse_tree).compact
+    end
+
+    def markdown_option?
+      options.include?("--markdown")
+    end
+
+    def debug_option?
+      options.include?("--debug")
     end
 
   end

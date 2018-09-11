@@ -9,9 +9,11 @@ module Stone
     class Suite
 
       attr_accessor :results
+      attr_accessor :debug
 
-      def initialize
+      def initialize(debug: false)
         @results = []
+        @debug = debug
       end
 
       def run(source_code)
@@ -60,9 +62,13 @@ module Stone
             last_comment = node
             spec.run.tap { |result| spec.print_result(result) unless result.nil? }
           else
-            last_node = node
-            last_result = node.evaluate(top_context)
-            nil
+            begin
+              last_node = node
+              last_result = node.evaluate(top_context)
+              nil
+            rescue NoMethodError
+              binding.pry if debug # rubocop:disable Lint/Debugger
+            end
           end
         }
       end

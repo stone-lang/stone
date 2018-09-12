@@ -14,6 +14,9 @@ module Stone
         "×" => "*",
         "·" => "*",
         "✖️" => "*",
+        "÷" => "/",
+        "➗" => "/",
+        "∕" => "/",
         "≠" => "!=",
         "≤" => "<=",
         "≥" => ">=",
@@ -30,6 +33,7 @@ module Stone
         "+"   => Integer,
         "-"   => Integer,
         "*"   => Integer,
+        "/"   => Rational,
         "<!"  => Integer,
         ">!"  => Integer,
         "=="  => Boolean,
@@ -52,6 +56,7 @@ module Stone
         "++"  => ->(_operator, operands){ operands.map(&:value).join("") },
         ">!"  => ->(_operator, operands){ operands.map(&:value).max },
         "<!"  => ->(_operator, operands){ operands.map(&:value).min },
+        "/"   => ->(_operator, operands){ operands.rest.map(&:value).reduce(operands.first.value){ |a, v| builtin_divide(a, v) } },
         DEFAULT: ->(operator, operands){ operands.rest.map(&:value).reduce(operands.first.value, operator.to_sym) }
       }
       ALLOWED_ARITHMETIC_MIXTURES = [%w[+ -], %w[* /]]
@@ -121,6 +126,12 @@ module Stone
         Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
           a && evaluate_operation(x.last, x.first).value
         })
+      end
+
+      def self.builtin_divide(dividend, divisor)
+        dividend = Rational.new(dividend) if dividend.is_a?(::Integer)
+        divisor = Rational.new(divisor) if divisor.is_a?(::Integer)
+        Rational.new((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
       end
 
     end

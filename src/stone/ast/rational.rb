@@ -7,10 +7,15 @@ module Stone
       attr_reader :numerator
       attr_reader :denominator
 
-      def initialize(numerator, denominator)
+      def initialize(numerator, denominator = 1)
         @source_location = get_source_location(numerator)
-        @numerator = numerator.to_s.to_i
-        @denominator = denominator.to_s.to_i
+        if numerator.is_a?(Rational)
+          @numerator = numerator.numerator
+          @denominator = numerator.denominator
+        else
+          @numerator = numerator.to_s.to_i
+          @denominator = denominator.to_s.to_i
+        end
         reduce!
       end
 
@@ -19,15 +24,17 @@ module Stone
       end
 
       def reduce!
+        @numerator = -@numerator if @denominator.negative?
+        @denominator = -@denominator if @denominator.negative?
         gcd = numerator.gcd(denominator)
-        @numerator = numerator / gcd if gcd != 1
-        @denominator = denominator / gcd if gcd != 1
+        return if gcd == 1
+        @numerator = numerator / gcd
+        @denominator = denominator / gcd
       end
 
       def to_s
         "#{type}(#{numerator}, #{denominator})"
       end
-
 
     end
 

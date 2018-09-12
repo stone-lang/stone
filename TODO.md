@@ -60,10 +60,10 @@ Specifications
         - [x] Mixing operators (gives an error in most cases)
             - [x] Allowed mixed operators
                 - [x] `+` and `-`
-                - [ ] `*` and `/`
+                - [x] `*` and `/`
                 - [x] `<` and `<=`
                 - [x] `>` and `>=`
-        - [ ] Division
+        - [x] Division
         - [x] Comparison
         - [x] Minimum/maximum (`<!` and `>!`)
         - [ ] Mixed numeric types

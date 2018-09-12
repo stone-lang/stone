@@ -127,7 +127,7 @@ module Stone
       str("==") | str("!=") | str("≠")
     }
     rule(:arithmetic_operator) {
-      match["+➕"] | match["\\-−➖"] | match["\*×·✖️"] | str("<!") | str(">!")
+      match["+➕"] | match["\\-−➖"] | match["\*×·✖️"] | match["/÷➗∕"] | str("<!") | str(">!")
     }
     rule(:comparison_operator) {
       str("<=") | str("≤") | str("<") | str(">=") | str("≥") | str(">")

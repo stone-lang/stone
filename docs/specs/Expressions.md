@@ -56,6 +56,9 @@ There are only a few exceptions to the mixed operators rule:
 1 - 2 + 3 - 4
 #= Number.Integer(-2)
 
+4 * 3 / -6
+#= Number.Rational(-2, 1)
+
 1 < 2 <= 3
 #= Boolean(Boolean.TRUE)
 
@@ -154,6 +157,7 @@ One thing that's relatively unique to Stone is that you can chain comparison ope
 ### Numeric Operators
 
 Stone has the normal infix numeric operators that you'd expect for addition, subtraction, and multiplication.
+Stone has division, too, but it's a little different — it returns a Rational result.
 
 ~~~ stone
 1 + 2
@@ -164,6 +168,18 @@ Stone has the normal infix numeric operators that you'd expect for addition, sub
 
 2 * 3
 #= Number.Integer(6)
+
+2 / 3
+#= Number.Rational(2, 3)
+
+2 / -3
+#= Number.Rational(-2, 3)
+
+12 ÷ 4
+#= Number.Rational(3, 1)
+
+60 ÷ 5 / 2
+#= Number.Rational(6, 1)
 
 identity(1) + identity(2)
 #= Number.Integer(3)

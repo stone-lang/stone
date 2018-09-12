@@ -36,6 +36,7 @@ Binaries are located in the `bin` directory:
 
 * `stone` - the main executable
     * `stone eval` - output the result of each top-level expression
+    * `stone repl` - accept manual input, and show the result of each line
     * `stone verify` - check that results of top-level expressions match expectations in comments
 
 

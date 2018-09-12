@@ -4,6 +4,7 @@ require "stone/parser/parser"
 require "stone/parser/transform"
 require "stone/verification/suite"
 
+require "readline"
 require "kramdown"
 require "pry"
 
@@ -53,6 +54,26 @@ module Stone
       end
     end
 
+    def run_repl
+      puts "Stone REPL"
+      top_context = {}
+      while (input = Readline.readline("#> ", true))
+        repl_1_line(input, top_context)
+      end
+    end
+
+    def repl_1_line(line, context)
+      ast = transform(parse(line, parser: Stone::Parser.new.line))
+      case result = ast.evaluate(context)
+      when AST::Error
+        puts "#! #{result}"
+      when AST::Value
+        puts "#= #{result}"
+      end
+    rescue Parslet::ParseFailed => e
+      puts e.parse_failure_cause.ascii_tree
+    end
+
     def run_verify
       suite = Stone::Verification::Suite.new(debug: debug_option?)
       each_input_file do |input|
@@ -91,14 +112,14 @@ module Stone
       markdown.root.children.select{ |e| e.type == :codeblock && e.options[:lang] == "stone" }.map(&:value)
     end
 
-    def parse(input)
-      parser = Stone::Parser.new
-      parser.parse(input, reporter: Parslet::ErrorReporter::Contextual.new)
+    def parse(input, parser: Stone::Parser.new)
+      parser.parse(input + "\n", reporter: Parslet::ErrorReporter::Contextual.new)
     end
 
     def transform(parse_tree)
       transformer = Stone::Transform.new
-      transformer.apply(parse_tree).compact
+      ast = transformer.apply(parse_tree)
+      ast.respond_to?(:compact) ? ast.compact : ast
     end
 
     def markdown_option?

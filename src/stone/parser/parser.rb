@@ -12,9 +12,12 @@ module Stone
     root(:top)
 
     rule(:top) {
-      (line | blank_line).repeat
+      line.repeat
     }
     rule(:line) {
+      statement_line | blank_line
+    }
+    rule(:statement_line) {
       whitespace? >> statement >> whitespace? >> (eol | line_comment.present?)
     }
     rule(:blank_line) {

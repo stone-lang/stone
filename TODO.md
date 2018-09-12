@@ -32,7 +32,8 @@ TODO
     - [ ] Bundler audit (for vulnerable gem versions)
     - [ ] Code smell analyzer -  RubyCritic
 - [ ] Compile to LLVM
-- [ ] REPL
+- [x] REPL
+    - [ ] Multi-line statements
 - [ ] Static type tracking/checking
     - [ ] Complex types
 - [ ] Self-hosting compiler (this one is WAY off)

@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Integer < Value
+    class Integer < Number
 
       def type
         "Number.Integer"

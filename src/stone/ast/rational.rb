@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Rational < Value
+    class Rational < Number
 
       attr_reader :numerator
       attr_reader :denominator

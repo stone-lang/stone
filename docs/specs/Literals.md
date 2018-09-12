@@ -110,6 +110,43 @@ Like decimals, underscores are allowed between digits.
 ~~~
 
 
+Rational Numbers
+----------------
+
+Stone is relatively unique in supporting rational literals.
+(Ruby supports them, but requires that the be suffixed with an `r`.)
+These are more commonly referred to as fractions.
+Rationals consist of an integer followed by a slash (`/`) followed by an unsigned positive integer.
+Rationals will be reduced to their simplest form.
+
+~~~ stone
+1/3
+#= Number.Rational(1, 3)
+
+-2/3
+#= Number.Rational(-2, 3)
+
++1/3
+#= Number.Rational(1, 3)
+
+2/4
+#= Number.Rational(1, 2)
+
+0/5
+#= Number.Rational(0, 1)
+
+4/2
+#= Number.Rational(2, 1)
+
+1/0
+#! DivisionByZero: invalid rational literal
+~~~
+
+Note that no whitespace is allowed before or after the slash within a rational literal.
+If you put spaces around the slash, you'll be performing a division.
+Division of integers will result in a rational result, but the extra computation is unnecessary.
+
+
 Text
 ----
 

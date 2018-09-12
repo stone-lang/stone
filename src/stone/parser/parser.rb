@@ -74,13 +74,16 @@ module Stone
       identifier
     }
     rule(:literal) {
-      boolean | integer | text
+      boolean | rational | integer | text
     }
     rule!(:boolean) {
       str("TRUE") | str("FALSE")
     }
     rule!(:integer) {
       binary_integer | octal_integer | hexadecimal_integer | decimal_integer
+    }
+    rule!(:rational) {
+      decimal_integer.as(:numerator) >> str("/") >> unsigned_decimal_integer.as(:denominator)
     }
     rule!(:text) {
       str('"').ignore >> (str('"').absent? >> any).repeat(0) >> str('"').ignore
@@ -92,8 +95,12 @@ module Stone
       binary_operand >> (whitespace >> binary_operator >> whitespace >> binary_operand).repeat(1) >> whitespace?
     }
     rule(:decimal_integer) {
-      match["+-"].maybe >> match["0-9_"].repeat(1)
+      match["+-"].maybe >> unsigned_decimal_integer
     }
+    rule(:unsigned_decimal_integer) {
+      match["0-9_"].repeat(1)
+    }
+
     rule(:hexadecimal_integer) {
       match["+-"].maybe >> str("0x") >> match["[:xdigit:]"] >> match["[:xdigit:]_"].repeat(0)
     }

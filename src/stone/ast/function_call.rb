@@ -4,7 +4,7 @@ module Stone
 
     class FunctionCall < Base
 
-      BUILTIN_FUNCTIONS = %i[if identity min max List]
+      BUILTIN_FUNCTIONS = %i[if identity min max gcd List]
 
       attr_reader :name
       attr_reader :arguments

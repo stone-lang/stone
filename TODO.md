@@ -49,7 +49,7 @@ Specifications
     - [x] Booleans
     - [x] Text strings
     - [ ] Fixed-point
-    - [ ] Rationals
+    - [x] Rationals
 - [ ] Expressions
     - [x] Parenthetical expressions
     - [ ] Arithmetic operators
@@ -66,6 +66,7 @@ Specifications
         - [ ] Division
         - [x] Comparison
         - [x] Minimum/maximum (`<!` and `>!`)
+        - [ ] Mixed numeric types
     - [x] Equality operators
     - [ ] Boolean operators
         - [x] Not

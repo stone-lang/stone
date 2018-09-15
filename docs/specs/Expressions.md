@@ -101,6 +101,12 @@ FALSE == 123
 
 "123" ≠ 123
 #= Boolean(Boolean.TRUE)
+
+1/2 == 2/4
+#= Boolean(Boolean.TRUE)
+
+2/1 == 2
+#= Boolean(Boolean.TRUE)
 ~~~
 
 

@@ -26,6 +26,11 @@ module Stone
       def normalize!
       end
 
+      # This might return an object of a different type.
+      def normalized!
+        self
+      end
+
     end
 
   end

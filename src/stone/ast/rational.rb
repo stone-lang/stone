@@ -36,6 +36,10 @@ module Stone
         "#{type}(#{numerator}, #{denominator})"
       end
 
+      def normalized!
+        denominator == 1 ? Integer.new(numerator) : self
+      end
+
     end
 
   end

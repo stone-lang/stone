@@ -51,8 +51,8 @@ module Stone
         "<="  => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value <= r.value }.all? },
         ">"   => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value > r.value }.all? },
         ">="  => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value >= r.value }.all? },
-        "=="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length == 1 },
-        "!="  => ->(_operator, operands){ operands.map{ |o| [o.type, o.value] }.uniq.length != 1 },
+        "=="  => ->(_operator, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length == 1 }, # rubocop:disable Style/Semicolon
+        "!="  => ->(_operator, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length != 1 }, # rubocop:disable Style/Semicolon
         "++"  => ->(_operator, operands){ operands.map(&:value).join("") },
         ">!"  => ->(_operator, operands){ operands.map(&:value).max },
         "<!"  => ->(_operator, operands){ operands.map(&:value).min },

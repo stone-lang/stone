@@ -44,13 +44,13 @@ Function Definition
 You can define your own functions.
 
 ~~~ stone
-square(x) := function {
+square := (x) => {
     x * x
 }
 square(4)
 #= Number.Integer(16)
 
-sum_of_squares(x, y) := function {
+sum_of_squares := (x, y) => {
     xx := x * x
     yy := y * y
     xx + yy
@@ -68,10 +68,10 @@ sum_of_squares(3)
 Functions are first-class — you can pass a function to a function.
 
 ~~~ stone
-add(x, y) := function {
+add := (x, y) => {
     x + y
 }
-apply(f, x, y) := function {
+apply := (f, x, y) => {
     f(x, y)
 }
 apply(add, 1, 2)
@@ -81,7 +81,7 @@ apply(add, 1, 2)
 Functions can implement recursion.
 
 ~~~ stone
-fib(n) := function {
+fib := (n) => {
     if(n < 2, { n }, { fib(n - 1) + fib(n - 2) })
 }
 fib(1)

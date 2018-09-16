@@ -47,8 +47,8 @@ module Stone
     rule(parameter: simple(:parameter)) {
       parameter
     }
-    rule(function_definition: {name: simple(:name), parameter_list: sequence(:parameters), block: sequence(:body)}) {
-      AST::Function.new(name, parameters, body)
+    rule(function: {parameter_list: sequence(:parameters), block: sequence(:body)}) {
+      AST::Function.new(parameters, body)
     }
     rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) {
       AST::UnaryOperation.new(op, arg)

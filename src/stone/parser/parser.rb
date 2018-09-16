@@ -24,13 +24,16 @@ module Stone
       whitespace? >> line_comment.as(:comment).maybe >> eol
     }
     rule(:statement) {
-      assignment | function_definition | expression
+      assignment | expression
     }
     rule(:expression) {
-      operation | function_call | literal | method_call | property_access | variable_reference | block | parens(whitespace? >> expression >> whitespace?)
+      function | operation | function_call | literal | method_call | property_access | variable_reference | block | parenthetical_expression
     }
-    rule!(:function_definition) {
-      identifier.as(:name) >> str("(") >> parameter_list >> str(")") >> whitespace >> str(":=") >> whitespace >> str("function") >> whitespace? >> function_body
+    rule(:parenthetical_expression) {
+      parens(whitespace? >> expression >> whitespace?)
+    }
+    rule!(:function) {
+      str("(") >> parameter_list >> str(")") >> whitespace >> str("=>") >> whitespace >> function_body
     }
     rule!(:parameter_list) {
       (parameter >> (str(",") >> whitespace >> parameter).repeat(0)).repeat(0)
@@ -118,7 +121,7 @@ module Stone
     }
     rule!(:binary_operand) {
       # TODO: This should really be an expression (other than a binary_operation).
-      function_call | unary_operation | literal | variable_reference | parens(whitespace? >> expression >> whitespace?)
+      function_call | unary_operation | literal | variable_reference | parenthetical_expression
     }
     rule(:unary_operand) {
       (block | operation).absent? >> expression

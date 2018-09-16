@@ -97,8 +97,8 @@ Specifications
     - [ ] Named arguments
     - [ ] Varargs
     - [ ] Closures
-    - [ ] Recursion
-    - [ ] First-class functions
+    - [x] Recursion
+    - [x] First-class functions
 - [ ] Classes
     - [ ] Class definition
     - [ ] Class instantiation

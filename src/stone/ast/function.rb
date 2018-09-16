@@ -4,20 +4,17 @@ module Stone
 
     class Function < Base
 
-      attr_reader :name
       attr_reader :parameters
       attr_reader :body
 
-      def initialize(name, parameters, body)
-        @source_location = name.line_and_column
-        @name = name.to_s.to_sym
+      def initialize(parameters, body)
+        @source_location = parameters.first.line_and_column
         @body = body
         @parameters = parameters.map(&:to_sym)
       end
 
-      def evaluate(context)
-        context[name] = self
-        nil
+      def evaluate(_context)
+        self
       end
 
       def call(parent_context, arguments)
@@ -33,7 +30,7 @@ module Stone
       end
 
       def to_s
-        "#{name}(#{parameters.join(", ")}) := {\n    #{body}\n}"
+        "(#{parameters.join(", ")}) => {\n    #{body}\n}"
       end
 
     end

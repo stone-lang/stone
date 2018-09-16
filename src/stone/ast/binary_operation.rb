@@ -111,7 +111,7 @@ module Stone
       end
 
       def known_operator?(operator)
-        OPERATION_RESULT_TYPES.include?(operator)
+        OPERATION_RESULT_TYPES.has_key?(operator)
       end
 
       # You're not expected to understand how this works. I wrote it, and I don't really understand how it works.

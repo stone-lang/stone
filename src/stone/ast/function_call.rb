@@ -72,12 +72,12 @@ module Stone
 
       def builtin_min(_context, args)
         # TODO: Check types.
-        Integer.new(args.map(&:value).min)
+        Number.new!(args.map(&:value).min)
       end
 
       def builtin_max(_context, args)
         # TODO: Check types.
-        Integer.new(args.map(&:value).max)
+        Number.new!(args.map(&:value).max)
       end
 
     end

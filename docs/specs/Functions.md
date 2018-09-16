@@ -24,6 +24,15 @@ min(1, 2)
 max(1, 2, 3)
 #= Number.Integer(3)
 
+min(1/2, 1)
+#= Number.Rational(1, 2)
+
+min(3/2, 1)
+#= Number.Integer(1)
+
+max(1, 2, 3, 4/3, 22/7)
+#= Number.Rational(22, 7)
+
 identity(1, 2)
 #! ArityError: 'identity' expects 1 argument, got 2
 ~~~

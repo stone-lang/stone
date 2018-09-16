@@ -51,7 +51,7 @@ module Stone
         @successes ||= results.select(&:success?)
       end
 
-      def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength
+      def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         last_comment = nil
         top_context = {}
         last_node = nil
@@ -66,7 +66,7 @@ module Stone
               last_node = node
               last_result = node.evaluate(top_context)
               nil
-            rescue NoMethodError
+            rescue NoMethodError => e
               binding.pry if debug # rubocop:disable Lint/Debugger
             end
           end

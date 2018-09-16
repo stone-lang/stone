@@ -13,4 +13,4 @@ gem "kramdown"
 gem "parslet"
 
 # Debugging
-gem "pry"
+gem "pry-byebug"

@@ -30,12 +30,12 @@ module Stone
         "➕" => "∨",
       }
       OPERATION_RESULT_TYPES = {
-        "+"   => Integer,
-        "-"   => Integer,
-        "*"   => Integer,
+        "+"   => Number,
+        "-"   => Number,
+        "*"   => Number,
         "/"   => Rational,
-        "<!"  => Integer,
-        ">!"  => Integer,
+        "<!"  => Number,
+        ">!"  => Number,
         "=="  => Boolean,
         "!="  => Boolean,
         "<"   => Boolean,
@@ -89,7 +89,7 @@ module Stone
         operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
         result_type = OPERATION_RESULT_TYPES[operator]
-        result_type.new(operation.call(operator, operands))
+        result_type.new!(operation.call(operator, operands))
       end
 
       def evaluate_mixed_operations(operators, operands)
@@ -131,7 +131,8 @@ module Stone
       def self.builtin_divide(dividend, divisor)
         dividend = Rational.new(dividend) if dividend.is_a?(::Integer)
         divisor = Rational.new(divisor) if divisor.is_a?(::Integer)
-        Rational.new((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
+        # Note that we're returning a native Ruby `Rational` here.
+        Rational((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
       end
 
     end

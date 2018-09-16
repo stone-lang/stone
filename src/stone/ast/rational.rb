@@ -40,6 +40,11 @@ module Stone
         denominator == 1 ? Integer.new(numerator) : self
       end
 
+      # Note that we're returning a native Ruby `Rational` here.
+      def value
+        Rational(numerator, denominator)
+      end
+
     end
 
   end

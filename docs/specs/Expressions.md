@@ -57,7 +57,7 @@ There are only a few exceptions to the mixed operators rule:
 #= Number.Integer(-2)
 
 4 * 3 / -6
-#= Number.Rational(-2, 1)
+#= Number.Integer(-2)
 
 1 < 2 <= 3
 #= Boolean(Boolean.TRUE)
@@ -146,6 +146,12 @@ One thing that's relatively unique to Stone is that you can chain comparison ope
 1 ≥ 2
 #= Boolean(Boolean.FALSE)
 
+1/2 < 2/3
+#= Boolean(Boolean.TRUE)
+
+1 >= 1/2
+#= Boolean(Boolean.TRUE)
+
 "abc" <= "abc"
 #= Boolean(Boolean.TRUE)
 
@@ -182,10 +188,41 @@ Stone has division, too, but it's a little different — it returns a Rational r
 #= Number.Rational(-2, 3)
 
 12 ÷ 4
-#= Number.Rational(3, 1)
+#= Number.Integer(3)
 
 60 ÷ 5 / 2
-#= Number.Rational(6, 1)
+#= Number.Integer(6)
+
+1/2 + 1/3
+#= Number.Rational(5, 6)
+
+1/2 - 1/3
+#= Number.Rational(1, 6)
+
+1/2 * 1/3
+#= Number.Rational(1, 6)
+
+1/2 / 1/3
+#= Number.Rational(3, 2)
+
+1 + 1/3
+#= Number.Rational(4, 3)
+
+2 - 1/2
+#= Number.Rational(3, 2)
+
+2 * 1/3
+#= Number.Rational(2, 3)
+
+3 * 1/3
+#= Number.Integer(1)
+
+1/3 / 2
+#= Number.Rational(1, 6)
+
+3 / 1/3
+#= Number.Integer(9)
+
 
 identity(1) + identity(2)
 #= Number.Integer(3)
@@ -201,6 +238,12 @@ The `>!` operator returns the maximum of the operands.
 
 2 >! 6 >! 1
 #= Number.Integer(6)
+
+1/2 <! 1/3
+#= Number.Rational(1, 3)
+
+3/2 >! 1
+#= Number.Rational(3, 2)
 ~~~
 
 

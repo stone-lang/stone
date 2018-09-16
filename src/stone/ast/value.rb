@@ -7,6 +7,7 @@ module Stone
 
     class Value < Base
 
+      # NOTE: This should be an object of a native Ruby class.
       attr_reader :value
 
       def initialize(slice_or_string)

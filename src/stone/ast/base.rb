@@ -6,6 +6,11 @@ module Stone
 
       attr_reader :source_location # 1-based [line, column]
 
+      # Used as a factory, for when we might want to return a different type.
+      def self.new!(*args)
+        new(*args)
+      end
+
       def evaluate(_context)
         fail NotImplementedError
       end

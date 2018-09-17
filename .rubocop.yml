@@ -20,7 +20,7 @@ Metrics/LineLength:
 Style/Documentation:
   Enabled: false
 
-# Outdent `private`/`protected`/`public`.
+# Outdent `private`/`protected`/`public`. NOTE: Also includes `module_function` (but I don't think that should be outdented).
 Layout/AccessModifierIndentation:
   EnforcedStyle: outdent
 
@@ -184,7 +184,13 @@ Metrics/ClassLength:
 Naming/MethodName:
   Exclude:
   - src/extensions/boolean.rb
-  - src/stone/ast/function_call.rb
+  - src/stone/top.rb
+
+# I don't believe `module_function` should be outdented like `private`, but there's no way to turn it off for just `module_function`.
+Layout/AccessModifierIndentation:
+  EnforcedStyle: outdent
+  Exclude:
+    - src/stone/top.rb
 
 # Disabling this only because it's breaking RuboCop (at least 0.53 to 0.58.2).
 Style/PercentLiteralDelimiters:

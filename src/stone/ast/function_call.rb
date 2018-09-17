@@ -4,8 +4,6 @@ module Stone
 
     class FunctionCall < Base
 
-      BUILTIN_FUNCTIONS = %i[if identity min max gcd List]
-
       attr_reader :name
       attr_reader :arguments
 
@@ -19,65 +17,46 @@ module Stone
         "#{name}(#{arguments.join(', ')})"
       end
 
-      def evaluate(context) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity
+      def value
+        self
+      end
+
+      def evaluate(context) # rubocop:disable Metrics/AbcSize
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
-        if context[name].is_a?(Function)
-          # TODO: Check argument types.
-          if context[name].arity == arguments.count
-            context[name].call(context, evaluated_arguments)
-          else
-            Error.new("ArityError", "'#{name}' expects #{context[name].arity} #{context[name].arity == 1 ? 'argument' : 'arguments'}, got #{arguments.count}")
-          end
-        elsif builtin_function?(name)
-          # TODO: Check argument types.
-          # NOTE: The builtin functions currently check arity themselves.
-          call_builtin_function(name, context, evaluated_arguments)
-        else
-          Error.new("UnknownFunction", name)
-        end
+        function = context[name]
+        return Error.new("UnknownFunction", name) unless callable?(function)
+        # TODO: Check argument types.
+        return arity_error(function, arguments.count) unless correct_arity?(function, arguments.count)
+        function.call(context, evaluated_arguments)
       end
 
     private
 
-      def builtin_function?(name)
-        BUILTIN_FUNCTIONS.include?(name)
+      # NOTE: A (default) Class constructor can be called with 0 arguments; a function/method cannot.
+      # NOTE: We can call a Block, but not using the function-call syntax. (The arity check is checking for that.)
+      def callable?(function)
+        function.respond_to?(:call) && function.method(:call).arity == 2
       end
 
-      def call_builtin_function(name, context, evaluated_arguments)
-        __send__("builtin_#{name}".to_sym, context, evaluated_arguments)
+      def correct_arity?(function, actual_argument_count)
+        function.arity.include?(actual_argument_count)
       end
 
-      def builtin_List(_context, args)
-        List.new(args)
+      def arity_error(function, actual_argument_count)
+        Error.new("ArityError", "'#{name}' expects #{arity_error_expected_text(function.arity)}, got #{actual_argument_count}")
       end
 
-      def builtin_if(context, args) # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
-        return Error.new("ArityError", "'if' expects 2 or 3 arguments, got #{args.count}") unless [2, 3].include?(args.count)
-        condition, consequent, alternative = args
-        return Error.new("TypeError", "'if' condition must be a Boolean") unless condition.is_a?(Boolean)
-        return Error.new("TypeError", "'if' consequent ('then') must be a block") unless consequent.is_a?(Block)
-        return Error.new("TypeError", "'if' alternative ('else') must be a block") unless alternative.is_a?(Block) || alternative.nil?
-        if condition.value
-          consequent.call(context)
-        elsif alternative
-          alternative.call(context)
+      def arity_error_expected_text(expected_arity)
+        if expected_arity == (1..1)
+          "1 argument"
+        elsif expected_arity.size == 1
+          "#{expected_arity.first} arguments"
+        elsif expected_arity.size == 2
+          "#{expected_arity.first} or #{expected_arity.last} arguments"
+        else
+          "#{expected_arity} arguments"
         end
-      end
-
-      def builtin_identity(_context, args)
-        return Error.new("ArityError", "'identity' expects 1 argument, got #{args.count}") unless args.count == 1
-        args.first
-      end
-
-      def builtin_min(_context, args)
-        # TODO: Check types.
-        Number.new!(args.map(&:value).min)
-      end
-
-      def builtin_max(_context, args)
-        # TODO: Check types.
-        Number.new!(args.map(&:value).max)
       end
 
     end

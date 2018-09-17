@@ -52,8 +52,8 @@ module Stone
       end
 
       def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+        top_context = Stone::Top.context
         last_comment = nil
-        top_context = {}
         last_node = nil
         last_result = nil
         ast.map{ |node|

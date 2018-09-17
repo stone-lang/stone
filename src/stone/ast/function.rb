@@ -26,7 +26,7 @@ module Stone
       end
 
       def arity
-        parameters.count
+        Range.new(parameters.count, parameters.count)
       end
 
       def to_s

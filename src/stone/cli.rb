@@ -3,6 +3,7 @@ require "extensions/argf"
 require "stone/parser/parser"
 require "stone/parser/transform"
 require "stone/verification/suite"
+require "stone/top"
 
 require "readline"
 require "kramdown"
@@ -45,7 +46,7 @@ module Stone
 
     def run_eval
       each_input_file do |input|
-        top_context = {}
+        top_context = Stone::Top.context
         puts transform(parse(input)).map{ |node|
           node.evaluate(top_context)
         }.compact
@@ -55,8 +56,8 @@ module Stone
     end
 
     def run_repl
+      top_context = Stone::Top.context
       puts "Stone REPL"
-      top_context = {}
       while (input = Readline.readline("#> ", true))
         repl_1_line(input, top_context)
       end

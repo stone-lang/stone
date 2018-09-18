@@ -47,7 +47,9 @@ module Stone
 
       def methods
         @methods ||= {
-          includes?: ->(element) { Boolean.new(@value.map(&:value).include?(element.value)) },
+          includes?: ->(_, element) { Boolean.new(@value.map(&:value).include?(element.value)) },
+          map: ->(context, fn) { List.new(@value.map{ |x| fn.call(context, [x]) }) },
+          each: ->(context, fn) { List.new(@value.map{ |x| fn.call(context, [x]) }) },
         }
       end
 

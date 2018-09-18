@@ -129,8 +129,8 @@ Specifications
         - [x] Creation
         - [x] Basics (empty?, includes?, size/length)
         - [x] Access (first/head, rest/tail, last)
-        - [ ] Iteration (map/each/fold/foldl)
-        - [ ] Reducing (reduce/inject)
+        - [x] Iteration (map/each)
+        - [ ] Reducing (reduce/inject/fold/foldl)
         - [ ] Re-ordering (reversed, sorted)
         - [ ] Misc (slice, split, join, ...)
     - [ ] Map

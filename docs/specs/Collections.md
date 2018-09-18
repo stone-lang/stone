@@ -93,3 +93,20 @@ list.includes?(9)
 empty.includes?(1)
 #= Boolean(Boolean.FALSE)
 ~~~
+
+
+### List Iteration
+
+~~~ stone
+list := List(1, 2, 3)
+square := (x) => { x * x }
+
+list.map((x) => { 2 * x })
+#= List[Number.Integer](Number.Integer(2), Number.Integer(4), Number.Integer(6))
+
+list.map(square)
+#= List[Number.Integer](Number.Integer(1), Number.Integer(4), Number.Integer(9))
+
+list.each(square)
+#= List[Number.Integer](Number.Integer(1), Number.Integer(4), Number.Integer(9))
+~~~

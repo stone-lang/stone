@@ -1,11 +1,14 @@
 Functions
 =========
 
+Functions are procedures that take 1 or more arguments and return a result.
+
 
 Function Call
 -------------
 
 You can call a function by name, using syntax that's pretty familiar.
+
 There are a few built-in functions.
 
 ~~~ stone
@@ -38,6 +41,34 @@ max(List(1, 2, 3, 4/3, 22/7))
 
 identity(1, 2)
 #! ArityError: 'identity' expects 1 argument, got 2
+~~~
+
+
+Function Application
+--------------------
+
+Alternatively, you can use the function application (pipe) operators.
+
+Note that this syntax only allows passing a single argument to a function.
+
+~~~ stone
+4 |> identity
+#= Number.Integer(4)
+
+TRUE |> identity
+#= Boolean(Boolean.TRUE)
+
+identity <| 4
+#= Number.Integer(4)
+
+identity <| TRUE
+#= Boolean(Boolean.TRUE)
+
+List(1, 2, 3, 4) |> identity |> max
+#= Number.Integer(4)
+
+max <| identity <| List(1, 2, 3, 4)
+#= Number.Integer(4)
 ~~~
 
 

@@ -76,6 +76,8 @@ Specifications
     - [x] Text operators
         - [x] Comparison
         - [x] Concatenation
+    - [x] Function application operators
+    - [ ] Function composition operators
 - [x] Exceptions
 - [x] Comments
     - [x] Per-line

@@ -23,6 +23,3 @@ module Stone
   end
 
 end
-
-
-require "stone/ast/any"

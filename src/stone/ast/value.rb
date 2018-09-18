@@ -38,7 +38,7 @@ module Stone
 
 end
 
-
+require "stone/ast/any"
 require "stone/ast/boolean"
 require "stone/ast/number"
 require "stone/ast/text"

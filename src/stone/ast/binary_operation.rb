@@ -45,19 +45,23 @@ module Stone
         "∧"  => Boolean,
         "∨"  => Boolean,
         "++"  => Text,
+        "|>"  => Any,
+        "<|"  => Any,
       }
       OPERATIONS = {
-        "<"   => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value < r.value }.all? },
-        "<="  => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value <= r.value }.all? },
-        ">"   => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value > r.value }.all? },
-        ">="  => ->(_operator, operands){ operands.each_cons(2).map{ |l, r| l.value >= r.value }.all? },
-        "=="  => ->(_operator, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length == 1 }, # rubocop:disable Style/Semicolon
-        "!="  => ->(_operator, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length != 1 }, # rubocop:disable Style/Semicolon
-        "++"  => ->(_operator, operands){ operands.map(&:value).join("") },
-        ">!"  => ->(_operator, operands){ operands.map(&:value).max },
-        "<!"  => ->(_operator, operands){ operands.map(&:value).min },
-        "/"   => ->(_operator, operands){ operands.map(&:value).reduce{ |a, v| builtin_divide(a, v) } },
-        DEFAULT: ->(operator, operands){ operands.map(&:value).reduce(operator.to_sym) }
+        "<"   => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value < r.value }.all? },
+        "<="  => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value <= r.value }.all? },
+        ">"   => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value > r.value }.all? },
+        ">="  => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value >= r.value }.all? },
+        "=="  => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length == 1 }, # rubocop:disable Style/Semicolon
+        "!="  => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length != 1 }, # rubocop:disable Style/Semicolon
+        "++"  => ->(_c, _o, operands){ operands.map(&:value).join("") },
+        ">!"  => ->(_c, _o, operands){ operands.map(&:value).max },
+        "<!"  => ->(_c, _o, operands){ operands.map(&:value).min },
+        "|>"  => ->(ct, _o, operands){ operands.reduce{ |l, r| r.call(ct, [l]) } },
+        "<|"  => ->(ct, _o, operands){ operands.reverse.reduce{ |r, l| l.call(ct, [r]) } },
+        "/"   => ->(_c, _o, operands){ operands.map(&:value).reduce{ |a, v| builtin_divide(a, v) } },
+        DEFAULT: ->(_c, operator, operands){ operands.map(&:value).reduce(operator.to_sym) }
       }
       ALLOWED_ARITHMETIC_MIXTURES = [%w[+ -], %w[* /]]
       ALLOWED_COMPARISON_MIXTURES = [%w[< <=], %w[> >=]]
@@ -78,25 +82,25 @@ module Stone
         return error?(evaluated_operands) if error?(evaluated_operands)
         return Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
         if mixed_operators?
-          evaluate_mixed_operations(operators, evaluated_operands)
+          evaluate_mixed_operations(context, operators, evaluated_operands)
         else
-          evaluate_operation(operator, evaluated_operands)
+          evaluate_operation(context, operator, evaluated_operands)
         end
       end
 
-      def evaluate_operation(operator, operands)
+      def evaluate_operation(context, operator, operands)
         return Error.new("UnknownOperator", operator) unless known_operator?(operator)
         operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
         result_type = OPERATION_RESULT_TYPES[operator]
-        result_type.new!(operation.call(operator, operands))
+        result_type.new!(operation.call(context, operator, operands))
       end
 
-      def evaluate_mixed_operations(operators, operands)
+      def evaluate_mixed_operations(context, operators, operands)
         if ALLOWED_ARITHMETIC_MIXTURES.flatten.include?(operators.first)
-          evaluate_mixed_arithmethic_operations(operators, operands)
+          evaluate_mixed_arithmethic_operations(context, operators, operands)
         elsif ALLOWED_COMPARISON_MIXTURES.flatten.include?(operators.first)
-          evaluate_mixed_comparison_operations(operators, operands)
+          evaluate_mixed_comparison_operations(context, operators, operands)
         else
           fail "Compiler needs logic added to handle the case of mixing these operators: #{operators}"
         end
@@ -115,16 +119,16 @@ module Stone
       end
 
       # You're not expected to understand how this works. I wrote it, and I don't really understand how it works.
-      def evaluate_mixed_arithmethic_operations(operators, operands)
+      def evaluate_mixed_arithmethic_operations(context, operators, operands)
         operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
-          evaluate_operation(x.first.first, [a] + x.map(&:last))
+          evaluate_operation(context, x.first.first, [a] + x.map(&:last))
         end
       end
 
       # This is almost as bad. Maybe worse in some ways.
-      def evaluate_mixed_comparison_operations(operators, operands)
+      def evaluate_mixed_comparison_operations(context, operators, operands)
         Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
-          a && evaluate_operation(x.last, x.first).value
+          a && evaluate_operation(context, x.last, x.first).value
         })
       end
 

@@ -56,8 +56,8 @@ module Stone
         "++"  => ->(_operator, operands){ operands.map(&:value).join("") },
         ">!"  => ->(_operator, operands){ operands.map(&:value).max },
         "<!"  => ->(_operator, operands){ operands.map(&:value).min },
-        "/"   => ->(_operator, operands){ operands.rest.map(&:value).reduce(operands.first.value){ |a, v| builtin_divide(a, v) } },
-        DEFAULT: ->(operator, operands){ operands.rest.map(&:value).reduce(operands.first.value, operator.to_sym) }
+        "/"   => ->(_operator, operands){ operands.map(&:value).reduce{ |a, v| builtin_divide(a, v) } },
+        DEFAULT: ->(operator, operands){ operands.map(&:value).reduce(operator.to_sym) }
       }
       ALLOWED_ARITHMETIC_MIXTURES = [%w[+ -], %w[* /]]
       ALLOWED_COMPARISON_MIXTURES = [%w[< <=], %w[> >=]]

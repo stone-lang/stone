@@ -6,11 +6,11 @@ module Stone
 
     def context
       {
-        List: Stone::AST::BuiltinFunction.new("list", 0..Float::INFINITY, ->(ctxt, args){ builtin_List(ctxt, args) }),
+        List: Stone::AST::BuiltinFunction.new("List", 0..Float::INFINITY, ->(ctxt, args){ builtin_List(ctxt, args) }),
         identity: Stone::AST::BuiltinFunction.new("identity", 1..1, ->(ctxt, args){ builtin_identity(ctxt, args) }),
-        if: Stone::AST::BuiltinFunction.new("identity", 2..3, ->(ctxt, args){ builtin_if(ctxt, args) }),
-        min: Stone::AST::BuiltinFunction.new("identity", 1..Float::INFINITY, ->(ctxt, args){ builtin_min(ctxt, args) }),
-        max: Stone::AST::BuiltinFunction.new("identity", 1..Float::INFINITY, ->(ctxt, args){ builtin_max(ctxt, args) }),
+        if: Stone::AST::BuiltinFunction.new("if", 2..3, ->(ctxt, args){ builtin_if(ctxt, args) }),
+        min: Stone::AST::BuiltinFunction.new("min", 1..Float::INFINITY, ->(ctxt, args){ builtin_min(ctxt, args) }),
+        max: Stone::AST::BuiltinFunction.new("max", 1..Float::INFINITY, ->(ctxt, args){ builtin_max(ctxt, args) }),
       }
     end
 

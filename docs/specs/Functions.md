@@ -33,6 +33,9 @@ min(3/2, 1)
 max(1, 2, 3, 4/3, 22/7)
 #= Number.Rational(22, 7)
 
+max(List(1, 2, 3, 4/3, 22/7))
+#= Number.Rational(22, 7)
+
 identity(1, 2)
 #! ArityError: 'identity' expects 1 argument, got 2
 ~~~

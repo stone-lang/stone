@@ -24,7 +24,7 @@ module Stone
         if @type_specifier == Any && child_types.same?
           child_types.uniq.only
         else
-          @type_specifier
+          @type_specifier.type
         end
       end
 

@@ -38,13 +38,21 @@ module Stone
     end
 
     def builtin_min(_context, args)
-      # TODO: Check types.
-      Stone::AST::Number.new!(args.map(&:value).min)
+      # TODO: Check types. Ensure we only have 1 List, if we have a list.
+      if args.first.is_a?(Stone::AST::List)
+        Stone::AST::Number.new!(args.only.value.map(&:value).min)
+      else
+        Stone::AST::Number.new!(args.map(&:value).min)
+      end
     end
 
     def builtin_max(_context, args)
-      # TODO: Check types.
-      Stone::AST::Number.new!(args.map(&:value).max)
+      # TODO: Check types. Ensure we only have 1 List, if we have a list.
+      if args.first.is_a?(Stone::AST::List)
+        Stone::AST::Number.new!(args.only.value.map(&:value).max)
+      else
+        Stone::AST::Number.new!(args.map(&:value).max)
+      end
     end
 
   end

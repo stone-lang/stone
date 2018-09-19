@@ -78,7 +78,7 @@ Specifications
         - [x] Comparison
         - [x] Concatenation
     - [x] Function application operators
-    - [ ] Function composition operators
+    - [x] Function composition operators
 - [x] Exceptions
 - [x] Comments
     - [x] Per-line

@@ -119,7 +119,7 @@ module Stone
       match["!¬"]
     }
     rule!(:binary_operator) {
-      application_operator | text_operator | equality_operator | arithmetic_operator | comparison_operator | boolean_operator
+      application_operator | composition_operator | text_operator | equality_operator | arithmetic_operator | comparison_operator | boolean_operator
     }
     rule!(:binary_operand) {
       # TODO: This should really be an expression (other than a binary_operation).
@@ -145,6 +145,9 @@ module Stone
     }
     rule(:application_operator) {
       str("|>") | str("<|")
+    }
+    rule(:composition_operator) {
+      str(">>") | str("<<") | str("∘")
     }
     rule(:identifier) {
       match["[:alpha:]\\?_"] >> match["[:alnum:]\\?_"].repeat(0)

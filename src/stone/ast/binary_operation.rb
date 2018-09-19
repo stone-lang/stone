@@ -20,6 +20,7 @@ module Stone
         "≠" => "!=",
         "≤" => "<=",
         "≥" => ">=",
+        "∘" => "<<",
       }
       BOOLEAN_OPERATOR_MAP = {
         "*" => "∧",
@@ -47,6 +48,8 @@ module Stone
         "++"  => Text,
         "|>"  => Any,
         "<|"  => Any,
+        ">>"  => Any, # Actually `Function`, but we'll build it ourself.
+        "<<"  => Any, # Actually `Function`, but we'll build it ourself.
       }
       OPERATIONS = {
         "<"   => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value < r.value }.all? },
@@ -60,6 +63,13 @@ module Stone
         "<!"  => ->(_c, _o, operands){ operands.map(&:value).min },
         "|>"  => ->(ct, _o, operands){ operands.reduce{ |l, r| r.call(ct, [l]) } },
         "<|"  => ->(ct, _o, operands){ operands.reverse.reduce{ |r, l| l.call(ct, [r]) } },
+        ">>"  => ->(ct, _o, operands){
+          left = operands.first
+          right = operands.last
+          Function.new()
+        },
+        # ">>"  => ->(ct, _o, operands){ operands.reduce{ |l, r| r.call(ct, [l]) } },
+        "<<"  => ->(ct, _o, operands){ operands.reverse.reduce{ |r, l| l.call(ct, [r]) } },
         "/"   => ->(_c, _o, operands){ operands.map(&:value).reduce{ |a, v| builtin_divide(a, v) } },
         DEFAULT: ->(_c, operator, operands){ operands.map(&:value).reduce(operator.to_sym) }
       }

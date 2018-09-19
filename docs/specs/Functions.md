@@ -126,3 +126,34 @@ fib(1)
 fib(11)
 #= Number.Integer(89)
 ~~~
+
+
+Function Composition
+--------------------
+
+Functions may be composed into new functions.
+Note that all but the first function must take exactly 1 argument,
+and each function must accept an argument of the same type that the previous function returns.
+
+~~~ stone
+square := (x) => {
+    x * x
+}
+
+double := (x) => {
+    2 * x
+}
+
+double_then_square := double >> square
+square_then_double := double << square
+
+square_then_double(3)
+#= Number.Integer(18)
+
+double_then_square(3)
+#= Number.Integer(36)
+
+square_then_double := double ∘ square
+square_then_double(3)
+#= Number.Integer(18)
+~~~

@@ -66,19 +66,28 @@ This allows `if` to be written as a function.
 The `then` clause of an `if` conditional is passed as the 2nd argument.
 The `if` function takes an optional 3rd argument, which acts as the `else` clause.
 
+There's also `unless`, which is the same as `if`, but with `TRUE` and `FALSE` cases reversed.
+
 ~~~ stone
 if(TRUE, { 1 })
 #= Number.Integer(1)
 
+unless(FALSE, { 123 })
+#= Number.Integer(123)
+
 if(2 < 1, { "2 is less than 1" }, { "2 is NOT less than 1" })
 #= Text("2 is NOT less than 1")
+
+x := 1
+unless(x == 1, { "there are x things" }, { "there is 1 thing" })
+#= Text("there is 1 thing")
 
 if(TRUE)
 #! ArityError: 'if' expects 2 or 3 arguments, got 1
 
 if(TRUE, 1)
-#! TypeError: 'if' consequent ('then') must be a block
+#! TypeError: 'if' argument 'then' must be a block
 
 if(TRUE, { 1 }, 2)
-#! TypeError: 'if' alternative ('else') must be a block
+#! TypeError: 'if' argument 'else' must be a block
 ~~~

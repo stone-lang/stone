@@ -72,6 +72,9 @@ There's also `unless`, which is the same as `if`, but with `TRUE` and `FALSE` ca
 if(TRUE, { 1 })
 #= Number.Integer(1)
 
+if(FALSE, { 1 })
+#= Null(Null.NULL)
+
 unless(FALSE, { 123 })
 #= Number.Integer(123)
 

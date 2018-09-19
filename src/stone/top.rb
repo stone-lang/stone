@@ -36,6 +36,8 @@ module Stone
         consequent.call(context)
       elsif alternative
         alternative.call(context)
+      else
+        Stone::AST::Null.new("")
       end
     end
 

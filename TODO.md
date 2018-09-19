@@ -47,8 +47,9 @@ Specifications
 - [ ] Literals
     - [x] Integers
     - [x] Booleans
+    - [x] Null
     - [x] Text strings
-    - [ ] Fixed-point
+    - [ ] Decimal floating-point numbers
     - [x] Rationals
 - [ ] Expressions
     - [x] Parenthetical expressions
@@ -68,11 +69,11 @@ Specifications
         - [x] Minimum/maximum (`<!` and `>!`)
         - [ ] Mixed numeric types
     - [x] Equality operators
-    - [ ] Boolean operators
+    - [x] Boolean operators
         - [x] Not
             - [x] Repeated Not (`!!value`)
         - [x] And/or (non-short-circuiting)
-        - [ ] Comparison (give an error?)
+        - [x] Comparison
     - [x] Text operators
         - [x] Comparison
         - [x] Concatenation
@@ -84,7 +85,7 @@ Specifications
     - [x] Bracketed
     - [ ] Nested (would be nice to have)
 - [ ] Control logic
-    - [x] Conditionals - if/then/else
+    - [x] Conditionals - if/unless
     - [ ] Short-circuit and/or
     - [ ] While/until
 - [x] Variables

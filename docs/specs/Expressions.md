@@ -78,6 +78,9 @@ TRUE == TRUE
 TRUE != FALSE
 #= Boolean(Boolean.TRUE)
 
+NULL != NULL
+#= Boolean(Boolean.FALSE)
+
 123 == 123
 #= Boolean(Boolean.TRUE)
 
@@ -156,6 +159,9 @@ One thing that's relatively unique to Stone is that you can chain comparison ope
 #= Boolean(Boolean.TRUE)
 
 "abc" <= "abcd"
+#= Boolean(Boolean.TRUE)
+
+TRUE > FALSE
 #= Boolean(Boolean.TRUE)
 
 1 < 2 < 3

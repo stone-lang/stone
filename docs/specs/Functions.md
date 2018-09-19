@@ -110,6 +110,9 @@ apply := (f, x, y) => {
 }
 apply(add, 1, 2)
 #= Number.Integer(3)
+
+apply((x, y) => { x + y }, 1, 2)
+#= Number.Integer(3)
 ~~~
 
 Functions can implement recursion.

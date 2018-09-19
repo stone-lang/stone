@@ -48,8 +48,8 @@ module Stone
       def methods
         @methods ||= {
           includes?: ->(_, element) { Boolean.new(@value.map(&:value).include?(element.value)) },
-          map: ->(context, fn) { List.new(@value.map{ |x| fn.call(context, [x]) }) },
-          each: ->(context, fn) { List.new(@value.map{ |x| fn.call(context, [x]) }) },
+          map: ->(context, fn) { map("map", context, fn) },
+          each: ->(context, fn) { map("each", context, fn) },
         }
       end
 
@@ -63,6 +63,14 @@ module Stone
 
       def child_types
         children.map(&:type)
+      end
+
+    private
+
+      def map(name, context, function)
+        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
+        return Error.new("ArityError", "'#{name}' argument 'function' must take 1 argument") unless function.arity.include?(1)
+        List.new(@value.map{ |x| function.call(context, [x]) })
       end
 
     end

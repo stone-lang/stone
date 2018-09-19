@@ -109,4 +109,10 @@ list.map(square)
 
 list.each(square)
 #= List[Number.Integer](Number.Integer(1), Number.Integer(4), Number.Integer(9))
+
+list.each((x, y) => { x + y })
+#! ArityError: 'each' argument 'function' must take 1 argument
+
+list.map(123)
+#! TypeError: 'map' argument 'function' must have type Function[Any](Any)
 ~~~

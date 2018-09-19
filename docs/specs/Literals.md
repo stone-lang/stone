@@ -23,6 +23,18 @@ FALSE
 ~~~
 
 
+Null
+----
+
+There's a special value in Stone that represents "no valid value", named `NULL`.
+It's (the only thing) defined in the `Null` class, but is exposed globally.
+
+~~~ stone
+NULL
+#= Null(Null.NULL)
+~~~
+
+
 Integers
 --------
 

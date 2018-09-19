@@ -77,10 +77,13 @@ module Stone
       identifier
     }
     rule(:literal) {
-      boolean | rational | integer | text
+      null | boolean | rational | integer | text
     }
     rule!(:boolean) {
       str("TRUE") | str("FALSE")
+    }
+    rule!(:null) {
+      str("NULL")
     }
     rule!(:integer) {
       binary_integer | octal_integer | hexadecimal_integer | decimal_integer
@@ -103,7 +106,6 @@ module Stone
     rule(:unsigned_decimal_integer) {
       match["0-9_"].repeat(1)
     }
-
     rule(:hexadecimal_integer) {
       match["+-"].maybe >> str("0x") >> match["[:xdigit:]"] >> match["[:xdigit:]_"].repeat(0)
     }

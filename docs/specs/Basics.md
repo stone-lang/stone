@@ -44,6 +44,10 @@ the first `*/` will always end the comment and return to processing code.
 Variables
 ---------
 
+Stone has variables, much like any other programming language.
+Variable names, along with function names, property names, and method names, are called _identifiers_.
+An identifier must start with a letter, and can contain letters, numbers, and underscores.
+
 ~~~ stone
 a := 123
 a
@@ -52,8 +56,8 @@ a
 b
 #! UndefinedVariable: b
 
-c := "Hello"
-if(TRUE, { c })
+c_2 := "Hello"
+if(TRUE, { c_2 })
 #= Text("Hello")
 ~~~
 

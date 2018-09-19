@@ -25,9 +25,10 @@ module Stone
       args.first
     end
 
-    def builtin_if(name, context, args, inverted: false) # rubocop:disable Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
+    def builtin_if(name, context, args, inverted: false) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
       return Stone::AST::Error.new("ArityError", "'#{name}' expects 2 or 3 arguments, got #{args.count}") unless [2, 3].include?(args.count)
       condition, consequent, alternative = args
+      condition = condition.call(context) if condition.is_a?(Stone::AST::Block)
       return Stone::AST::Error.new("TypeError", "'#{name}' condition must be a Boolean") unless condition.is_a?(Stone::AST::Boolean)
       return Stone::AST::Error.new("TypeError", "'#{name}' argument 'then' must be a block") unless consequent.is_a?(Stone::AST::Block)
       return Stone::AST::Error.new("TypeError", "'#{name}' argument 'else' must be a block") unless alternative.is_a?(Stone::AST::Block) || alternative.nil?

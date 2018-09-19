@@ -15,6 +15,7 @@ Rails:
 # Allow longer lines.
 Metrics/LineLength:
   Max: 160
+  IgnoreCopDirectives: true
 
 # Don't require documentation for everything.
 Style/Documentation:

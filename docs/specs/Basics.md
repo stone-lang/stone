@@ -78,6 +78,9 @@ unless(FALSE, { 123 })
 if(2 < 1, { "2 is less than 1" }, { "2 is NOT less than 1" })
 #= Text("2 is NOT less than 1")
 
+if({ 2 < 1 }, { "2 is less than 1" }, { "2 is NOT less than 1" })
+#= Text("2 is NOT less than 1")
+
 x := 1
 unless(x == 1, { "there are x things" }, { "there is 1 thing" })
 #= Text("there is 1 thing")
@@ -90,4 +93,10 @@ if(TRUE, 1)
 
 if(TRUE, { 1 }, 2)
 #! TypeError: 'if' argument 'else' must be a block
+
+if("Text", { "Hello" }, { "Googbye" })
+#! TypeError: 'if' condition must be a Boolean
+
+unless({ "Text" }, { "Hello" }, { "Googbye" })
+#! TypeError: 'unless' condition must be a Boolean
 ~~~

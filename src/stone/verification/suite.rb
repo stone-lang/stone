@@ -22,6 +22,7 @@ module Stone
 
       def complete
         print_results
+        exit 1 if failures.any?
       end
 
     private

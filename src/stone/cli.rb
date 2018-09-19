@@ -41,6 +41,7 @@ module Stone
         puts parse(input)
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree
+        exit 1
       end
     end
 
@@ -52,6 +53,7 @@ module Stone
         }.compact
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree
+        exit 1
       end
     end
 

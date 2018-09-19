@@ -58,6 +58,9 @@ empty.empty?
 #= Boolean(Boolean.TRUE)
 ~~~
 
+A List also has properties to access the first and last items,
+as well as a List containing all but the first item.
+
 ~~~ stone
 list := List(1, 2, 3)
 
@@ -80,6 +83,8 @@ list.tail
 
 ### List Methods
 
+You can determine whether a list contains a specific item.
+
 ~~~ stone
 list := List(1, 2, 3)
 empty := List()
@@ -96,6 +101,10 @@ empty.includes?(1)
 
 
 ### List Iteration
+
+You'll often want to perform an operation on every item in a List.
+The `map` method allows you to do this. (You may prefer to use its alias, `each`.)
+It takes a function that takes 1 argument.
 
 ~~~ stone
 list := List(1, 2, 3)
@@ -115,4 +124,42 @@ list.each((x, y) => { x + y })
 
 list.map(123)
 #! TypeError: 'map' argument 'function' must have type Function[Any](Any)
+~~~
+
+
+### List Reduction
+
+Sometimes you'll need to combine the items in a List to a single item.
+You can do this using the `reduce` or `fold` methods.
+(The `fold` method has aliases named `inject` and `foldl`.)
+The `reduce` method takes the first 2 elements of the List, and applies the function to them.
+It then applies the function to the previous result and each successive element.
+The `fold` method is similar, but starts with an separately-specified initial value.
+These functions take a function that takes 2 arguments.
+
+~~~ stone
+list := List(1, 2, 3, 4)
+add := (x, y) => { x + y }
+square := (x) => { x * x }
+
+list.reduce(add)
+#= Number.Integer(10)
+
+list.reduce((x, y) => { x * y })
+#= Number.Integer(24)
+
+list.fold(add, 1)
+#= Number.Integer(11)
+
+list.fold((x, y) => { x * y }, 1)
+#= Number.Integer(24)
+
+list.fold(square)
+#! ArityError: 'fold' expects 2 arguments, got 1
+
+list.fold(square, 1)
+#! ArityError: 'fold' argument 'function' must take 2 arguments
+
+list.reduce(123)
+#! TypeError: 'reduce' argument 'function' must have type Function[Any](Any)
 ~~~

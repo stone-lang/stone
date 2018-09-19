@@ -45,11 +45,15 @@ module Stone
         }
       end
 
-      def methods
+      def methods # rubocop:disable Metrics/AbcSize
         @methods ||= {
           includes?: ->(_, element) { Boolean.new(@value.map(&:value).include?(element.value)) },
           map: ->(context, fn) { map("map", context, fn) },
           each: ->(context, fn) { map("each", context, fn) },
+          reduce: ->(context, fn) { reduce("reduce", context, fn) },
+          fold: ->(context, fn, iv) { reduce("fold", context, fn, initial_value: iv) },
+          foldl: ->(context, fn, iv) { reduce("foldl", context, fn, initial_value: iv) },
+          inject: ->(context, fn, iv) { reduce("inject", context, fn, initial_value: iv) },
         }
       end
 
@@ -71,6 +75,16 @@ module Stone
         return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 1 argument") unless function.arity.include?(1)
         List.new(@value.map{ |x| function.call(context, [x]) })
+      end
+
+      def reduce(name, context, function, initial_value: nil)
+        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
+        return Error.new("ArityError", "'#{name}' argument 'function' must take 2 arguments") unless function.arity.include?(2)
+        if initial_value
+          @value.reduce(initial_value){ |x, y| function.call(context, [x, y]) }
+        else
+          @value.reduce{ |x, y| function.call(context, [x, y]) }
+        end
       end
 
     end

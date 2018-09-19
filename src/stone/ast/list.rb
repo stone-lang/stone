@@ -54,6 +54,7 @@ module Stone
           fold: ->(context, fn, iv) { reduce("fold", context, fn, initial_value: iv) },
           foldl: ->(context, fn, iv) { reduce("foldl", context, fn, initial_value: iv) },
           inject: ->(context, fn, iv) { reduce("inject", context, fn, initial_value: iv) },
+          foldr: ->(context, fn, iv) { reduce("foldr", context, fn, initial_value: iv, reverse: true) },
         }
       end
 
@@ -77,13 +78,15 @@ module Stone
         List.new(@value.map{ |x| function.call(context, [x]) })
       end
 
-      def reduce(name, context, function, initial_value: nil)
+      def reduce(name, context, function, initial_value: nil, reverse: false)
         return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 2 arguments") unless function.arity.include?(2)
+        reverse_or_not = reverse ? :reverse : :itself
+        list = value.__send__(reverse_or_not)
         if initial_value
-          @value.reduce(initial_value){ |x, y| function.call(context, [x, y]) }
+          list.reduce(initial_value){ |x, y| function.call(context, [x, y].__send__(reverse_or_not)) }
         else
-          @value.reduce{ |x, y| function.call(context, [x, y]) }
+          list.reduce{ |x, y| function.call(context, [x, y].__send__(reverse_or_not)) }
         end
       end
 

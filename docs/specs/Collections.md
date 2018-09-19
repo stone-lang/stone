@@ -140,6 +140,7 @@ These functions take a function that takes 2 arguments.
 ~~~ stone
 list := List(1, 2, 3, 4)
 add := (x, y) => { x + y }
+sub := (x, y) => { x - y }
 square := (x) => { x * x }
 
 list.reduce(add)
@@ -153,6 +154,12 @@ list.fold(add, 1)
 
 list.fold((x, y) => { x * y }, 1)
 #= Number.Integer(24)
+
+list.foldl(sub, 0)
+#= Number.Integer(-10)
+
+list.foldr(sub, 0)
+#= Number.Integer(-2)
 
 list.fold(square)
 #! ArityError: 'fold' expects 2 arguments, got 1

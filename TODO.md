@@ -131,7 +131,7 @@ Specifications
         - [x] Basics (empty?, includes?, size/length)
         - [x] Access (first/head, rest/tail, last)
         - [x] Iteration (map/each)
-        - [ ] Reducing (reduce/inject/fold/foldl)
+        - [x] Reduction (reduce/inject/fold/foldl, foldr)
         - [ ] Re-ordering (reversed, sorted)
         - [ ] Misc (slice, split, join, ...)
     - [ ] Map

@@ -49,10 +49,10 @@ module Stone
         "<|"  => Any,
       }
       OPERATIONS = {
-        "<"   => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value < r.value }.all? },
-        "<="  => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value <= r.value }.all? },
-        ">"   => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value > r.value }.all? },
-        ">="  => ->(_c, _o, operands){ operands.each_cons(2).map{ |l, r| l.value >= r.value }.all? },
+        "<"   => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value < r.value }.all? },
+        "<="  => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value <= r.value }.all? },
+        ">"   => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value > r.value }.all? },
+        ">="  => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value >= r.value }.all? },
         "=="  => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length == 1 }, # rubocop:disable Style/Semicolon
         "!="  => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length != 1 }, # rubocop:disable Style/Semicolon
         "++"  => ->(_c, _o, operands){ operands.map(&:value).join("") },

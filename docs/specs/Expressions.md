@@ -110,6 +110,15 @@ FALSE == 123
 
 2/1 == 2
 #= Boolean(Boolean.TRUE)
+
+1.0 == 1.00
+#= Boolean(Boolean.TRUE)
+
+1.0 == 1
+#= Boolean(Boolean.TRUE)
+
+1/2 == 0.5
+#= Boolean(Boolean.TRUE)
 ~~~
 
 

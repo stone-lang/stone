@@ -25,7 +25,7 @@ module Stone
       end
 
       def normalized!
-        Rational.new(value.numerator, value.denominator) # Note that this is Stone's Rational.
+        Rational.new(value.numerator, value.denominator).normalized! # Note that this is Stone's Rational.
       end
 
     end

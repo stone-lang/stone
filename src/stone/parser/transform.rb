@@ -25,11 +25,10 @@ module Stone
       AST::Decimal.new(d)
     }
     rule(rational: {numerator: simple(:numerator), denominator: simple(:denominator)}) {
-      rational = AST::Rational.new(numerator, denominator)
-      if rational.denominator.zero?
+      begin
+        AST::Rational.new(numerator, denominator)
+      rescue ZeroDivisionError
         AST::Error.new("DivisionByZero", "invalid rational literal")
-      else
-        rational
       end
     }
     rule(text: simple(:t)) {

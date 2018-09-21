@@ -17,6 +17,7 @@ module Stone
           @denominator = denominator.to_s.to_i
         end
         reduce!
+        @value = Rational(@numerator, @denominator) # Note that this is a native Ruby `Rational` here, and might raise `ZeroDivisionError`.
       end
 
       def type
@@ -38,11 +39,6 @@ module Stone
 
       def normalized!
         denominator == 1 ? Integer.new(numerator) : self
-      end
-
-      # Note that we're returning a native Ruby `Rational` here.
-      def value
-        Rational(numerator, denominator)
       end
 
     end

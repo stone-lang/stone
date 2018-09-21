@@ -21,6 +21,9 @@ module Stone
     rule(integer: simple(:i)) {
       AST::Integer.new(i)
     }
+    rule(decimal: simple(:d)) {
+      AST::Decimal.new(d)
+    }
     rule(rational: {numerator: simple(:numerator), denominator: simple(:denominator)}) {
       rational = AST::Rational.new(numerator, denominator)
       if rational.denominator.zero?

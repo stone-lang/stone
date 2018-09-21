@@ -77,7 +77,7 @@ module Stone
       identifier
     }
     rule(:literal) {
-      null | boolean | rational | integer | text
+      null | boolean | decimal | rational | integer | text
     }
     rule!(:boolean) {
       str("TRUE") | str("FALSE")
@@ -87,6 +87,9 @@ module Stone
     }
     rule!(:integer) {
       binary_integer | octal_integer | hexadecimal_integer | decimal_integer
+    }
+    rule!(:decimal) {
+      decimal_integer >> str(".") >> unsigned_decimal_integer
     }
     rule!(:rational) {
       decimal_integer.as(:numerator) >> str("/") >> unsigned_decimal_integer.as(:denominator)

@@ -4,11 +4,13 @@ module Stone
 
     class Number < Value
 
-      def self.new!(value)
+      def self.new!(value) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
         if value.is_a?(::Integer)
           Integer.new(value)
         elsif value.is_a?(::Rational) && value.denominator == 1
           Integer.new(value.numerator)
+        elsif value.is_a?(::Rational) && (value.denominator % 10).zero?
+          Decimal.new((value.numerator.to_f / value.denominator.to_f).to_s)
         elsif value.is_a?(::Rational)
           Rational.new(value.numerator, value.denominator)
         else
@@ -29,3 +31,4 @@ end
 
 require "stone/ast/integer"
 require "stone/ast/rational"
+require "stone/ast/decimal"

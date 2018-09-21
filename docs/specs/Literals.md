@@ -122,6 +122,41 @@ Like decimals, underscores are allowed between digits.
 ~~~
 
 
+Decimals
+--------
+
+Like most languages, Stone supports floating-point numbers.
+These are called Decimals in Stone.
+A Decimal has 1 or more digits before the decimal point, and 1 or more digits after.
+
+There's a subtle difference from most languages, though.
+Decimals are stored internally in a decimal format, instead of a binary format.
+This means that every number you can write in decimal format will be stored exactly.
+This is not the case with decimals stored in binary format.
+The reason we do this is so that you won't run into unexpected results.
+For example, in many languages `0.1 + 0.2 == 0.3` will return `FALSE`.
+We prefer to give the correct answer in those situations, even if it's slower.
+We plan to eventually support IEEE-754 floating-point numbers, for cases where speed
+is more important, and when you prefer to take care of the rounding issues manually.
+
+~~~ stone
+1.0
+#= Number.Decimal(1.0)
+
+1.00
+#= Number.Decimal(1.00)
+
+0.1
+#= Number.Decimal(0.1)
+
+0.1 + 0.2
+#= Number.Decimal(0.3)
+
+(0.1 + 0.2) == 0.3
+#= Boolean(Boolean.TRUE)
+~~~
+
+
 Rational Numbers
 ----------------
 

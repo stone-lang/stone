@@ -167,6 +167,21 @@ One thing that's relatively unique to Stone is that you can chain comparison ope
 1.01 > 1.000
 #= Boolean(Boolean.TRUE)
 
+1.0 > 1.000
+#= Boolean(Boolean.FALSE)
+
+1.0 < 1.000
+#= Boolean(Boolean.FALSE)
+
+1 < 1.0
+#= Boolean(Boolean.FALSE)
+
+1 > 1.0
+#= Boolean(Boolean.FALSE)
+
+1 >= 1.0
+#= Boolean(Boolean.TRUE)
+
 1.01 > 1
 #= Boolean(Boolean.TRUE)
 

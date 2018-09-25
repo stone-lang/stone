@@ -89,7 +89,8 @@ module Stone
       binary_integer | octal_integer | hexadecimal_integer | decimal_integer
     }
     rule!(:decimal) {
-      decimal_integer >> str(".") >> unsigned_decimal_integer
+      # NOTE: \u23E8 is Unicode DECIMAL EXPONENT SYMBOL.
+      decimal_integer >> str(".") >> unsigned_decimal_integer >> (match["eE\u23E8"] >> decimal_integer).maybe
     }
     rule!(:rational) {
       decimal_integer.as(:numerator) >> str("/") >> unsigned_decimal_integer.as(:denominator)

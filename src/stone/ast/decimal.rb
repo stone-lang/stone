@@ -1,19 +1,26 @@
+require "extensions/string"
+require "extensions/integer"
+
+
 module Stone
 
   module AST
 
     class Decimal < Number
 
-      attr_reader :decimal
+      attr_reader :numerator, :denominator
+      attr_reader :significant_digits
+      attr_reader :whole, :fraction, :exponent
 
-      def initialize(decimal)
+      def initialize(decimal) # rubocop:disable Metrics/AbcSize
         @source_location = get_source_location(decimal)
-        @decimal = decimal.to_s.sub(/^0+/, "0")
-        digits_left_of_decimal_point = @decimal.index(".")
-        digits_right_of_decimal_point = @decimal.length - digits_left_of_decimal_point - 1
-        numerator = @decimal.tr(".", "")
-        denominator = 10**digits_right_of_decimal_point
-        @value = Rational(numerator, denominator) # Note that this is Ruby's built-in Rational.
+        whole, fraction, exponent = decimal.to_s.split(/[.eE\u23E8]/)
+        compute_components!(whole, fraction, exponent)
+        digits = "#{whole}#{fraction}"
+        @significant_digits = digits.length - (digits.start_with?(/[+-]/) ? 1 : 0)
+        @numerator = digits.to_i
+        @denominator = 10**(fraction.length - exponent.to_i)
+        @value = Rational(@numerator, @denominator) # Note that this is Ruby's built-in Rational.
       end
 
       def type
@@ -21,11 +28,22 @@ module Stone
       end
 
       def to_s
-        "#{type}(#{decimal})"
+        "#{type}(#{sign}#{whole.abs}.#{fraction}E#{exponent.sign}#{exponent.abs})"
       end
 
       def normalized!
-        Rational.new(value.numerator, value.denominator).normalized! # Note that this is Stone's Rational.
+        Rational.new(numerator, denominator).normalized! # Note that this is Stone's Rational.
+      end
+
+      def sign
+        numerator.sign
+      end
+
+      def compute_components!(whole, fraction, exponent)
+        digits = "#{whole}#{fraction}"
+        @whole = digits.first(digits.start_with?(/[+-]/) ? 2 : 1).to_i
+        @fraction = digits.rest(digits.start_with?(/[+-]/) ? 2 : 1)
+        @exponent = exponent.to_i + whole.length - (digits.start_with?(/[+-]/) ? 2 : 1)
       end
 
     end

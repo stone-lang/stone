@@ -44,12 +44,12 @@ TODO
 Specifications
 --------------
 
-- [ ] Literals
+- [x] Literals
     - [x] Integers
     - [x] Booleans
     - [x] Null
     - [x] Text strings
-    - [ ] Decimal floating-point numbers
+    - [x] Decimal floating-point numbers
     - [x] Rationals
 - [ ] Expressions
     - [x] Parenthetical expressions

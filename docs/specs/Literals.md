@@ -129,6 +129,8 @@ Like most languages, Stone supports floating-point numbers.
 These are called Decimals in Stone.
 A Decimal has 1 or more digits before the decimal point, and 1 or more digits after.
 
+Decimals may be expressed in scientific notation, using `e` or `E`.
+
 There's a subtle difference from most languages, though.
 Decimals are stored internally in a decimal format, instead of a binary format.
 This means that every number you can write in decimal format will be stored exactly.
@@ -141,16 +143,46 @@ is more important, and when you prefer to take care of the rounding issues manua
 
 ~~~ stone
 1.0
-#= Number.Decimal(1.0)
+#= Number.Decimal(+1.0E0)
 
 1.00
-#= Number.Decimal(1.00)
+#= Number.Decimal(+1.00E0)
+
+0.0
+#= Number.Decimal(0.0E0)
+
+0.000
+#= Number.Decimal(0.000E0)
 
 0.1
-#= Number.Decimal(0.1)
+#= Number.Decimal(+0.1E0)
+
+0.10
+#= Number.Decimal(+0.10E0)
+
+-2.0E-1
+#= Number.Decimal(-2.0E-1)
+
+-2.00e-1
+#= Number.Decimal(-2.00E-1)
+
+-0.004
+#= Number.Decimal(-0.004E0)
+
++5.0e+1
+#= Number.Decimal(+5.0E+1)
+
+1.0E+3
+#= Number.Decimal(+1.0E+3)
+
+1.000E+2
+#= Number.Decimal(+1.000E+2)
+
+100.0E0
+#= Number.Decimal(+1.000E+2)
 
 0.1 + 0.2
-#= Number.Decimal(0.3)
+#= Number.Decimal(+0.3E0)
 
 (0.1 + 0.2) == 0.3
 #= Boolean(Boolean.TRUE)

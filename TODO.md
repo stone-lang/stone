@@ -60,6 +60,7 @@ Specifications
         - [x] Multiple operands
         - [x] Mixing operators (gives an error in most cases)
             - [x] Allowed mixed operators
+                - [x] Comparison/equality (lower precedence) and anything else
                 - [x] `+` and `-`
                 - [x] `*` and `/`
                 - [x] `<` and `<=`

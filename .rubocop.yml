@@ -193,6 +193,11 @@ Layout/AccessModifierIndentation:
   Exclude:
     - src/stone/top.rb
 
+# Allow `expr = expr + x` in this file, to parallel `expr = x + expr` that's right next to it.
+Style/SelfAssignment:
+  Exclude:
+    - src/stone/ast/binary_operation.rb
+
 # Disabling this only because it's breaking RuboCop (at least 0.53 to 0.58.2).
 Style/PercentLiteralDelimiters:
   Enabled: false

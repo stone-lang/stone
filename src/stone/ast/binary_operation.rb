@@ -63,6 +63,7 @@ module Stone
         "/"   => ->(_c, _o, operands){ operands.map(&:value).reduce{ |a, v| builtin_divide(a, v) } },
         DEFAULT: ->(_c, operator, operands){ operands.map(&:value).reduce(operator.to_sym) }
       }
+      LOWER_PRECEDENCE_OPERATORS = %w[== != < <= > >=]
       ALLOWED_ARITHMETIC_MIXTURES = [%w[+ -], %w[* /]]
       ALLOWED_COMPARISON_MIXTURES = [%w[< <=], %w[> >=]]
       ALLOWED_OPERATOR_MIXTURES = ALLOWED_ARITHMETIC_MIXTURES + ALLOWED_COMPARISON_MIXTURES
@@ -88,6 +89,15 @@ module Stone
         end
       end
 
+      def self.builtin_divide(dividend, divisor)
+        dividend = Rational.new(dividend) if dividend.is_a?(::Integer)
+        divisor = Rational.new(divisor) if divisor.is_a?(::Integer)
+        # Note that we're returning a native Ruby `Rational` here.
+        Rational((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
+      end
+
+    private
+
       def evaluate_operation(context, operator, operands)
         return Error.new("UnknownOperator", operator) unless known_operator?(operator)
         operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }
@@ -96,26 +106,50 @@ module Stone
         result_type.new!(operation.call(context, operator, operands))
       end
 
-      def evaluate_mixed_operations(context, operators, operands)
-        if ALLOWED_ARITHMETIC_MIXTURES.flatten.include?(operators.first)
+      def evaluate_mixed_operations(context, operators, operands) # rubocop:disable Metrics/AbcSize
+        if (ALLOWED_ARITHMETIC_MIXTURES.flatten & operators).sort == operators.sort.uniq
           evaluate_mixed_arithmethic_operations(context, operators, operands)
-        elsif ALLOWED_COMPARISON_MIXTURES.flatten.include?(operators.first)
+        elsif (ALLOWED_COMPARISON_MIXTURES.flatten & operators).sort == operators.sort.uniq
           evaluate_mixed_comparison_operations(context, operators, operands)
+        elsif !(LOWER_PRECEDENCE_OPERATORS & operators).empty?
+          evaluate_lower_precedence_operations(context, operators, operands)
         else
           fail "Compiler needs logic added to handle the case of mixing these operators: #{operators}"
         end
       end
 
       def disallowed_mixed_operators?
-        mixed_operators? && !ALLOWED_OPERATOR_MIXTURES.include?(operators.sort.uniq)
+        mixed_operators? && !allowed_mixed_operators?
       end
 
       def mixed_operators?
         operators.uniq.size > 1
       end
 
+      def allowed_mixed_operators?
+        (operators & LOWER_PRECEDENCE_OPERATORS).any? || ALLOWED_OPERATOR_MIXTURES.include?(operators.sort.uniq)
+      end
+
       def known_operator?(operator)
         OPERATION_RESULT_TYPES.has_key?(operator)
+      end
+
+      # This one's a bit rough, but we should probably make it more like evaluate_mixed_arithmethic_operations.
+      def evaluate_lower_precedence_operations(context, operators, operands) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+        expr = operands.zip(operators).flatten.compact.each_cons(3).map { |ops|
+          if !ops[1].is_a?(String)
+            nil
+          elsif LOWER_PRECEDENCE_OPERATORS.include?(ops[1])
+            ops[1]
+          else
+            evaluate_operation(context, ops[1], [ops[0], ops[2]])
+          end
+        }.compact
+        expr = [operands.first] + expr if expr.first.is_a?(String)
+        expr = expr + [operands.last] if expr.last.is_a?(String)
+        remaining_operators = expr.select{ |x| x.is_a?(String) }
+        remaining_operands = expr.reject{ |x| x.is_a?(String) }
+        evaluate_mixed_comparison_operations(context, remaining_operators, remaining_operands)
       end
 
       # You're not expected to understand how this works. I wrote it, and I don't really understand how it works.
@@ -130,13 +164,6 @@ module Stone
         Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
           a && evaluate_operation(context, x.last, x.first).value
         })
-      end
-
-      def self.builtin_divide(dividend, divisor)
-        dividend = Rational.new(dividend) if dividend.is_a?(::Integer)
-        divisor = Rational.new(divisor) if divisor.is_a?(::Integer)
-        # Note that we're returning a native Ruby `Rational` here.
-        Rational((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
       end
 
     end

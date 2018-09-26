@@ -184,7 +184,7 @@ is more important, and when you prefer to take care of the rounding issues manua
 0.1 + 0.2
 #= Number.Decimal(+0.3E0)
 
-(0.1 + 0.2) == 0.3
+0.1 + 0.2 == 0.3
 #= Boolean(Boolean.TRUE)
 ~~~
 

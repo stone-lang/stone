@@ -47,7 +47,10 @@ Most importantly, operator precedence adds complexity to what you have to learn 
 #= Number.Integer(7)
 ~~~
 
-There are only a few exceptions to the mixed operators rule:
+There are only a few exceptions to the mixed operators rule.
+Addition and subtraction can be mixed, and have the same precedence.
+Multiplication and division can be mixed, and have the same precedence.
+The equality and comparison operators can be mixed with anything else, and have a lower precedence.
 
 ~~~ stone
 1 + 2 - 3
@@ -64,6 +67,15 @@ There are only a few exceptions to the mixed operators rule:
 
 3 >= 4 > 3
 #= Boolean(Boolean.FALSE)
+
+0.1 + 0.2 == 0.3
+#= Boolean(Boolean.TRUE)
+
+0.1 + 0.1 < 0.3
+#= Boolean(Boolean.TRUE)
+
+0.3 > 0.1 + 0.1
+#= Boolean(Boolean.TRUE)
 ~~~
 
 

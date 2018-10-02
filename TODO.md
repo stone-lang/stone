@@ -19,6 +19,12 @@ TODO
     - [x] Show progress
     - [x] Allow debugging
     - [ ] Add some colorization
+- [ ] Other testing
+    - [ ] Unit tests
+    - [ ] Property-based tests
+    - [ ] Testing optimizations (compare with unoptimized version)
+    - [ ] Code coverage
+    - [ ] Benchmarking (for hotspot location)
 - [ ] Add design docs
 - [x] Start on parser and grammar
     - [x] Look into various choices for parsing
@@ -34,6 +40,7 @@ TODO
 - [ ] Compile to LLVM
 - [x] REPL
     - [ ] Multi-line statements
+    - [ ] Jupyter kernel
 - [ ] Static type tracking/checking
     - [ ] Complex types
 - [ ] Self-hosting compiler (this one is WAY off)
@@ -138,7 +145,11 @@ Specifications
     - [ ] Map
 - [ ] Types
     - [ ] Annotations
+    - [ ] Type inference
     - [ ] Ensure `if` returns same type for all paths
+    - [ ] Refinement types
+    - [ ] Dependent types?
+    - [ ] Substructural (linear, affine, ordered, unique) types?
 - [ ] I/O
     - [ ] STDOUT
     - [ ] STDIN
@@ -151,6 +162,6 @@ Design Docs
 -----------
 
 - [ ] Purpose
-- [ ] Goals
+- [x] Goals
 - [ ] Features
 - [ ] Parsing

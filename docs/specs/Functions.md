@@ -126,3 +126,21 @@ fib(1)
 fib(11)
 #= Number.Integer(89)
 ~~~
+
+
+Closures
+--------
+
+Functions in Stone are closures; they can reference variables defined outside their own scope.
+
+~~~ stone
+adder := (y) => {
+    (x) => { x + y }
+}
+add1 := adder(1)
+add2 := adder(2)
+add1(2)
+#= Number.Integer(3)
+add2(2)
+#= Number.Integer(4)
+~~~

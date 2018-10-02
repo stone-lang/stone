@@ -100,7 +100,7 @@ Specifications
     - [ ] Default arguments
     - [ ] Named arguments
     - [ ] Varargs
-    - [ ] Closures
+    - [x] Closures
     - [x] Recursion
     - [x] First-class functions
 - [ ] Classes

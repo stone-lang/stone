@@ -13,7 +13,16 @@ module Stone
         @parameters = parameters.map(&:to_sym)
       end
 
-      def evaluate(_context)
+      def evaluate(context)
+        @body = body.map{ |stmt|
+          stmt.recursively{ |ast_node|
+            if ast_node.is_a?(VariableReference) && !defined_locally?(ast_node.name)
+              ast_node.evaluate(context)
+            else
+              ast_node
+            end
+          }
+        }
         self
       end
 
@@ -31,6 +40,10 @@ module Stone
 
       def to_s
         "(#{parameters.join(", ")}) => {\n    #{body}\n}"
+      end
+
+      def defined_locally?(name)
+        parameters.include?(name) || body.any?{ |stmt| stmt.is_a?(Assignment) && stmt.name == name }
       end
 
     end

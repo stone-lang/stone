@@ -15,6 +15,10 @@ module Stone
         fail NotImplementedError
       end
 
+      def recursively(&block)
+        block.call(self)
+      end
+
       def type
         fail NotImplementedError
       end

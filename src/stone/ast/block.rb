@@ -24,6 +24,13 @@ module Stone
         "{\n    #{body}\n}"
       end
 
+      def recursively(&block)
+        @body = body.map{ |stmt|
+          stmt.recursively(block)
+        }.compact
+        block.call(self)
+      end
+
     end
 
   end

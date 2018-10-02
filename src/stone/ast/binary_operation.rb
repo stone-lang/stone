@@ -89,6 +89,11 @@ module Stone
         end
       end
 
+      def recursively(&block)
+        @operands = operands.map { |operand| operand.recursively(&block) }
+        block.call(self)
+      end
+
       def self.builtin_divide(dividend, divisor)
         dividend = Rational.new(dividend) if dividend.is_a?(::Integer)
         divisor = Rational.new(divisor) if divisor.is_a?(::Integer)

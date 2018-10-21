@@ -17,6 +17,7 @@ module Stone
       end
 
       def run(source_code)
+        return if source_code.empty?
         self.results += process_ast(source_code, yield).compact
       end
 

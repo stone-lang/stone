@@ -4,7 +4,7 @@ module Stone
 
     class Result
 
-      attr_reader :code, :expected, :actual, :error, :expecting_error
+      attr_reader :code, :expected, :actual, :error, :expecting_error, :success
 
       def initialize(code, expected, actual, error = nil, expecting_error: false)
         @code = code
@@ -16,10 +16,16 @@ module Stone
 
       def success?
         if expecting_error
-          expected == error
+          @success = (expected == error)
+        elsif error
+          @success = false
         else
-          expected == actual
+          @success = (expected == actual)
         end
+      end
+
+      def failed?
+        !success?
       end
 
     end

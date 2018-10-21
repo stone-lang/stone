@@ -4,6 +4,7 @@ require "stone/parser/parser"
 require "stone/parser/transform"
 require "stone/verification/suite"
 require "stone/top"
+require "stone/ast/error"
 
 require "readline"
 require "kramdown"
@@ -82,9 +83,10 @@ module Stone
       each_input_file do |input|
         suite.run(input) do
           transform(parse(input))
+        rescue Parslet::ParseFailed => e
+          suite.add_failure(input, Stone::AST::Error.new("ParseError", e.parse_failure_cause))
+          []
         end
-      rescue Parslet::ParseFailed => e
-        puts e.parse_failure_cause.ascii_tree
       end
       suite.complete
     end

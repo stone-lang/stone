@@ -25,6 +25,11 @@ module Stone
         exit 1 if failures.any?
       end
 
+      # This will probably only be used to register parse errors.
+      def add_failure(code, error_message)
+        results << Result.new(code, nil, nil, error_message)
+      end
+
     private
 
       def print_results
@@ -38,14 +43,14 @@ module Stone
         puts "\nFailed specs:\n\n"
         failures.each do |failure|
           puts failure.code
-          puts "    Expected: #{failure.expected}"
-          puts "    Actual:   #{failure.actual}"
+          puts "    Expected: #{failure.expected}" if failure.expected
+          puts "    Actual:   #{failure.actual || failure.error}"
         end
         puts
       end
 
       def failures
-        @failures ||= results.reject(&:success?)
+        @failures ||= results.select(&:failed?)
       end
 
       def successes

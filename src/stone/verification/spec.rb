@@ -35,7 +35,7 @@ module Stone
     private
 
       def actual_error
-        actual_result
+        actual_result if expected_error
       end
 
       def expected_result

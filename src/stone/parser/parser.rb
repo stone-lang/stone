@@ -77,13 +77,7 @@ module Stone
       identifier
     }
     rule(:literal) {
-      null | boolean | decimal | rational | integer | text
-    }
-    rule!(:boolean) {
-      str("TRUE") | str("FALSE")
-    }
-    rule!(:null) {
-      str("NULL")
+      decimal | rational | integer | text
     }
     rule!(:integer) {
       binary_integer | octal_integer | hexadecimal_integer | decimal_integer

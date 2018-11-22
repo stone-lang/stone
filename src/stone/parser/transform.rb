@@ -12,12 +12,6 @@ module Stone
     rule(comment: simple(:c)) {
       AST::Comment.new(c)
     }
-    rule(boolean: simple(:b)) {
-      AST::Boolean.new(b)
-    }
-    rule(null: simple(:n)) {
-      AST::Null.new(n)
-    }
     rule(integer: simple(:i)) {
       AST::Integer.new(i)
     }

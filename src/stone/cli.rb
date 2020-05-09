@@ -15,8 +15,6 @@ module Stone
 
   class CLI
 
-    attr_reader :options
-
     def self.run
       new.run
     end
@@ -24,8 +22,6 @@ module Stone
     def run
       subcommand = ARGV[0]
       ARGV.shift
-
-      extract_options
 
       if self.respond_to?("run_#{subcommand}", true)
         __send__("run_#{subcommand}")
@@ -91,7 +87,8 @@ module Stone
       suite.complete
     end
 
-    def extract_options
+    private def options
+      return @options if @options
       @options = []
       while ARGV[0] =~ /^--/
         @options << ARGV[0]

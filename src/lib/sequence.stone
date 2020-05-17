@@ -1,0 +1,82 @@
+# Sequence only needs to implement `fold` (AKA `reduce` or `inject`)
+	* All the other methods can be written in terms of it
+		* Although they might need to be overridden with something more performant
+	* See Barndon Weaver's [blog series](https://medium.com/@baweaver/reducing-enumerable-part-five-cerulean-master-of-tally-by-9d5f9e430bc2) and talks on the subject
+	* Might need to define both `foldl` and `foldr`
+		* I don't think `foldr` will work for infinite Sequences
+
+
+* Leaning strongly towards `Foldable` as the primary building block for Sequences and Collections
+    * Perhaps every sub-type of `Anything` will be `Foldable`
+	    * Other than maybe `Function`
+
+
+Sequence := Interface[T = Anything]({
+
+    @name := "Sequence"
+    @interfaces := List(Container, Foldable)
+
+    Unknown := Enum(value: UNKNOWN)
+
+    first :: T | Null
+    first := { nth(1) }
+    rest :: Sequence[T] | Null  # Should be "@dynamic_type[T]" instead of "Sequence[T]".
+    rest := { drop(1) }  # Implementations will likely override this.
+    length :: Cardinal | Unknown | Infinity.Positive
+
+    empty? := { length.zero? }
+    
+    nth(Ordinal) :: T | Null # Subclasses need to implement this.
+    at := nth
+
+    take(n) :: Sequence[T] | Null  # First _n_ elements.
+    drop(n) :: Sequence[T] | Null  # All but first _n_ elements.
+
+    head := first
+    tail := rest
+
+    foldl :: Sequence[T]  # Should be "@dynamic_type[T]" here (and everywhere).
+    fold := foldl
+    map := { ... }
+
+    car := first
+    cdr := rest
+
+    keep := take
+    initial := take
+    all_but_first := drop
+    nthcdr := drop
+
+})
+
+
+Sequence.Finite := Interface[T = Anything]({
+
+    @name := "Finite"
+    @interfaces := List(Sequence)
+
+    FiniteLength := Constraint { length != Infinity }  # TODO: Fake this in constructor.
+
+    # NOTE: These *might* have terrible performance.
+    last :: T
+    final(n :: Cardinal) :: Function[Sequence[T]] | Null]
+
+    foldr :: Sequence[T]  # Should be "@dynamic_type[T]" here too (and everywhere).
+    mapr := { ... }
+
+    reverse :: Sequence[T]
+})
+
+
+Sequence.Infinite := Interface[T = Anything]({
+
+    @name := "Infinite"
+    @interfaces := List(Sequence)
+
+    InfiniteLength := Invariant { length =? Infinity.Positive }  # TODO: Fake this in constructor.
+
+})
+
+
+assert(Sequence.Infinite.name =? "Sequence.Infinite")
+assert(Sequence.Infinite.type =? Type.Interface)

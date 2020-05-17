@@ -1,0 +1,53 @@
+Operation := Namespace({
+    # Arithmetic
+    sum(terms...) := Function[Numeric](Numeric...) { terms.first.sum(terms.rest) }  # `terms` or `addends`?
+    difference(terms...) := Function[Numeric](Numeric...) { ... }  # `terms` or `subtrahends`?
+    product(factors...) := Function[Numeric](Numeric...) { ... }  # `factors` or `multiplicands`?
+    quotient(dividends...) := Function[Numeric](Numeric...) { ... }  # First is the `dividend`; the rest are `divisors`.
+
+    add := sum
+    subtract := difference
+    multiply := product
+    divide := quotient
+
+    plus := sum
+    minus := difference
+    times := product
+    divide := quotient
+
+
+    # Equality
+    equal?(terms...) := Function[Boolean](Any...) { terms.equal? }  # `=?` or `==`
+    unique?(terms...) := Function[Boolean](Any...) { terms.unique? }  # `!=`
+
+    not_equal? := unique?
+    unequal? := unique?
+
+
+    # Comparison
+    gt := Function[Boolean](Comparable...) { ... }  # `>`
+    lt := Function[Boolean](Comparable...) { ... }  # `<` `?
+    gte := Function[Boolean](Comparable...) { ... }  # `>=`; or maybe `greater_than_or_equal` or `increasing?`?
+    lte := Function[Boolean](Comparable...) { ... }  # `<=`; or maybe `less_than_or_equal?` or `decreasing?`?
+
+    min(elements...) := Function[Comparable](Comparable...) { ... }
+    max(elements...) := Function[Comparable](Comparable...) { ... }
+    minimum := min
+    maximum := max
+
+    greater_than? := gt
+    less_than? := lt
+    greater_than_or_equal? := gte
+    less_than_or_equal? := lte
+
+    strictly_decreasing? := gt
+    strictly_increasing? := lt
+    decreasing? := gte
+    increasing? := lte
+
+
+    # String
+    concatenate(strings...) := Function[String](String...) { ... }  # `++`
+    concat := concatenate
+    cat := concatenate
+})

@@ -1,0 +1,16 @@
+# This is a preliminary implementation to get the interface figured out.
+# This will eventually be replaced with code from a C library.
+
+
+Number.Rational := Class({
+
+    @interfaces := Integer  # NOTE: We *implement* Integer, instead of subclassing, since we don't want its implementation.
+
+    numerator :: Integer
+    denominator :: Integer.Positive
+
+    # TODO: Implement everything Integer does.
+
+    as_text := { ... }
+
+})

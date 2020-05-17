@@ -1,0 +1,48 @@
+# TODO: Use 
+
+
+# Contains only a single Unicode character, including composite characters.
+Text.Character := Class({
+
+    code_point :: Integer
+    name :: Text
+    plane :: Integer
+    categories :: List[Unicode.Category]
+    type :: Unicode::Type
+    hex := { code_point.hex }
+    decimal := code_point
+    encode(Text.Encoding) :: Text.String
+    html :: Text
+
+})
+
+
+# Single printable Unicode character.
+Text.Glyph := ...
+
+
+# Lower level, for manipulating sequences of characters.
+Text.String := Class(implements: Collection.Ordered, implements: Sequence.Finite, {
+
+    slice(start_index, end_index) := { ... }
+    substring(start_index, length) := { ... }
+    begins_with?(str) := { ... }
+    ends_with?(str) := { ... }
+    contains?(str) := { ... }
+    reversed := { ... }
+    interpolated(mappings :: Pair...) := { ... }
+    process-C-escape-codes := # Need a better name, obviously.
+
+})
+
+
+# Contains written language text.
+Text := Class.Definition({
+
+    @superclass := Text.String
+
+    capitalized := { ... }
+    uppercased := { ... }
+    lowercased := { ... }
+
+})

@@ -1,0 +1,13 @@
+A Map should be a function
+	* Or at the very least, callable
+	* I suppose that'd work OK for Lists too
+		* But `nth` makes more sense usually
+```
+m = Map(a: 1, b: 2)
+m(:a)  # => 1
+m.first  # => Pair(:a, 1)
+l = List(1, 2, 3)
+l.first
+l.nth(1)
+l(1)
+```

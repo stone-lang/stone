@@ -1,0 +1,48 @@
+# I've mistakenly referred to this as "preamble" and "prologue".
+
+# Allow a custom prelude to decide whether to include the standard prelude or not.
+# Custom prelude should usually start with `this += import(“standard-prelude”)`
+# Preludes can/should be pre-compiled, because every file will get it compiled in.
+
+# Overriding something from the prelude should not generate an error or warning.
+
+
+Operator := import("https://stone-lang.org/operators")
+Operator.each {
+    $1 := Operator.__send__($1)  # TODO: Find a better syntax for this.
+}
+
+Boolean := import("https://stone-lang.org/boolean")
+TRUE := Boolean.TRUE
+FALSE := Boolean.FALSE
+
+Null := import("https://stone-lang.org/null")
+NULL := Null.NULL
+
+Number := import("https://stone-lang.org/number")  # Should this include the "basics"?
+Number.Integer := import("https://stone-lang.org/number/integer")
+Number.Rational := import("https://stone-lang.org/number/rational")
+Number.Decimal := import("https://stone-lang.org/number/decimal")
+Number.FloatingPoint := import("https://stone-lang.org/number/floating-point")
+Number.Complex := import("https://stone-lang.org/number/complex")
+
+Integer := Number.Integer
+Ordinal := Number.Integer.Ordinal  # Use this for the position of anything. Note that this is 1-based.
+Cardinal := Number.Integer.Cardinal  # Use this for size or length of anything.
+Distributive := Number.Integer.Distributive  # Use this for group size or iteration.
+Rational := Number.Rational
+Decimal := Number.Decimal
+NaN := Number.NaN
+# NOTE: No syntactic sugar for Number.FloatingPoint; it should not be frequently used, so doesn't deserve a shorter name. Same for Number.Complex and others.
+
+
+Number.Infinity := import("https://stone-lang.org/number/infinity")
+Number.Infinitesimal := import("https://stone-lang.org/number/infinitesimal")
+
+
+Measurement.Turn := import("https://stone-lang.org/measurement/turn")
+τ := Measurement.Turn(1)
+π := Measurement.Turn(1/2)
+TAU := τ
+PI := π
+

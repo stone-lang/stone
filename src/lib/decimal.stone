@@ -1,0 +1,19 @@
+# This is a preliminary implementation to get the interface figured out.
+# This will eventually be replaced with code from a C library.
+
+
+Integer.PowerOfTen := Class(superclass: Integer, {
+
+    DivisibleByTen := Invariant { this.divisibly_by?(10) }
+
+})
+
+
+Number.Decimal := Class(implements: Rational, {
+
+    numerator :: Integer
+    denominator :: Integer.PowerOfTen
+
+    as_text := { ... }
+
+})

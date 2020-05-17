@@ -1,0 +1,17 @@
+Consider `Time.Moment` for a given point in time
+	* Or perhaps `Time.Point`
+	* `Time.Moment` has a date and a `Time.OfDay`, and is in UTC
+		* `Time.OfDay` is timezone-less
+			* Need a better name for that
+				* Time.WithinDay
+				* Time.Clock
+	* Will have another class for a time with a time zone included
+		* Will be a bit more than a time plus a time zone, as we'll need to handle conversions
+		* Will want to handle DST changes that cause certain times to be non-existent or duplicated
+		* Will also want constraints about dates
+	* Inspired by Racket's "Gregor" library
+	* Will also have `Time.Duration` and `Time.Interval`
+		* Probably don't need them both, as for example, subtracting 2 dates would give you a `Time.Interval` of 3 days, which seems to be the same as a `Date.Duration` of 3 days
+	* It might make sense for `Date` to be within the `Time` namespace
+		* It does deal with time
+		* Seems like dates are just times with less granularity

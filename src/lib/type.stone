@@ -1,0 +1,8 @@
+* A type might have a `cardinality` that we can ask for
+	* Tells how many possible values the type has
+	* It might be `Infinity` though
+	* `Boolean.cardinality` would be `2`
+	* `Null.cardinality` would be `1`
+	* `Nothing.cardinality` would be `0`
+	* It's hard to determine the cardinality of anything other than a `Type.Enum`.
+	* Cardinality of a `Type.Union` (union type) would be the sum of the cardinalities

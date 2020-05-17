@@ -1,0 +1,27 @@
+List := Class({
+
+    @name := "List"
+    @interfaces := List(Sequence.Finite, Collection.Ordered)
+
+    # Temporary implementation using a linked list.
+
+    first :: Anything | Null
+    rest :: List | Null
+    length :: Ordinal
+    last :: Anything | Null  # Performance optimization.
+
+    # TODO: Implement a doubly-linked list, so "foldr" has decent performance.
+
+    # TODO: This is really going to need to be a built-in.
+    @create(values_...) := {  # Trailing underscore means "don't pass by name".
+        @first = values.first
+        @rest = values.rest
+        @length = values.length
+        @last = values.last
+    }
+
+    foldl := { ... }
+    foldr := { ... }
+
+    as_text := { ... }
+})

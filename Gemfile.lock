@@ -9,7 +9,8 @@ GEM
     ffi (1.9.25)
     iniparse (1.4.4)
     jaro_winkler (1.5.1)
-    kramdown (1.17.0)
+    kramdown (2.3.0)
+      rexml
     method_source (0.9.0)
     overcommit (0.46.0)
       childprocess (~> 0.6, >= 0.6.3)
@@ -26,6 +27,7 @@ GEM
       byebug (~> 10.0)
       pry (~> 0.10)
     rainbow (3.0.0)
+    rexml (3.2.4)
     rubocop (0.58.2)
       jaro_winkler (~> 1.5.1)
       parallel (~> 1.10)

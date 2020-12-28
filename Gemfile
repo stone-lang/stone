@@ -1,10 +1,10 @@
-ruby "2.5.1"
+ruby "2.7.2"
 
 source "https://rubygems.org"
 
 # Building
 gem "overcommit"
-gem "rubocop", "~>0.58", require: false
+gem "rubocop", require: false
 
 # Specifications
 gem "kramdown"

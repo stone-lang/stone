@@ -1,14 +1,16 @@
 require "extensions/argf"
+require "extensions/class"
 
-require "stone/parser/parser"
-require "stone/parser/transform"
 require "stone/verification/suite"
 require "stone/top"
 require "stone/ast/error"
 
+# Load all the sub-languages, then determine the highest-level sub-language (it'll have the most ancestors).
+Dir[File.join(__dir__, "language", "*.rb")].each { |file| require file }
+DEFAULT_LANGUAGE = ::Stone::Language::Base.descendants.sort_by { |lang| lang.ancestors.size }.last
+
 require "readline"
 require "kramdown"
-require "pry"
 
 
 module Stone
@@ -31,21 +33,24 @@ module Stone
       end
     end
 
-  private
+    private def language
+      @language ||= DEFAULT_LANGUAGE.new
+      # TODO: Allow a command-line option to select a sub-language.
+    end
 
-    def run_parse
+    private def run_parse
       each_input_file do |input|
-        puts parse(input)
+        puts language.parse(input)
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree
         exit 1
       end
     end
 
-    def run_eval
+    private def run_eval
       each_input_file do |input|
         top_context = Stone::Top.context
-        puts transform(parse(input)).map{ |node|
+        puts language.ast(input).map{ |node|
           node.evaluate(top_context)
         }.compact
       rescue Parslet::ParseFailed => e
@@ -54,16 +59,15 @@ module Stone
       end
     end
 
-    def run_repl
-      top_context = Stone::Top.context
+    private def run_repl
       puts "Stone REPL"
       while (input = Readline.readline("#> ", true))
         repl_1_line(input, top_context)
       end
     end
 
-    def repl_1_line(line, context)
-      ast = transform(parse(line, parser: Stone::Parser.new.line))
+    private def repl_1_line(line, context)
+      ast = language.ast(line, single_line: true)
       case result = ast.evaluate(context)
       when AST::Error
         puts "#! #{result}"
@@ -74,11 +78,11 @@ module Stone
       puts e.parse_failure_cause.ascii_tree
     end
 
-    def run_verify
+    private def run_verify
       suite = Stone::Verification::Suite.new(debug: debug_option?)
       each_input_file do |input|
         suite.run(input) do
-          transform(parse(input))
+          language.ast(input)
         rescue Parslet::ParseFailed => e
           suite.add_failure(input, Stone::AST::Error.new("ParseError", e.parse_failure_cause))
           []
@@ -94,9 +98,10 @@ module Stone
         @options << ARGV[0]
         ARGV.shift
       end
+      @options
     end
 
-    def each_input_file
+    private def each_input_file
       ARGF.each_file do |file|
         if ARGF.filename.end_with?(".md") || (ARGF.filename == "-" && markdown_option?)
           markdown_code_blocks(file).each do |code_block|
@@ -109,27 +114,31 @@ module Stone
       end
     end
 
-    def markdown_code_blocks(file)
+    private def markdown_code_blocks(file)
       markdown = Kramdown::Document.new(file.read)
       markdown.root.children.select{ |e| e.type == :codeblock && e.options[:lang] == "stone" }.map(&:value)
     end
 
-    def parse(input, parser: Stone::Parser.new)
+    private def parse(input)
       parser.parse(input + "\n", reporter: Parslet::ErrorReporter::Contextual.new)
     end
 
-    def transform(parse_tree)
+    private def transform(parse_tree)
       transformer = Stone::Transform.new
       ast = transformer.apply(parse_tree)
       ast.respond_to?(:compact) ? ast.compact : ast
     end
 
-    def markdown_option?
+    private def markdown_option?
       options.include?("--markdown")
     end
 
-    def debug_option?
+    private def debug_option?
       options.include?("--debug")
+    end
+
+    private def top_context
+      @top_context ||= Stone::Top.context
     end
 
   end

@@ -1,6 +1,7 @@
 require "extensions/argf"
 require "extensions/class"
 
+require "stone/version"
 require "stone/verification/suite"
 require "stone/top"
 require "stone/ast/error"
@@ -22,11 +23,12 @@ module Stone
     end
 
     def run
-      subcommand = ARGV[0]
-      ARGV.shift
-
-      if self.respond_to?("run_#{subcommand}", true)
+      if options.include?("--version")
+        puts "Stone version #{Stone::VERSION}"
+        exit 0
+      elsif self.respond_to?("run_#{subcommand}", true)
         __send__("run_#{subcommand}")
+        exit 0
       else
         puts "Don't know the '#{subcommand}' subcommand."
         exit 1
@@ -99,6 +101,14 @@ module Stone
         ARGV.shift
       end
       @options
+    end
+
+    private def subcommand
+      return @subcommand if @subcommand
+      options # Global options come before subcommands, so we have to look for them in ARGV first.
+      @subcommand = ARGV[0]
+      ARGV.shift
+      @subcommand
     end
 
     private def each_input_file

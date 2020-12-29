@@ -8,7 +8,7 @@ require "stone/ast/error"
 
 # Load all the sub-languages, then determine the highest-level sub-language (it'll have the most ancestors).
 Dir[File.join(__dir__, "language", "*.rb")].each { |file| require file }
-DEFAULT_LANGUAGE = ::Stone::Language::Base.descendants.sort_by { |lang| lang.ancestors.size }.last
+DEFAULT_LANGUAGE = Stone::Language::Base.descendants.sort_by { |lang| lang.ancestors.size }.last
 
 require "readline"
 require "kramdown"
@@ -37,7 +37,6 @@ module Stone
 
     private def language
       @language ||= DEFAULT_LANGUAGE.new
-      # TODO: Allow a command-line option to select a sub-language.
     end
 
     private def run_parse
@@ -99,6 +98,17 @@ module Stone
       while ARGV[0] =~ /^--/
         @options << ARGV[0]
         ARGV.shift
+        # TODO: I should really use an options-parsing library here.
+        if @options.last == "--grammar"
+          grammar = ARGV[0].capitalize
+          if Stone::Language.const_defined?(grammar.to_sym)
+            @language = Stone::Language.const_get(grammar.to_sym).new
+          else
+            puts "Don't know the #{grammar} sub-language."
+            exit 1
+          end
+          ARGV.shift
+        end
       end
       @options
     end

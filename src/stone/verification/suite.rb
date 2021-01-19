@@ -22,7 +22,8 @@ module Stone
       end
 
       def complete
-        print_results
+        puts failed_specs
+        puts totals
         exit 1 if failures.any?
       end
 
@@ -31,21 +32,13 @@ module Stone
         results << Result.new(code, nil, nil, error_message)
       end
 
-      private def print_results
-        puts
-        print_failures
-        puts "#{results.size} tests: #{successes.size} passed, #{failures.size} failed"
+      private def totals
+        "#{results.size} tests: #{successes.size} passed, #{failures.size} failed"
       end
 
-      private def print_failures
-        return if failures.empty?
-        puts "\nFailed specs:\n\n"
-        failures.each do |failure|
-          puts failure.code
-          puts "    Expected: #{failure.expected}" if failure.expected
-          puts "    Actual:   #{failure.actual || failure.error}"
-        end
-        puts
+      private def failed_specs
+        return "" if failures.empty?
+        "\n\nFailed specs:\n#{failures.map(&:failure_details).join("\n")}"
       end
 
       private def failures
@@ -65,7 +58,7 @@ module Stone
           if node.is_a?(Stone::AST::Comment)
             spec = Stone::Verification::Spec.new(code_between(source_code, node, last_comment), node, last_result)
             last_comment = node
-            spec.run.tap { |result| spec.print_result(result) unless result.nil? }
+            spec.run.tap { |result| print result unless result.nil? }
           else
             begin
               last_node = node

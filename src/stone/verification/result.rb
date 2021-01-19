@@ -28,6 +28,23 @@ module Stone
         !success?
       end
 
+      def to_s
+        if success?
+          "."
+        else
+          "F"
+        end
+      end
+
+      def failure_details
+        return nil unless failed?
+        if expected
+          "#{code}\n    Expected: #{expected}\n    Actual:   #{actual || error}"
+        else
+          "#{code}\n    Actual:   #{actual || error}"
+        end
+      end
+
     end
 
   end

@@ -24,14 +24,6 @@ module Stone
         Result.new(code, expected_result || expected_error, actual_result, actual_error, expecting_error: expected_error)
       end
 
-      def print_result(result)
-        if result.success?
-          print "."
-        else
-          print "F"
-        end
-      end
-
       private def actual_error
         actual_result if expected_error
       end

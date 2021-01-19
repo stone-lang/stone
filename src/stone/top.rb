@@ -2,9 +2,7 @@ module Stone
 
   module Top
 
-    module_function
-
-    def context # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+    def self.context # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
       {
         TRUE: Stone::AST::Boolean.new(true),
         FALSE: Stone::AST::Boolean.new(false),
@@ -19,16 +17,16 @@ module Stone
     end
 
     # TODO: We can remove this when we have classes and (default) constructors working.
-    def builtin_List(_context, args)
+    def self.builtin_List(_context, args)
       Stone::AST::List.new(args)
     end
 
-    def builtin_identity(_context, args)
+    def self.builtin_identity(_context, args)
       return Stone::AST::Error.new("ArityError", "'identity' expects 1 argument, got #{args.count}") unless args.count == 1
       args.first
     end
 
-    def builtin_if(name, context, args, inverted: false) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
+    def self.builtin_if(name, context, args, inverted: false) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/PerceivedComplexity, Metrics/CyclomaticComplexity
       return Stone::AST::Error.new("ArityError", "'#{name}' expects 2 or 3 arguments, got #{args.count}") unless [2, 3].include?(args.count)
       condition, consequent, alternative = args
       condition = condition.call(context) if condition.is_a?(Stone::AST::Block)
@@ -44,7 +42,7 @@ module Stone
       end
     end
 
-    def builtin_min(_context, args)
+    def self.builtin_min(_context, args)
       # TODO: Check types. Ensure we only have 1 List, if we have a list.
       if args.first.is_a?(Stone::AST::List)
         Stone::AST::Number.new!(args.only.value.map(&:value).min)
@@ -53,7 +51,7 @@ module Stone
       end
     end
 
-    def builtin_max(_context, args)
+    def self.builtin_max(_context, args)
       # TODO: Check types. Ensure we only have 1 List, if we have a list.
       if args.first.is_a?(Stone::AST::List)
         Stone::AST::Number.new!(args.only.value.map(&:value).max)

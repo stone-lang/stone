@@ -5,12 +5,14 @@ module Stone
   module Language
     class Literals < Base
 
+      DECIMAL_EXPONENT_SYMBOL = "\u23E8"
+
       def grammar
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
           override rule(:expression) { literal | parenthetical_expression }
           rule(:literal) { decimal | rational | integer | string }
           rule!(:integer) { binary_integer | octal_integer | hexadecimal_integer | decimal_integer }
-          rule!(:decimal) { decimal_integer >> str(".") >> unsigned_decimal_integer >> (match["eE\u23E8"] >> decimal_integer).maybe }  # NOTE: \u23E8 is Unicode DECIMAL EXPONENT SYMBOL.
+          rule!(:decimal) { decimal_integer >> str(".") >> unsigned_decimal_integer >> (match["eE#{DECIMAL_EXPONENT_SYMBOL}"] >> decimal_integer).maybe }
           rule!(:rational) { decimal_integer.as(:numerator) >> str("/") >> unsigned_decimal_integer.as(:denominator) }
           rule!(:string) { str('"').ignore >> (str('"').absent? >> any).repeat(0) >> str('"').ignore }
           rule(:decimal_integer) { match["+-"].maybe >> unsigned_decimal_integer }
@@ -22,7 +24,7 @@ module Stone
       end
 
       def transforms
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
 
           rule(integer: simple(:i)) {
             AST::Integer.new(i)

@@ -31,15 +31,13 @@ module Stone
         results << Result.new(code, nil, nil, error_message)
       end
 
-    private
-
-      def print_results
+      private def print_results
         puts
         print_failures
         puts "#{results.size} tests: #{successes.size} passed, #{failures.size} failed"
       end
 
-      def print_failures
+      private def print_failures
         return if failures.empty?
         puts "\nFailed specs:\n\n"
         failures.each do |failure|
@@ -50,15 +48,15 @@ module Stone
         puts
       end
 
-      def failures
+      private def failures
         @failures ||= results.select(&:failed?)
       end
 
-      def successes
+      private def successes
         @successes ||= results.select(&:success?)
       end
 
-      def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      private def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         top_context = Stone::Top.context
         last_comment = nil
         last_node = nil
@@ -80,7 +78,7 @@ module Stone
         }
       end
 
-      def code_between(source_code, comment, last_comment)
+      private def code_between(source_code, comment, last_comment)
         if last_comment.nil?
           source_code.split("\n")[0..(comment.source_line - 2)].join("\n")
         else

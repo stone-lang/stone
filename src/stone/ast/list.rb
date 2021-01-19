@@ -70,15 +70,13 @@ module Stone
         children.map(&:type)
       end
 
-    private
-
-      def map(name, context, function)
+      private def map(name, context, function)
         return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 1 argument") unless function.arity.include?(1)
         List.new(@value.map{ |x| function.call(context, [x]) })
       end
 
-      def reduce(name, context, function, initial_value: nil, reverse: false)
+      private def reduce(name, context, function, initial_value: nil, reverse: false)
         return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 2 arguments") unless function.arity.include?(2)
         reverse_or_not = reverse ? :reverse : :itself

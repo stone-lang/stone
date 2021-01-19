@@ -5,6 +5,8 @@ source "https://rubygems.org"
 # Building
 gem "overcommit"
 gem "rubocop", require: false
+gem "rubocop-rspec", require: false
+gem "rubocop-performance", require: false
 
 # Specifications
 gem "kramdown"

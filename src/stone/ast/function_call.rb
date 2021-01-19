@@ -31,23 +31,21 @@ module Stone
         function.call(context, evaluated_arguments)
       end
 
-    private
-
       # NOTE: A (default) Class constructor can be called with 0 arguments; a function/method cannot.
       # NOTE: We can call a Block, but not using the function-call syntax. (The arity check is checking for that.)
-      def callable?(function)
+      private def callable?(function)
         function.respond_to?(:call) && function.method(:call).arity == 2
       end
 
-      def correct_arity?(function, actual_argument_count)
+      private def correct_arity?(function, actual_argument_count)
         function.arity.include?(actual_argument_count)
       end
 
-      def arity_error(function, actual_argument_count)
+      private def arity_error(function, actual_argument_count)
         Error.new("ArityError", "'#{name}' expects #{arity_error_expected_text(function.arity)}, got #{actual_argument_count}")
       end
 
-      def arity_error_expected_text(expected_arity)
+      private def arity_error_expected_text(expected_arity)
         if expected_arity == (1..1)
           "1 argument"
         elsif expected_arity.size == 1

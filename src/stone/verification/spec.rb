@@ -32,17 +32,15 @@ module Stone
         end
       end
 
-    private
-
-      def actual_error
+      private def actual_error
         actual_result if expected_error
       end
 
-      def expected_result
+      private def expected_result
         comment.sub(/\A#=\s+/, "") if comment.match?(/\A#=\s+/)
       end
 
-      def expected_error
+      private def expected_error
         comment.sub(/\A#!\s+/, "") if comment.match?(/\A#!\s+/)
       end
 

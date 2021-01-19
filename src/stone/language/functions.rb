@@ -6,7 +6,7 @@ module Stone
     class Functions < Operators
 
       def grammar
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
           override rule(:expression) { function | operation | function_call | literal | block | parenthetical_expression }
           rule!(:function) { str("(") >> parameter_list >> str(")") >> whitespace >> str("=>") >> whitespace >> function_body }
           rule!(:parameter_list) { (parameter >> (str(",") >> whitespace >> parameter).repeat(0)).repeat(0) }
@@ -23,7 +23,7 @@ module Stone
       end
 
       def transforms
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
           rule(argument: simple(:argument)) {
             argument
           }

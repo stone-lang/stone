@@ -12,7 +12,7 @@ module Stone
       attr_reader :significant_digits
       attr_reader :whole, :fraction, :exponent
 
-      def initialize(decimal) # rubocop:disable Metrics/AbcSize
+      def initialize(decimal)
         @source_location = get_source_location(decimal)
         whole, fraction, exponent = decimal.to_s.split(/[.eE\u23E8]/)
         compute_components!(whole, fraction, exponent)

@@ -1,5 +1,8 @@
 ---
 
+require:
+  - rubocop-rspec
+  - rubocop-performance
 
 # Provide more details in output.
 AllCops:
@@ -8,22 +11,17 @@ AllCops:
   DisplayStyleGuide: true
   ExtraDetails: true
 
-# We don't need/want Rails for this project.
-Rails:
-  Enabled: false
-
 # Allow longer lines.
 Metrics/LineLength:
   Max: 160
-  IgnoreCopDirectives: true
 
 # Don't require documentation for everything.
 Style/Documentation:
   Enabled: false
 
-# Outdent `private`/`protected`/`public`. NOTE: Also includes `module_function` (but I don't think that should be outdented).
-Layout/AccessModifierIndentation:
-  EnforcedStyle: outdent
+# Require `private` on the same line as each private method. We find this easier to read and move code.
+Style/AccessModifierDeclarations:
+  EnforcedStyle: inline
 
 # Use `{}` for blocks that return a value; otherwise use `do` and `end`.
 # We make a few exceptions, mostly for RSpec.
@@ -50,9 +48,9 @@ Style/FrozenStringLiteralComment:
 Style/CommandLiteral:
   EnforcedStyle: percent_x
 
-# Don't require underscores for long numeric literals.
+# Don't require underscores for long numeric literals (but warn about them).
 Style/NumericLiterals:
-  Enabled: false
+  Severity: warning
 
 # Require blank lines inside class/module definitions.
 Layout/EmptyLinesAroundClassBody:
@@ -140,7 +138,7 @@ Style/Send:
 
 # Don't complain that `has_many` doesn't end with a question mark.
 Naming/PredicateName:
-  NameWhitelist:
+  AllowedMethods:
     - has_many
 
 # Allow `has_key?` and `has_value?` on Hash, as they read better than `key?` and `value?`.
@@ -148,7 +146,7 @@ Style/PreferredHashMethods:
   Enabled: false
 
 # Ensure there's a newline at the end of the file, but not a blank line.
-Layout/TrailingBlankLines:
+Style/TrailingEmptyLines:
   EnforcedStyle: final_newline
 
 # Allow assigning to the same variable in multiple branches of an `if` or `case`.
@@ -172,6 +170,24 @@ Style/DoubleNegation:
 # Allow non-ASCII identifiers.
 Naming/AsciiIdentifiers:
   Enabled: false
+
+# I prefer to order my gems in order of "importance".
+Bundler/OrderedGems:
+  Enabled: false
+
+# Don't require an empty line after a guard clause. TODO: Perhaps reconsider this decision.
+Layout/EmptyLineAfterGuardClause:
+  Enabled: false
+
+# I often prefer to put each accessor on its own line.
+Style/AccessorGrouping:
+  Enabled: false
+
+# I don't see any good reason to call `super` when the superclass has no explicit `initialize`.
+# TODO: Add a config to the cop to allow (only) this case to pass. See https://github.com/rubocop-hq/rubocop/issues/8506
+Lint/MissingSuper:
+  Enabled: false
+
 
 
 ## Exceptions.
@@ -202,6 +218,30 @@ Style/SelfAssignment:
   Exclude:
     - src/stone/ast/binary_operation.rb
 
-# Disabling this only because it's breaking RuboCop (at least 0.53 to 0.58.2).
-Style/PercentLiteralDelimiters:
+# The `grammar` and `transforms` methods are DSLs; don't worry about their size/complexity.
+Metrics/AbcSize:
+  IgnoredMethods:
+    - grammar
+    - transforms
+Metrics/MethodLength:
+  IgnoredMethods:
+    - grammar
+    - transforms
+Metrics/PerceivedComplexity:
+  IgnoredMethods:
+    - grammar
+    - transforms
+Metrics/CyclomaticComplexity:
+  IgnoredMethods:
+    - grammar
+    - transforms
+
+# These seem to be broken; I *have* empty lines around all my class/module/method/block bodies.
+Layout/EmptyLinesAroundClassBody:
+  Enabled: false
+Layout/EmptyLinesAroundModuleBody:
+  Enabled: false
+Layout/EmptyLineBetweenDefs:
+  Enabled: false
+Layout/EmptyLinesAroundBlockBody:
   Enabled: false

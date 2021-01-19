@@ -6,7 +6,7 @@ module Stone
     class Variables < Functions
 
       def grammar
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
           override rule(:statement) { assignment | expression }
           override rule(:expression) { function | operation | function_call | literal | variable_reference | block | parenthetical_expression }
           rule!(:assignment) { identifier.as(:lvalue) >> whitespace >> str(":=") >> whitespace >> expression.as(:rvalue) }
@@ -15,7 +15,7 @@ module Stone
       end
 
       def transforms
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
           rule(assignment: {lvalue: simple(:lvalue), rvalue: simple(:rvalue)}) {
             AST::Assignment.new(lvalue, rvalue)
           }

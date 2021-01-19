@@ -6,7 +6,7 @@ module Stone
     class Operators < Literals
 
       def grammar
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
           override rule(:expression) { literal | operation }
           rule(:operation) { unary_operation | binary_operation }
           rule!(:unary_operation) { unary_operator.repeat(1).as(:operator) >> unary_operand.as(:operand) >> whitespace? }
@@ -27,7 +27,7 @@ module Stone
       end
 
       def transforms
-        Class.new(super) do |klass|
+        Class.new(super) do |_klass|
           rule(unary_operation: {operator: simple(:op), operand: simple(:arg)}) {
             AST::UnaryOperation.new(op, arg)
           }

@@ -7,8 +7,10 @@ require "stone/top"
 require "stone/ast/error"
 
 # Load all the sub-languages, then determine the highest-level sub-language (it'll have the most ancestors).
-Dir[File.join(__dir__, "language", "*.rb")].each { |file| require file }
-DEFAULT_LANGUAGE = Stone::Language::Base.descendants.sort_by { |lang| lang.ancestors.size }.last
+Dir[File.join(__dir__, "language", "*.rb")].sort.each do |file|
+  require file
+end
+DEFAULT_LANGUAGE = Stone::Language::Base.descendants.max_by { |lang| lang.ancestors.size }
 
 require "readline"
 require "kramdown"
@@ -92,14 +94,14 @@ module Stone
       suite.complete
     end
 
-    private def options
+    private def options # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
       return @options if @options
       @options = []
       while ARGV[0] =~ /^--/
         @options << ARGV[0]
         ARGV.shift
         # TODO: I should really use an options-parsing library here.
-        if @options.last == "--grammar"
+        if @options.last == "--grammar" # rubocop:disable Style/Next
           grammar = ARGV[0].capitalize
           if Stone::Language.const_defined?(grammar.to_sym)
             @language = Stone::Language.const_get(grammar.to_sym).new
@@ -121,15 +123,15 @@ module Stone
       @subcommand
     end
 
-    private def each_input_file
+    private def each_input_file(&block)
       ARGF.each_file do |file|
         if ARGF.filename.end_with?(".md") || (ARGF.filename == "-" && markdown_option?)
           markdown_code_blocks(file).each do |code_block|
-            yield code_block
+            block.call(code_block)
           end
         else
           input = file.read
-          yield input.end_with?("\n") ? input : input << "\n"
+          block.call(input.end_with?("\n") ? input : input << "\n")
         end
       end
     end
@@ -140,7 +142,7 @@ module Stone
     end
 
     private def parse(input)
-      parser.parse(input + "\n", reporter: Parslet::ErrorReporter::Contextual.new)
+      parser.parse("#{input}\n", reporter: Parslet::ErrorReporter::Contextual.new)
     end
 
     private def transform(parse_tree)

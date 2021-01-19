@@ -30,37 +30,37 @@ module Stone
         "➕" => "∨",
       }
       OPERATION_RESULT_TYPES = {
-        "+"   => Number,
-        "-"   => Number,
-        "*"   => Number,
-        "/"   => Rational,
-        "<!"  => Number,
-        ">!"  => Number,
-        "=="  => Boolean,
-        "!="  => Boolean,
-        "<"   => Boolean,
-        "<="  => Boolean,
-        ">"   => Boolean,
-        ">="  => Boolean,
-        "∧"  => Boolean,
-        "∨"  => Boolean,
-        "++"  => Text,
-        "|>"  => Any,
-        "<|"  => Any,
+        "+" => Number,
+        "-" => Number,
+        "*" => Number,
+        "/" => Rational,
+        "<!" => Number,
+        ">!" => Number,
+        "==" => Boolean,
+        "!=" => Boolean,
+        "<" => Boolean,
+        "<=" => Boolean,
+        ">" => Boolean,
+        ">=" => Boolean,
+        "∧" => Boolean,
+        "∨" => Boolean,
+        "++" => Text,
+        "|>" => Any,
+        "<|" => Any,
       }
       OPERATIONS = {
-        "<"   => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value < r.value }.all? },
-        "<="  => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value <= r.value }.all? },
-        ">"   => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value > r.value }.all? },
-        ">="  => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value >= r.value }.all? },
-        "=="  => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length == 1 }, # rubocop:disable Style/Semicolon
-        "!="  => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length != 1 }, # rubocop:disable Style/Semicolon
-        "++"  => ->(_c, _o, operands){ operands.map(&:value).join("") },
-        ">!"  => ->(_c, _o, operands){ operands.map(&:value).max },
-        "<!"  => ->(_c, _o, operands){ operands.map(&:value).min },
-        "|>"  => ->(ct, _o, operands){ operands.reduce{ |l, r| r.call(ct, [l]) } },
-        "<|"  => ->(ct, _o, operands){ operands.reverse.reduce{ |r, l| l.call(ct, [r]) } },
-        "/"   => ->(_c, _o, operands){ operands.map(&:value).reduce{ |a, v| builtin_divide(a, v) } },
+        "<" => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value < r.value }.all? },
+        "<=" => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value <= r.value }.all? },
+        ">" => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value > r.value }.all? },
+        ">=" => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value >= r.value }.all? },
+        "==" => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length == 1 }, # rubocop:disable Style/Semicolon
+        "!=" => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length != 1 }, # rubocop:disable Style/Semicolon
+        "++" => ->(_c, _o, operands){ operands.map(&:value).join("") },
+        ">!" => ->(_c, _o, operands){ operands.map(&:value).max },
+        "<!" => ->(_c, _o, operands){ operands.map(&:value).min },
+        "|>" => ->(ct, _o, operands){ operands.reduce{ |l, r| r.call(ct, [l]) } },
+        "<|" => ->(ct, _o, operands){ operands.reverse.reduce{ |r, l| l.call(ct, [r]) } },
+        "/" => ->(_c, _o, operands){ operands.map(&:value).reduce{ |a, v| builtin_divide(a, v) } },
         DEFAULT: ->(_c, operator, operands){ operands.map(&:value).reduce(operator.to_sym) }
       }
       LOWER_PRECEDENCE_OPERATORS = %w[== != < <= > >=]
@@ -96,9 +96,7 @@ module Stone
         Rational((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
       end
 
-    private
-
-      def evaluate_operation(context, operator, operands)
+      private def evaluate_operation(context, operator, operands)
         return Error.new("UnknownOperator", operator) unless known_operator?(operator)
         operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
@@ -106,7 +104,7 @@ module Stone
         result_type.new!(operation.call(context, operator, operands))
       end
 
-      def evaluate_mixed_operations(context, operators, operands) # rubocop:disable Metrics/AbcSize
+      private def evaluate_mixed_operations(context, operators, operands) # rubocop:disable Metrics/AbcSize
         if (ALLOWED_ARITHMETIC_MIXTURES.flatten & operators).sort == operators.sort.uniq
           evaluate_mixed_arithmethic_operations(context, operators, operands)
         elsif (ALLOWED_COMPARISON_MIXTURES.flatten & operators).sort == operators.sort.uniq
@@ -118,24 +116,24 @@ module Stone
         end
       end
 
-      def disallowed_mixed_operators?
+      private def disallowed_mixed_operators?
         mixed_operators? && !allowed_mixed_operators?
       end
 
-      def mixed_operators?
+      private def mixed_operators?
         operators.uniq.size > 1
       end
 
-      def allowed_mixed_operators?
+      private def allowed_mixed_operators?
         (operators & LOWER_PRECEDENCE_OPERATORS).any? || ALLOWED_OPERATOR_MIXTURES.include?(operators.sort.uniq)
       end
 
-      def known_operator?(operator)
+      private def known_operator?(operator)
         OPERATION_RESULT_TYPES.has_key?(operator)
       end
 
       # This one's a bit rough, but we should probably make it more like evaluate_mixed_arithmethic_operations.
-      def evaluate_lower_precedence_operations(context, operators, operands) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
+      private def evaluate_lower_precedence_operations(context, operators, operands) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
         expr = operands.zip(operators).flatten.compact.each_cons(3).map { |ops|
           if !ops[1].is_a?(String)
             nil
@@ -153,14 +151,14 @@ module Stone
       end
 
       # You're not expected to understand how this works. I wrote it, and I don't really understand how it works.
-      def evaluate_mixed_arithmethic_operations(context, operators, operands)
+      private def evaluate_mixed_arithmethic_operations(context, operators, operands)
         operators.zip(operands.rest).chunk_while{ |x, y| x.first == y.first }.reduce(operands.first) do |a, x|
           evaluate_operation(context, x.first.first, [a] + x.map(&:last))
         end
       end
 
       # This is almost as bad. Maybe worse in some ways.
-      def evaluate_mixed_comparison_operations(context, operators, operands)
+      private def evaluate_mixed_comparison_operations(context, operators, operands)
         Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
           a && evaluate_operation(context, x.last, x.first).value
         })

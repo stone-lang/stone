@@ -11,13 +11,13 @@ class TrueClass
   end
 
   def <=>(other)
-    return 1 if other.class == FalseClass
-    return 0 if other.class == TrueClass
+    return 1 if other.instance_of?(FalseClass)
+    return 0 if other.instance_of?(TrueClass)
     fail ArgumentError, "comparison of Boolean with #{other.class} failed"
   end
 
   def ==(other)
-    other.class == TrueClass
+    other.instance_of?(TrueClass)
   end
 
 end
@@ -36,13 +36,13 @@ class FalseClass
   end
 
   def <=>(other)
-    return -1 if other.class == TrueClass
-    return 0 if other.class == FalseClass
+    return -1 if other.instance_of?(TrueClass)
+    return 0 if other.instance_of?(FalseClass)
     fail ArgumentError, "comparison of Boolean with #{other.class} failed"
   end
 
   def ==(other)
-    other.class == FalseClass
+    other.instance_of?(FalseClass)
   end
 
 end

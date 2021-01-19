@@ -31,14 +31,14 @@ module Stone
 
       def parse(input, single_line: false)
         if single_line
-          parser.line.parse(input + "\n", reporter: Parslet::ErrorReporter::Contextual.new)
+          parser.line.parse("#{input}\n", reporter: Parslet::ErrorReporter::Contextual.new)
         else
-          parser.parse(input + "\n", reporter: Parslet::ErrorReporter::Contextual.new)
+          parser.parse("#{input}\n", reporter: Parslet::ErrorReporter::Contextual.new)
         end
       end
 
       overridable def grammar
-        Class.new(Parslet::Parser) do |klass|
+        Class.new(Parslet::Parser) do |_klass|
           include ParsletExtensions
 
           root(:top)
@@ -61,7 +61,7 @@ module Stone
       end
 
       overridable def transforms
-        Class.new(Parslet::Transform) do |klass|
+        Class.new(Parslet::Transform) do |_klass|
 
           rule(comment: simple(:c)) {
             AST::Comment.new(c)

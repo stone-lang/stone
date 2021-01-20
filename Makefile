@@ -8,10 +8,13 @@ setup: setup-overcommit
 console:
 	bundle exec irb -I src -rubygems -r stone/cli.rb
 
-setup-overcommit: .git/hooks/overcommit-hook
+lint: rubocop
+
 
 verify-specs: bundle
 	bin/stone --debug verify docs/specs/*.md
+
+setup-overcommit: .git/hooks/overcommit-hook
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)
@@ -25,3 +28,6 @@ Gemfile.lock: Gemfile
 	bundle exec overcommit --install
 	bundle exec overcommit --sign
 	bundle exec overcommit --sign pre-commit
+
+rubocop:
+	bundle exec rubocop .

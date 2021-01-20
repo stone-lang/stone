@@ -72,9 +72,9 @@ Style/EmptyMethod:
 # Use `{}` for `%r`, because regular expressions might have unbalanced `()` or `<>`.
 Style/PercentLiteralDelimiters:
   PreferredDelimiters:
-    '%w': []
-    '%W': []
-    '%x': []
+    '%w': '[]'
+    '%W': '[]'
+    '%x': '[]'
     '%': '{}'
     '%q': '{}'
     '%Q': '{}'

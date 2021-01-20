@@ -16,3 +16,6 @@ gem "parslet"
 
 # Debugging
 gem "pry-byebug"
+
+# Console
+gem "irb"

@@ -5,6 +5,9 @@ all: setup verify-specs
 
 setup: setup-overcommit
 
+console:
+	bundle exec irb -I src -rubygems -r stone/cli.rb
+
 setup-overcommit: .git/hooks/overcommit-hook
 
 verify-specs: bundle

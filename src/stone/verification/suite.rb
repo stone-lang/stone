@@ -63,14 +63,16 @@ module Stone
       end
 
       private def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-        last_comment = nil
+        last_special_comment = nil
         last_node = nil
         last_result = nil
         ast.map{ |node|
           if node.is_a?(Stone::AST::Comment)
-            spec = Stone::Verification::Spec.new(code_between(source_code, node, last_comment), node, last_result)
-            last_comment = node
-            spec.run.tap { |result| print result unless result.nil? }
+            if special_comment?(node)
+              spec = Stone::Verification::Spec.new(code_between(source_code, node, last_special_comment), node, last_result)
+              last_special_comment = node
+              spec.run.tap { |result| print result unless result.nil? }
+            end
           else
             begin
               last_node = node
@@ -83,11 +85,16 @@ module Stone
         }
       end
 
-      private def code_between(source_code, comment, last_comment)
-        if last_comment.nil?
+      private def special_comment?(comment_node)
+        comment = comment_node.to_s
+        comment =~ Stone::Verification::Spec::COMMENT_WITH_EXPECTED_RESULT || comment =~ Stone::Verification::Spec::COMMENT_WITH_EXPECTED_ERROR
+      end
+
+      private def code_between(source_code, comment, last_special_comment)
+        if last_special_comment.nil?
           source_code.split("\n")[0..(comment.source_line - 2)].join("\n")
         else
-          source_code.split("\n")[last_comment.source_line..(comment.source_line - 2)].join("\n")
+          source_code.split("\n")[last_special_comment.source_line..(comment.source_line - 2)].join("\n")
         end
       end
 

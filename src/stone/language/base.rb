@@ -1,5 +1,4 @@
 require "extensions/module"
-require "extensions/enumerable"
 
 require "stone/ast/base"
 

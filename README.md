@@ -53,10 +53,11 @@ Running
 
 Binaries are located in the `bin` directory:
 
-* `stone` - the main executable
-    * `stone eval` - output the result of each top-level expression
-    * `stone repl` - accept manual input, and show the result of each line
-    * `stone verify` - check that results of top-level expressions match expectations in comments
+* `stone`
+    * `stone eval` - Output the result of each top-level expression (non-interactive REPL)
+    * `stone repl` - Accept interactive manual input, and show the result of each top-level expression
+    * `stone verify` - Verify that results of top-level expressions match expectations in comments
+    * `stone parse` - Output the parse tree
 
 
 License

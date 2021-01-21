@@ -12,7 +12,7 @@ lint: rubocop
 
 
 verify-specs: bundle
-	bin/stone --debug verify docs/specs/*.md
+	bin/stone verify --debug docs/specs/*.md
 
 setup-overcommit: .git/hooks/overcommit-hook
 

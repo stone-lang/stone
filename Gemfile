@@ -2,6 +2,9 @@ ruby "2.7.2"
 
 source "https://rubygems.org"
 
+# Command-line argument parsing
+gem "dry-cli"
+
 # Building
 gem "overcommit"
 gem "rubocop", require: false

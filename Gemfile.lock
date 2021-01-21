@@ -63,6 +63,7 @@ DEPENDENCIES
   overcommit
   parslet
   pry-byebug
+  rainbow
   rubocop
   rubocop-performance
   rubocop-rspec

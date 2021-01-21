@@ -134,7 +134,7 @@ You can do this using the `reduce` or `fold` methods.
 (The `fold` method has aliases named `inject` and `foldl`.)
 The `reduce` method takes the first 2 elements of the List, and applies the function to them.
 It then applies the function to the previous result and each successive element.
-The `fold` method is similar, but starts with an separately-specified initial value.
+The `fold` method is similar, but starts with a separately-specified initial value.
 These functions take a function that takes 2 arguments.
 
 ~~~ stone

@@ -22,3 +22,6 @@ gem "pry-byebug"
 
 # Console
 gem "irb"
+
+# ANSI colors for the console
+gem "rainbow"

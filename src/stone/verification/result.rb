@@ -1,3 +1,6 @@
+require "rainbow"
+
+
 module Stone
 
   module Verification
@@ -30,9 +33,9 @@ module Stone
 
       def to_s
         if success?
-          "."
+          Rainbow(".").green
         else
-          "F"
+          Rainbow("F").red
         end
       end
 

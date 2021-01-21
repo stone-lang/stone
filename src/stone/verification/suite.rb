@@ -1,5 +1,7 @@
-require "stone/verification/spec"
 require "kramdown"
+require "rainbow"
+
+require "stone/verification/spec"
 
 
 module Stone
@@ -33,7 +35,19 @@ module Stone
       end
 
       private def totals
-        "#{results.size} tests: #{successes.size} passed, #{failures.size} failed"
+        "#{test_count}: #{passed_count}, #{failed_count}"
+      end
+
+      private def test_count
+        "#{results.size} tests"
+      end
+
+      private def passed_count
+        Rainbow("#{successes.size} passed").green
+      end
+
+      private def failed_count
+        Rainbow("#{failures.size} failed").red
       end
 
       private def failed_specs

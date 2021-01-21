@@ -19,7 +19,7 @@ TODO
     - [x] Allow testing of more than 1 result per code block
     - [x] Show progress
     - [x] Allow debugging
-    - [ ] Add some colorization
+    - [x] Add some colorization
 - [ ] Other testing
     - [ ] Unit tests
     - [ ] Property-based tests

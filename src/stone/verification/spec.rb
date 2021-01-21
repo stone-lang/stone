@@ -9,6 +9,9 @@ module Stone
 
     class Spec
 
+      COMMENT_WITH_EXPECTED_RESULT = /\A#=\s+/
+      COMMENT_WITH_EXPECTED_ERROR = /\A#!\s+/
+
       attr_reader :code
       attr_reader :comment
       attr_reader :actual_result
@@ -29,11 +32,11 @@ module Stone
       end
 
       private def expected_result
-        comment.sub(/\A#=\s+/, "") if comment.match?(/\A#=\s+/)
+        comment.sub(COMMENT_WITH_EXPECTED_RESULT, "") if comment.match?(COMMENT_WITH_EXPECTED_RESULT)
       end
 
       private def expected_error
-        comment.sub(/\A#!\s+/, "") if comment.match?(/\A#!\s+/)
+        comment.sub(COMMENT_WITH_EXPECTED_ERROR, "") if comment.match?(COMMENT_WITH_EXPECTED_ERROR)
       end
 
     end

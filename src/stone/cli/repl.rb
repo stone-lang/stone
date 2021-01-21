@@ -15,7 +15,7 @@ module Stone
       def call(**_args)
         puts "Stone REPL"
         while (input = Readline.readline("#> ", true))
-          repl_1_line(input, top_context)
+          repl_1_line(input, Stone::Top::CONTEXT)
         end
       end
 
@@ -29,10 +29,6 @@ module Stone
         end
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree
-      end
-
-      private def top_context
-        @top_context ||= Stone::Top.context
       end
 
     end

@@ -2,19 +2,17 @@ module Stone
 
   module Top
 
-    def self.context # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-      {
-        TRUE: Stone::AST::Boolean.new(true),
-        FALSE: Stone::AST::Boolean.new(false),
-        NULL: Stone::AST::Null.new(nil),
-        List: Stone::AST::BuiltinFunction.new("List", 0..Float::INFINITY, ->(ctxt, args){ builtin_List(ctxt, args) }),
-        identity: Stone::AST::BuiltinFunction.new("identity", 1..1, ->(ctxt, args){ builtin_identity(ctxt, args) }),
-        if: Stone::AST::BuiltinFunction.new("if", 2..3, ->(ctxt, args){ builtin_if("if", ctxt, args) }),
-        unless: Stone::AST::BuiltinFunction.new("unless", 2..3, ->(ctxt, args){ builtin_if("unless", ctxt, args, inverted: true) }),
-        min: Stone::AST::BuiltinFunction.new("min", 1..Float::INFINITY, ->(ctxt, args){ builtin_min(ctxt, args) }),
-        max: Stone::AST::BuiltinFunction.new("max", 1..Float::INFINITY, ->(ctxt, args){ builtin_max(ctxt, args) }),
-      }
-    end
+    CONTEXT = {
+      TRUE: Stone::AST::Boolean.new(true),
+      FALSE: Stone::AST::Boolean.new(false),
+      NULL: Stone::AST::Null.new(nil),
+      List: Stone::AST::BuiltinFunction.new("List", 0..Float::INFINITY, ->(ctxt, args){ builtin_List(ctxt, args) }),
+      identity: Stone::AST::BuiltinFunction.new("identity", 1..1, ->(ctxt, args){ builtin_identity(ctxt, args) }),
+      if: Stone::AST::BuiltinFunction.new("if", 2..3, ->(ctxt, args){ builtin_if("if", ctxt, args) }),
+      unless: Stone::AST::BuiltinFunction.new("unless", 2..3, ->(ctxt, args){ builtin_if("unless", ctxt, args, inverted: true) }),
+      min: Stone::AST::BuiltinFunction.new("min", 1..Float::INFINITY, ->(ctxt, args){ builtin_min(ctxt, args) }),
+      max: Stone::AST::BuiltinFunction.new("max", 1..Float::INFINITY, ->(ctxt, args){ builtin_max(ctxt, args) }),
+    }
 
     # TODO: We can remove this when we have classes and (default) constructors working.
     def self.builtin_List(_context, args)

@@ -12,7 +12,7 @@ module Stone
 
       def evaluate(input, single_line: false)
         puts ast(input, single_line: single_line).map{ |node|
-          node.evaluate(top_context)
+          node.evaluate(Stone::Top::CONTEXT)
         }.compact
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree
@@ -72,10 +72,6 @@ module Stone
           end
 
         end
-      end
-
-      protected def top_context
-        Stone::Top.context
       end
 
       private def parser

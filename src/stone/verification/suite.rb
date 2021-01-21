@@ -5,7 +5,6 @@ require "stone/verification/spec"
 
 
 module Stone
-
   module Verification
 
     class Suite
@@ -64,7 +63,6 @@ module Stone
       end
 
       private def process_ast(source_code, ast) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
-        top_context = Stone::Top.context
         last_comment = nil
         last_node = nil
         last_result = nil
@@ -76,7 +74,7 @@ module Stone
           else
             begin
               last_node = node
-              last_result = node.evaluate(top_context)
+              last_result = node.evaluate(Stone::Top::CONTEXT)
               nil
             rescue NoMethodError => e
               binding.pry if debug # rubocop:disable Lint/Debugger
@@ -96,5 +94,4 @@ module Stone
     end
 
   end
-
 end

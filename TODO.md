@@ -5,7 +5,8 @@ TODO
 - [x] Create GitHub organization
     - [x] Move repo to the organization
     - [x] Add an icon to the organization
-        * Avatar from https://www.flickr.com/photos/jsjgeology/16310656713, CC BY 2.0 licensed.
+        - Avatar from <https://www.flickr.com/photos/jsjgeology/16310656713>
+            - CC BY 2.0 licensed.
 - [x] Buy domain
 - [x] Add a license
 - [x] Write a basic README

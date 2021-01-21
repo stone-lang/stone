@@ -8,7 +8,7 @@ setup: setup-overcommit
 console:
 	bundle exec irb -I src -rubygems -r stone/cli.rb
 
-lint: rubocop
+lint: markdownlint rubocop
 
 
 verify-specs: bundle
@@ -31,3 +31,6 @@ Gemfile.lock: Gemfile
 
 rubocop:
 	bundle exec rubocop .
+
+markdownlint:
+	markdownlint *.md docs

@@ -10,14 +10,16 @@ These are the executable specifications for the Stone programming language.
 * [Collections](Collections.md)
 
 
-## Conventions
+Conventions
+-----------
 
 For every code block, expected results will be included, prefixed with `#=`.
 In some cases, there will be an expected exception, instead of an expected result —
 these will be prefixed with `#!` instead of `#=`.
 
 
-## Running
+Running
+-------
 
 You can test that all these specifications are being met by running the following
 (from the top-level directory):

@@ -36,3 +36,8 @@ My goals for Stone are varied, and perhaps not typical for a programming languag
     * Not counting compile time - that can be amortized
         * With modern IDEs, it can start as soon as a change is made
             * Can use caching, so only changes to files are compiled
+
+Stretch Goals
+-------------
+
+* See if I can construct a language that has no keywords or special forms.

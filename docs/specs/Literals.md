@@ -248,8 +248,7 @@ Text is enclosed in double quotes:
 
 NOTE: There is no escaping or interpolation of any kind for text literals.
 The `Text` class has methods to support those features.
-
-TODO: How can we include a double-quote character?
-Maybe allow escaping of only double-quote and the escape character.
-(I think that's what Bash single-quote strings do.)
-Or allow a secondary type of quoting.
+TODO: Show ways to include a double-quote character:
+    "${quote}".interpolate(quote: Text.Character.QUOTATION_MARK)
+    "\u0022".escape
+    "&quot;".html_entities

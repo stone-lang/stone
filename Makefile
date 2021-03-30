@@ -37,3 +37,5 @@ rubocop:
 
 markdownlint:
 	markdownlint *.md docs
+
+.PHONY: all setup console lint verify-specs rspec setup-overcommit bundle rubocop markdownlint

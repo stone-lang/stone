@@ -12,13 +12,14 @@ gem "rubocop-rspec", require: false
 gem "rubocop-performance", require: false
 
 # Specifications
+gem "rspec"
 gem "kramdown"
 
 # Parsing
 gem "parslet"
 
 # Debugging
-gem "pry-byebug"
+gem "pry"
 
 # Console
 gem "irb"

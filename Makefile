@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
 
-all: setup verify-specs
+all: setup verify-specs rspec
 
 setup: setup-overcommit
 
@@ -13,6 +13,9 @@ lint: markdownlint rubocop
 
 verify-specs: bundle
 	bin/stone verify --debug docs/specs/*.md
+
+rspec: bundle
+	bundle exec rspec
 
 setup-overcommit: .git/hooks/overcommit-hook
 

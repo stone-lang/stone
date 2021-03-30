@@ -2,19 +2,17 @@ module Stone
 
   module AST
 
-    class UnaryOperation < Operation
+    class UnaryOperation < Base
 
       BOOLEAN_NOT = /[!¬]/
 
       attr_reader :operator
-      attr_reader :operands
       attr_reader :operand
 
       def initialize(operator, operand)
         @source_location = operator.line_and_column
-        @operator = operator.to_s
+        @operator = operator
         @operand = operand
-        @operands = [operand] # Keep parent class happy.
       end
 
       def evaluate(context)

@@ -193,7 +193,7 @@ Rational Numbers
 ----------------
 
 Stone is relatively unique in supporting rational literals.
-(Ruby supports them, but requires that the be suffixed with an `r`.)
+(Ruby supports them, but requires that they be suffixed with an `r`.)
 These are more commonly referred to as fractions.
 Rationals consist of an integer followed by a slash (`/`) followed by an unsigned positive integer.
 Rationals will be reduced to their simplest form.

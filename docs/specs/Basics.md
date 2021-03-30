@@ -101,9 +101,9 @@ if(TRUE, 1)
 if(TRUE, { 1 }, 2)
 #! TypeError: 'if' argument 'else' must be a block
 
-if("Text", { "Hello" }, { "Googbye" })
+if("Text", { "Hello" }, { "Goodbye" })
 #! TypeError: 'if' condition must be a Boolean
 
-unless({ "Text" }, { "Hello" }, { "Googbye" })
+unless({ "Text" }, { "Hello" }, { "Goodbye" })
 #! TypeError: 'unless' condition must be a Boolean
 ~~~

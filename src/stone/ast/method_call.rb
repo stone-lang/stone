@@ -12,6 +12,7 @@ module Stone
         @object = object
         @method_name = method_name.to_sym
         @arguments = arguments
+        @source_location = get_source_location(object)
       end
 
       def evaluate(context) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize

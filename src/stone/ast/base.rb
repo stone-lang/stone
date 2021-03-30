@@ -38,7 +38,7 @@ module Stone
       end
 
       def source_line
-        source_location.first
+        source_location&.first
       end
 
     end

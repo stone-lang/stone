@@ -10,6 +10,7 @@ module Stone
       def initialize(object, property_name)
         @object = object
         @property_name = property_name.to_sym
+        @source_location = get_source_location(object)
       end
 
       def evaluate(context)

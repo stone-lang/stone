@@ -96,6 +96,11 @@ module Stone
         Rational((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
       end
 
+      # TODO: This should probably have a unit test.
+      def to_s
+        operands.zip(operators).flatten.compact.map{ |n| n.respond_to?(:source_code) ? n.source_code : n.to_s }.join(" ")
+      end
+
       private def evaluate_operation(context, operator, operands)
         return Error.new("UnknownOperator", operator) unless known_operator?(operator)
         operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }

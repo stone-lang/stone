@@ -24,6 +24,10 @@ module Stone
         end
       end
 
+      def to_s
+        "#{object}.#{property_name}"
+      end
+
     end
 
   end

@@ -26,6 +26,10 @@ module Stone
         end
       end
 
+      def to_s
+        "#{operator}(#{operand})"
+      end
+
       private def boolean_not(operand)
         return Error.new("TypeError", "Boolean NOT operand must be a Boolean value: #{operand}") unless operand.is_a?(Boolean)
         return operand.to_s if operator.size.even?

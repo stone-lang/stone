@@ -31,6 +31,10 @@ module Stone
         end
       end
 
+      def to_s
+        "{object}.#{method_name}(#{arguments.join(', ')})"
+      end
+
     end
 
   end

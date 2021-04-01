@@ -170,3 +170,67 @@ list.fold(square, 1)
 list.reduce(123)
 #! TypeError: 'reduce' argument 'function' must have type Function[Any](Any)
 ~~~
+
+
+Pair
+----
+
+A *Pair* is a data structure containing 2 items, related in some (programmer-determined) way.
+The 2 items don't need to have the same type.
+The 2 items can be thought of as (and referenced as):
+
+* `first` and `second`
+* `first` and `last`
+* `left` and `right`
+* `key` and `value`
+
+If you need to specify the type of items in the Pair, you'll specify the type of each.
+
+~~~ stone
+Pair("a", 1)
+#= Pair[Text, Number.Integer](Text("a"), Number.Integer(1))
+
+Pair(NULL, NULL)
+#= Pair[Null, Null](Null(Null.NULL), Null(Null.NULL))
+
+Pair()
+#! ArityError: 'Pair' expects 2 arguments, got 0
+
+Pair(1)
+#! ArityError: 'Pair' expects 2 arguments, got 1
+
+Pair(1, 2, 3)
+#! ArityError: 'Pair' expects 2 arguments, got 3
+~~~
+
+### Pair Properties
+
+You can query a Pair for several properties, including the 2 individual items:
+
+~~~ stone
+pair := Pair("a", 1)
+
+pair.first
+#= Text("a")
+
+pair.second
+#= Number.Integer(1)
+
+pair.last
+#= Number.Integer(1)
+
+pair.key
+#= Text("a")
+
+pair.value
+#= Number.Integer(1)
+
+pair.left
+#= Text("a")
+
+pair.right
+#= Number.Integer(1)
+~~~
+
+A Pair is not a Collection, nor is it a Sequence.
+However, Pair data structures are used within the second-most important collection type — Map.

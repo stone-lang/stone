@@ -20,8 +20,12 @@ module Stone
         self
       end
 
-      def to_s
-        "#{type}(#{value})"
+      def to_s(untyped = false)
+        if untyped
+          value
+        else
+          "#{type}(#{value})"
+        end
       end
 
       def normalize!

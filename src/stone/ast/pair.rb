@@ -7,6 +7,9 @@ module Stone
 
     class Pair < Object
 
+      attr_reader :first
+      attr_reader :second
+
       def initialize(first, second, type_specifier: [Any, Any])
         @first = first
         @second = second
@@ -43,8 +46,8 @@ module Stone
         }
       end
 
-      def to_s
-        "#{type}(#{@first}, #{@second})"
+      def to_s(untyped = false)
+        "#{type}(#{@first.to_s(:untyped)}, #{@second.to_s(:untyped)})"
       end
 
       def children

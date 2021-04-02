@@ -12,6 +12,10 @@ module Stone
         "Any"
       end
 
+      def type
+        "Any"
+      end
+
     end
 
   end

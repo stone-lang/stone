@@ -59,7 +59,7 @@ module Stone
       end
 
       def to_s
-        "#{type}(#{@value.join(', ')})"
+        "#{type}(#{@value.map{ |v| v.to_s(:untyped) }.join(', ')})"
       end
 
       def children

@@ -9,7 +9,7 @@ The individual elements of a Collection can be easily iterated through as well.
 List
 ----
 
-The simplest collection is a List.
+The simplest collection is a _List_.
 As the name suggests, a List is an ordered set of items.
 A List has a type specifier, which specifies the types of values within the List.
 If the values in the List are all of different types, the type specifier will by Any.
@@ -20,13 +20,13 @@ List()
 #= List[Any]()
 
 List(1, 2, 3)
-#= List[Number.Integer](Number.Integer(1), Number.Integer(2), Number.Integer(3))
+#= List[Number.Integer](1, 2, 3)
 
 List(1, 1 + 1, 1 + 1 + 1)
-#= List[Number.Integer](Number.Integer(1), Number.Integer(2), Number.Integer(3))
+#= List[Number.Integer](1, 2, 3)
 
 List(1, "abc", FALSE)
-#= List[Any](Number.Integer(1), Text("abc"), Boolean(Boolean.FALSE))
+#= List[Any](1, "abc", Boolean.FALSE)
 ~~~
 
 
@@ -74,10 +74,10 @@ list.last
 #= Number.Integer(3)
 
 list.rest
-#= List[Number.Integer](Number.Integer(2), Number.Integer(3))
+#= List[Number.Integer](2, 3)
 
 list.tail
-#= List[Number.Integer](Number.Integer(2), Number.Integer(3))
+#= List[Number.Integer](2, 3)
 ~~~
 
 
@@ -111,13 +111,13 @@ list := List(1, 2, 3)
 square := (x) => { x * x }
 
 list.map((x) => { 2 * x })
-#= List[Number.Integer](Number.Integer(2), Number.Integer(4), Number.Integer(6))
+#= List[Number.Integer](2, 4, 6)
 
 list.map(square)
-#= List[Number.Integer](Number.Integer(1), Number.Integer(4), Number.Integer(9))
+#= List[Number.Integer](1, 4, 9)
 
 list.each(square)
-#= List[Number.Integer](Number.Integer(1), Number.Integer(4), Number.Integer(9))
+#= List[Number.Integer](1, 4, 9)
 
 list.each((x, y) => { x + y })
 #! ArityError: 'each' argument 'function' must take 1 argument
@@ -175,7 +175,7 @@ list.reduce(123)
 Pair
 ----
 
-A *Pair* is a data structure containing 2 items, related in some (programmer-determined) way.
+A _Pair_ is a data structure containing 2 items, related in some (programmer-determined) way.
 The 2 items don't need to have the same type.
 The 2 items can be thought of as (and referenced as):
 
@@ -188,10 +188,10 @@ If you need to specify the type of items in the Pair, you'll specify the type of
 
 ~~~ stone
 Pair("a", 1)
-#= Pair[Text, Number.Integer](Text("a"), Number.Integer(1))
+#= Pair[Text, Number.Integer]("a", 1)
 
 Pair(NULL, NULL)
-#= Pair[Null, Null](Null(Null.NULL), Null(Null.NULL))
+#= Pair[Null, Null](Null.NULL, Null.NULL)
 
 Pair()
 #! ArityError: 'Pair' expects 2 arguments, got 0

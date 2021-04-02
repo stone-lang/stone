@@ -12,8 +12,12 @@ module Stone
         @value = nil
       end
 
-      def to_s
-        "#{type}(Null.NULL)"
+      def to_s(untyped = false)
+        if untyped
+          "Null.NULL"
+        else
+          "#{type}(Null.NULL)"
+        end
       end
 
     end

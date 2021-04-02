@@ -8,6 +8,7 @@ module Stone
       NULL: Stone::AST::Null.new(nil),
       List: Stone::AST::BuiltinFunction.new("List", 0..Float::INFINITY, ->(ctxt, args){ builtin_List(ctxt, args) }),
       Pair: Stone::AST::BuiltinFunction.new("Pair", 2..2, ->(ctxt, args){ builtin_Pair(ctxt, args[0], args[1]) }),
+      Map: Stone::AST::BuiltinFunction.new("Map", 0..Float::INFINITY, ->(ctxt, args){ builtin_Map(ctxt, args) }),
       identity: Stone::AST::BuiltinFunction.new("identity", 1..1, ->(ctxt, args){ builtin_identity(ctxt, args) }),
       if: Stone::AST::BuiltinFunction.new("if", 2..3, ->(ctxt, args){ builtin_if("if", ctxt, args) }),
       unless: Stone::AST::BuiltinFunction.new("unless", 2..3, ->(ctxt, args){ builtin_if("unless", ctxt, args, inverted: true) }),
@@ -15,14 +16,17 @@ module Stone
       max: Stone::AST::BuiltinFunction.new("max", 1..Float::INFINITY, ->(ctxt, args){ builtin_max(ctxt, args) }),
     }
 
-    # TODO: We can remove this when we have classes and (default) constructors working.
+    # TODO: We can remove these when we have classes and (default) constructors working.
     def self.builtin_List(_context, args)
       Stone::AST::List.new(args)
     end
 
-    # TODO: We can remove this when we have classes and (default) constructors working.
     def self.builtin_Pair(_context, first, second)
       Stone::AST::Pair.new(first, second)
+    end
+
+    def self.builtin_Map(_context, args)
+      Stone::AST::Map.new(args)
     end
 
     def self.builtin_identity(_context, args)

@@ -233,4 +233,82 @@ pair.right
 ~~~
 
 A Pair is not a Collection, nor is it a Sequence.
-However, Pair data structures are used within the second-most important collection type — Map.
+However, Pair plays a large role in the second-most important collection type — Map.
+
+
+Map
+---
+
+A _Map_ is a data structure containing a "mapping" from keys to values.
+Each _key_ may only map to a single _value_.
+So a given key can only be in the map once; but values do *not* need to be unique.
+In other programming languages, this data structure is often called an associative array, dictionary, hashmap, or hash.
+A Map could also be considered a List of Pair elements, which is how it's constructed:
+
+~~~ stone
+Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
+#= Map[Text, Number.Integer](Pair("a", 1), Pair("b", 2), Pair("c", 3))
+
+Map()
+#= Map[Any, Any]()
+~~~
+
+TODO: Test for unique keys.
+
+### Map Properties
+
+You can query a Map for several properties, including its list of keys and values,
+its length/size, and whether it's empty.
+
+~~~ stone
+map := Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
+empty := Map()
+
+map.keys
+#= List[Text]("a", "b", "c")
+
+map.values
+#= List[Number.Integer](1, 2, 3)
+
+map.length
+#= Number.Integer(3)
+
+map.size
+#= Number.Integer(3)
+
+map.empty?
+#= Boolean(Boolean.FALSE)
+
+empty.length
+#= Number.Integer(0)
+
+empty.size
+#= Number.Integer(0)
+
+empty.empty?
+#= Boolean(Boolean.TRUE)
+~~~
+
+### Map Methods
+
+You can determine whether a Map contains a specific key, value, or pair.
+You can get the value associated with a given key.
+
+~~~ stone
+map := Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
+
+map.has_key?("c")
+#= Boolean(Boolean.TRUE)
+
+map.has_value?(1)
+#= Boolean(Boolean.TRUE)
+
+map.includes?(Pair("b", 2))
+#= Boolean(Boolean.TRUE)
+
+map.get("a")
+#= Number.Integer(1)
+
+map.get("c")
+#= Number.Integer(3)
+~~~

@@ -21,3 +21,4 @@ end
 
 require "stone/ast/list"
 require "stone/ast/pair"
+require "stone/ast/map"

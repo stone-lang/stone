@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Function < Base
+    class Function < Node
 
       attr_reader :parameters
       attr_reader :body

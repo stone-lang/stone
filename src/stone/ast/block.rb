@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Block < Base
+    class Block < Node
 
       attr_reader :body
 

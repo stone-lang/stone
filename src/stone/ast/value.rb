@@ -5,7 +5,7 @@ module Stone
 
   module AST
 
-    class Value < Base
+    class Value < Node
 
       # NOTE: This should be an object of a native Ruby class.
       attr_reader :value

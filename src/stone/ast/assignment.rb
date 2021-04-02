@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Assignment < Base
+    class Assignment < Node
 
       attr_reader :name
       attr_reader :rvalue

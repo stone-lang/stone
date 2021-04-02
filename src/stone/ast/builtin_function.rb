@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class BuiltinFunction < Base
+    class BuiltinFunction < Node
 
       attr_reader :name
       attr_reader :arity

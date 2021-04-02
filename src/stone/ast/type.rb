@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Type < Base
+    class Type < Node
 
       attr_reader :name
 

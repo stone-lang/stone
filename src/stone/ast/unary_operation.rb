@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class UnaryOperation < Base
+    class UnaryOperation < Node
 
       BOOLEAN_NOT = /[!¬]/
 

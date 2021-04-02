@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Base
+    class Node
 
       attr_reader :source_location # 1-based [line, column]
 

@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class VariableReference < Base
+    class VariableReference < Node
 
       attr_reader :name
 

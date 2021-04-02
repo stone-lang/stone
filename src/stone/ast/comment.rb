@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Comment < Base
+    class Comment < Node
 
       attr_reader :text
 

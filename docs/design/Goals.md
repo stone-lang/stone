@@ -40,4 +40,5 @@ My goals for Stone are varied, and perhaps not typical for a programming languag
 Stretch Goals
 -------------
 
-* See if I can construct a language that has no keywords or special forms.
+* See if I can construct a language with no keywords or special forms
+* See if I can construct a language with a minimal number of built-in functions

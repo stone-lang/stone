@@ -1,25 +1,168 @@
+# TODO: Write a complete test suite for this class. (See my Ruby implementation/tests.)
+
+# NOTE: A `Class` is just a `Namespace` with instances (and constructors).
+# NOTE: A `Class` is also a `Function`, as it can be called with arguments (returning the result of calling its default constructor).
+
 Boolean := Class({
-    @name := "Boolean"
+    Name := "Boolean"
 
-    #Values := Enum(TRUE, FALSE)
+    # Default constructor - takes a Boolean (is effectively a no-op)
+    Create :: Function[(Boolean): Boolean]  # WHOA: The type specifier in the `[]` is a Pair that requires the key to be in parens, so the parens will match with the function parameters in the function definition.
+    Create := (value) => { return(value) }  # NOTE: This class has no instance fields, so the compiler should NOT allocate space for this object.
 
-    # Return the "opposite", or "inverse"; AKA "not".
-    # TODO: Find the proper correct name and synonyms to use.
-    #complement := __BUILTIN__.Boolean.complement
+    # We're implementing Booleans using Church encoding here.
+    TRUE := (t, f) => { t }
+    FALSE := (t, f) => { f }
 
+    not := (this) => { this(FALSE, TRUE) }  # NOTE: This implementation is only for languages with *strict* evaluation.
+    and := (this, that) => { this(that, FALSE) }
+    or := (this, that) => { this(TRUE, that) }
+    xor := (this, that) => { this(not(that), that) }
 
-    # Temporary implementation, until we implement Enum.
+    implies := (this, that) => { this(that, not(this)) }
+    implied_by := (this, that) => { that(this, not(that)) }
+    iff := (this, that) => { not(xor(this, that)) }  # this = antecedent, that = consequent
 
-    TRUE := 1
-    FALSE := 0
+    if := (this, then, else) => { this(then, else) }  # TODO: This should take blocks `then` and `else`, and evaluate only the chosen block.
 
-    value :: Integer
+    as_text := (this) => { if(this, "TRUE", "FALSE") }
 
-    Create(value) := { @value = value }
+    all := and  # TODO: allow this to take more than 2 arguments (including `this`).
+    any := or   # TODO: allow this to take more than 2 arguments (including `this`).
 
-    complement := { @value.even? }
+    logical_conjunction	:= and
+    logical_disjunction	:= or
+    exclusive_disjunction := xor
+    material_implication := implies
+    material_equivalence := iff
+    tautology := (this) => { TRUE }
+    contradiction := (this) => { FALSE }
+    sufficient_for := implies
+    necessary_for := implied_by
+    necessary_and_sufficient_for := iff
+    biconditional := iff
+    xnor := iff
 
-    as_text := { Array("FALSE", "TRUE").at(@value + 1) }
+    == := iff
+    != := (that) => { !(==(this, that)) }
+
+    ¬ := not
+    ∧ := and
+    ∨ := or
+    ⊕ := xor
+    ⟹ := implies
+    ⟸ := implied_by
+    ⟺ := iff
+    ⊤ := tautology
+    ⊥ := contradiction
+
+    ! := not
+    && := and
+    || := or
+
+    × := and
+    ⋅ := and
+    * := and
+    + := or
+    ⊻ := xor
+
+    ⇒ := ⟹
+    ⇐ := ⟸
+    ⇔ := ⟺
+    ↔ := ⟺
+    ≡ := ⟺
 })
 
+### Tests
 
+# FIXME: This is the simplest thing that could possibly (kind of) work.
+# TODO: We could pass a block and run it, and print its source code.
+assert := (condition) => { Boolean.if(condition, "PASSED", "FAILED")
+
+# TODO: Might need to define `==` (which won't work with non-Booleans (Text and Integer in these tests)).
+
+assert(Boolean.Name == "Boolean")
+
+assert(Boolean.Create(Boolean.FALSE) == Boolean.FALSE)
+assert(Boolean.Create(Boolean.TRUE) == Boolean.TRUE)
+
+assert(Boolean.FALSE == Boolean.FALSE)
+assert(Boolean.FALSE != Boolean.TRUE)
+assert(Boolean.TRUE != Boolean.FALSE)
+assert(Boolean.TRUE == Boolean.TRUE)
+
+assert(Boolean.not(FALSE) == TRUE)
+assert(Boolean.not(TRUE) == FALSE)
+
+assert(Boolean.and(FALSE, FALSE) == FALSE)
+assert(Boolean.and(FALSE, TRUE) == FALSE)
+assert(Boolean.and(TRUE, FALSE) == FALSE)
+assert(Boolean.and(TRUE, TRUE) == TRUE)
+
+assert(Boolean.or(FALSE, FALSE) == FALSE)
+assert(Boolean.or(FALSE, TRUE) == TRUE)
+assert(Boolean.or(TRUE, FALSE) == TRUE)
+assert(Boolean.or(TRUE, TRUE) == TRUE)
+
+assert(Boolean.xor(FALSE, FALSE) == FALSE)
+assert(Boolean.xor(FALSE, TRUE) == TRUE)
+assert(Boolean.xor(TRUE, FALSE) == TRUE)
+assert(Boolean.xor(TRUE, TRUE) == FALSE)
+
+assert(Boolean.implies(FALSE, FALSE) == TRUE)
+assert(Boolean.implies(FALSE, TRUE) == TRUE)
+assert(Boolean.implies(TRUE, FALSE) == FALSE)
+assert(Boolean.implies(TRUE, TRUE) == TRUE)
+
+assert(Boolean.implied_by(FALSE, FALSE) == TRUE)
+assert(Boolean.implied_by(FALSE, TRUE) == FALSE)
+assert(Boolean.implied_by(TRUE, FALSE) == TRUE)
+assert(Boolean.implied_by(TRUE, TRUE) == TRUE)
+
+assert(Boolean.iff(FALSE, FALSE) == TRUE)
+assert(Boolean.iff(FALSE, TRUE) == FALSE)
+assert(Boolean.iff(TRUE, FALSE) == FALSE)
+assert(Boolean.iff(TRUE, TRUE) == TRUE)
+
+assert(Boolean.if(FALSE, 1, 2) == 2)
+assert(Boolean.if(TRUE, 1, 2) == 1)
+
+
+t := Boolean.TRUE
+f := Boolean.FALSE
+
+assert(f.not == TRUE)
+assert(t.not == FALSE)
+
+assert(f.and(FALSE) == FALSE)
+assert(f.and(TRUE) == FALSE)
+assert(t.and(FALSE) == FALSE)
+assert(t.and(TRUE) == TRUE)
+
+assert(f.or(FALSE) == FALSE)
+assert(f.or(TRUE) == TRUE)
+assert(t.or(FALSE) == TRUE)
+assert(t.or(TRUE) == TRUE)
+
+assert(f.xor(FALSE) == FALSE)
+assert(f.xor(TRUE) == TRUE)
+assert(t.xor(FALSE) == TRUE)
+assert(t.xor(TRUE) == FALSE)
+
+assert(f.implies(FALSE) == TRUE)
+assert(f.implies(TRUE) == TRUE)
+assert(t.implies(FALSE) == FALSE)
+assert(t.implies(TRUE) == TRUE)
+
+assert(f.implied_by(FALSE) == TRUE)
+assert(f.implied_by(TRUE) == FALSE)
+assert(t.implied_by(FALSE) == TRUE)
+assert(t.implied_by(TRUE) == TRUE)
+
+assert(f.iff(FALSE) == TRUE)
+assert(f.iff(TRUE) == FALSE)
+assert(t.iff(FALSE) == FALSE)
+assert(t.iff(TRUE) == TRUE)
+
+assert(f.if(1, 2) == 2)
+assert(t.if(1, 2) == 1)

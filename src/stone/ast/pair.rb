@@ -46,8 +46,8 @@ module Stone
         }
       end
 
-      def to_s(untyped = false)
-        "#{type}(#{@first.to_s(:untyped)}, #{@second.to_s(:untyped)})"
+      def to_s(untyped: false)
+        "#{type}(#{@first.to_s(untyped: true)}, #{@second.to_s(untyped: true)})"
       end
 
       def children

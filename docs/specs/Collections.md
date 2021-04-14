@@ -242,8 +242,8 @@ Map
 A _Map_ is a data structure containing a "mapping" from keys to values.
 Each _key_ may only map to a single _value_.
 So a given key can only be in the map once; but values do *not* need to be unique.
-In other programming languages, this data structure is often called an associative array, dictionary, hashmap, or hash.
-A Map could also be considered a List of Pair elements, which is how it's constructed:
+In other programming languages, this data structure is often called an associative array, dictionary, hash-map, or hash.
+A Map could also be considered a List of Pairs, which is how it's constructed.
 
 ~~~ stone
 Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
@@ -292,7 +292,8 @@ empty.empty?
 ### Map Methods
 
 You can determine whether a Map contains a specific key, value, or pair.
-You can get the value associated with a given key.
+You can get the value associated with a given key, using the `get` method,
+or by treating the Map as a Function (calling it with the key you want to retrieve).
 
 ~~~ stone
 map := Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
@@ -311,4 +312,61 @@ map.get("a")
 
 map.get("c")
 #= Number.Integer(3)
+
+map("a")
+#= Number.Integer(1)
+
+map("c")
+#= Number.Integer(3)
+~~~
+
+If you try to get the value for a key that's not in the Map, you'll get a `NULL`.
+
+~~~ stone
+map := Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
+
+map.has_key?("d")
+#= Boolean(Boolean.FALSE)
+
+map.get("d")
+#= Null(Null.NULL)
+
+map("d")
+#= Null(Null.NULL)
+~~~
+
+### Map Iteration
+
+You'll often want to perform an operation on every pair in a Map.
+The `map` method allows you to do this. (You may prefer to use its alias, `each`.)
+It takes a function that will modify each Pair.
+The function will take 1 argument (a Pair), and must return a Pair.
+
+~~~ stone
+map := Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
+
+map.map((x) => { Pair(x.key, 2 * x.value) })
+#= Map[Text, Number.Integer](Pair("a", 2), Pair("b", 4), Pair("c", 6))
+~~~
+
+You can also use the `map_to_list` method to operate on every pair and return a List.
+It takes a function that will modify each Pair, turning each Pair into an item in the resulting List.
+
+~~~ stone
+map := Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
+
+map.map_to_list((x) => { 2 * x.value })
+#= List[Number.Integer](2, 4, 6)
+~~~
+
+### Map Reduction
+
+Sometimes you'll need to combine the items in a Map to a single item.
+You can do this using the `reduce` or `fold` methods.
+
+~~~ stone
+map := Map(Pair("a", 1), Pair("b", 2), Pair("c", 3))
+
+map.reduce((x, y) => { x * y })
+#= List[Number.Integer](2, 4, 6)
 ~~~

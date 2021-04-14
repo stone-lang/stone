@@ -1,13 +1,16 @@
 A Map should be a function
 	* Or at the very least, callable
 	* I suppose that'd work OK for Lists too
-		* But `nth` makes more sense usually
+		* But `nth` makes more sense
+		* But I don't want people to think of a List as a function mapping position to values
+			* Because they should not be thinking about *where* in the List a given element is at
+				* They should create a Class if the specific locations of things matter
 ```
 m = Map(a: 1, b: 2)
+m.get(:a)  # => 1
 m(:a)  # => 1
 m.first  # => Pair(:a, 1)
 l = List(1, 2, 3)
 l.first
 l.nth(1)
-l(1)
 ```

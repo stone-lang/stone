@@ -27,6 +27,15 @@ module Stone
         end
       end
 
+      def call(_parent_context, arguments)
+        key = arguments.first
+        @value.select { |k, _v| k.value == key.value }.values.first
+      end
+
+      def arity
+        1..1  # If we treat a Map as a function, it'll take 1 argument (a key).
+      end
+
       def properties
         @properties ||= {
           keys: List.new(@value.keys),
@@ -39,17 +48,17 @@ module Stone
 
       def methods # rubocop:disable Metrics/AbcSize
         @methods ||= {
-          includes?: ->(_, element) { Boolean.new(@value.map{ |k,v| [k.value, v.value] }.to_h[element.first.value] == element.second.value) },
+          includes?: ->(_, element) { Boolean.new(@value.map{ |k, v| [k.value, v.value] }.to_h[element.first.value] == element.second.value) },
           has_key?: ->(_, key) { Boolean.new(@value.keys.map(&:value).include?(key.value)) },
           has_value?: ->(_, value) { Boolean.new(@value.values.map(&:value).include?(value.value)) },
-          get: ->(context, key) { @value.select { |k,v| k.value == key.value }.values.first },
+          get: ->(_context, key) { @value.keys.map(&:value).include?(key.value) ? @value.select { |k, _v| k.value == key.value }.values.first : Null.new(nil) },
           map: ->(context, fn) { map("map", context, fn) },
           each: ->(context, fn) { map("each", context, fn) },
         }
       end
 
       def to_s
-        "#{type}(#{@value.map{ |k,v| "Pair(#{k.to_s(:untyped)}, #{v.to_s(:untyped)})"}.join(', ')})"
+        "#{type}(#{@value.map{ |k, v| "Pair(#{k.to_s(untyped: true)}, #{v.to_s(untyped: true)})" }.join(', ')})"
       end
 
       def children
@@ -57,7 +66,7 @@ module Stone
       end
 
       def child_types
-        children.map{ |k,v| [k.type, v.type] }.uniq
+        children.map{ |k, v| [k.type, v.type] }.uniq
       end
 
       private def map(name, context, function)

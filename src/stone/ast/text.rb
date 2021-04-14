@@ -8,7 +8,7 @@ module Stone
         "Text"
       end
 
-      def to_s(untyped = false)
+      def to_s(untyped: false)
         if untyped
           "\"#{@value}\""
         else

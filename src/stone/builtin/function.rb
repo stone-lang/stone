@@ -1,8 +1,8 @@
 module Stone
 
-  module AST
+  module Builtin
 
-    class BuiltinFunction < Node
+    class Function < Object
 
       attr_reader :name
       attr_reader :arity
@@ -14,12 +14,8 @@ module Stone
         @proc = proc
       end
 
-      def value
-        self
-      end
-
-      def evaluate(_context)
-        self
+      def klass
+        "Function"
       end
 
       def call(parent_context, arguments)
@@ -27,7 +23,7 @@ module Stone
       end
 
       def to_s
-        "BuiltinFunction(name: #{name}, arity: #{arity})"
+        "Function(name: #{name}, arity: #{arity})"
       end
 
     end

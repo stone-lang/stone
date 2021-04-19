@@ -30,8 +30,8 @@ Boolean := Class({
     all := and  # TODO: allow this to take more than 2 arguments (including `this`).
     any := or   # TODO: allow this to take more than 2 arguments (including `this`).
 
-    logical_conjunction	:= and
-    logical_disjunction	:= or
+    logical_conjunction := and
+    logical_disjunction := or
     exclusive_disjunction := xor
     material_implication := implies
     material_equivalence := iff
@@ -46,31 +46,31 @@ Boolean := Class({
     == := iff
     != := (that) => { !(==(this, that)) }
 
-    ¬ := not
-    ∧ := and
-    ∨ := or
-    ⊕ := xor
-    ⟹ := implies
-    ⟸ := implied_by
-    ⟺ := iff
-    ⊤ := tautology
-    ⊥ := contradiction
+    ¬ := not            # Unicode `not sign` character.
+    ∧ := and            # Unicode `logical and` character.
+    ∨ := or             # Unicode `logical or` character.
+    ⊻ := xor            # Unicode `xor` character.
+    ⟹ := implies        # Unicode `long rightwards double arrow` character. NOTE: This is a "wide" character in most fonts.
+    ⟸ := implied_by     # Unicode `long leftwards double arrow` character.  NOTE: This is a "wide" character in most fonts.
+    ⟺ := iff            # Unicode `long left right double arrow` character. NOTE: This is a "wide" character in most fonts.
+    ⊤ := tautology      # Unicode `down tack` or `top` character.
+    ⊥ := contradiction  # Unicode `up tack` or `bottom` character.
 
     ! := not
     && := and
     || := or
 
-    × := and
-    ⋅ := and
-    * := and
-    + := or
-    ⊻ := xor
+    × := and            # Unicode `multiplication sign` character.
+    ⋅ := and            # Unicode `dot operator` character.
+    * := and            # Unicode `asterisk` character.
+    + := or             # Unicode `plus sign` character.
+    ⊕ := xor            # Unicode `circled plus` character, the more commonly-used operator for `xor`.
 
-    ⇒ := ⟹
-    ⇐ := ⟸
-    ⇔ := ⟺
-    ↔ := ⟺
-    ≡ := ⟺
+    ⇒ := implies        # Unicode `rightwards double arrow` character.
+    ⇐ := implied_by     # Unicode `leftwards double arrow` character.
+    ⇔ := iff            # Unicode `left right double arrow` character.
+    ↔ := iff            # Unicode `left right arrow` character.
+    ≡ := iff            # Unicode `identical to` character.
 })
 
 ### Tests

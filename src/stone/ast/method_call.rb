@@ -31,6 +31,10 @@ module Stone
         end
       end
 
+      override def children
+        arguments
+      end
+
       def to_s
         "{object}.#{method_name}(#{arguments.join(', ')})"
       end

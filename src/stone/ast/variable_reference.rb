@@ -19,6 +19,10 @@ module Stone
         name.to_s
       end
 
+      override def variables_referenced
+        [name]
+      end
+
     end
 
   end

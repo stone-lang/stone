@@ -24,6 +24,10 @@ module Stone
         "{\n    #{body}\n}"
       end
 
+      override def children
+        body
+      end
+
     end
 
   end

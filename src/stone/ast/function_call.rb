@@ -24,11 +24,19 @@ module Stone
       def evaluate(context) # rubocop:disable Metrics/AbcSize
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
-        function = context[name]
+        function = context[name] # FIXME: The function should be expression. It'll *usually* be a variable reference.
         return Error.new("UnknownFunction", name) unless callable?(function)
         # TODO: Check argument types.
         return arity_error(function, arguments.count) unless correct_arity?(function, arguments.count)
         function.call(context, evaluated_arguments)
+      end
+
+      override def children
+        arguments
+      end
+
+      override def variables_referenced
+        [name] + children.map(&:variables_referenced)
       end
 
       # NOTE: A (default) Class constructor can be called with 0 arguments; a function/method cannot.

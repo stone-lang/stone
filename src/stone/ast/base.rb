@@ -41,6 +41,16 @@ module Stone
         source_location&.first
       end
 
+      overridable def children
+        []
+      end
+
+      # TODO: It'd probably be useful to have `descendents` to fully iterate through sub-trees.
+
+      overridable def variables_referenced
+        children.map(&:variables_referenced).flatten
+      end
+
     end
 
   end

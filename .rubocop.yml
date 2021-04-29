@@ -7,6 +7,12 @@ require:
 inherit_from:
   - https://raw.githubusercontent.com/booch/config_files/master/ruby/rubocop.yml
 
+# Ignore some files. NOTE: Exclude does not add to any existing Exclude directives.
+AllCops:
+  Exclude:
+    - 'church*.rb'
+    - 'vendor/**/*'
+
 # Allow longer lines.
 Metrics/LineLength:
   Max: 160

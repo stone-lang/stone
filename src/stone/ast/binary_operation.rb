@@ -101,6 +101,10 @@ module Stone
         operands.zip(operators).flatten.compact.map{ |n| n.respond_to?(:source_code) ? n.source_code : n.to_s }.join(" ")
       end
 
+      override def children
+        operands
+      end
+
       private def evaluate_operation(context, operator, operands)
         return Error.new("UnknownOperator", operator) unless known_operator?(operator)
         operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }

@@ -34,6 +34,7 @@ module Stone
           first: @first,
           second: @second,
           last: @second,
+          rest: @second,
           left: @first,
           right: @second,
           key: @first,
@@ -50,7 +51,7 @@ module Stone
         "#{type}(#{@first.to_s(:untyped)}, #{@second.to_s(:untyped)})"
       end
 
-      def children
+      override def children
         [@first, @second]
       end
 

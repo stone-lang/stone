@@ -13,15 +13,20 @@ module Stone
         @parameters = parameters.map(&:to_sym)
       end
 
-      def evaluate(_context)
+      def evaluate(context)
+        @closure_context = context
         self
       end
 
-      def call(parent_context, arguments)
+      def call(parent_context, arguments) # rubocop:disable Metrics/AbcSize
         context = Hash.new{ |_h, k| parent_context[k] }
         parameters.zip(arguments).each do |param, arg|
           context[param] = arg
         end
+        free_variables.each do |v|
+          context[v] = @closure_context.fetch(v) { Error.new("UndefinedVariable", v) }
+        end
+        # puts "function called with context: #{context}"
         body.map{ |x| x.evaluate(context) }.compact.last
       end
 
@@ -31,6 +36,23 @@ module Stone
 
       def to_s
         "(#{parameters.join(", ")}) => {\n    #{body}\n}"
+      end
+
+      override def children
+        @body
+      end
+
+      # Get a list of all the variables defined *directly* in the body.
+      private def defined_variables
+        @defined_variables ||= @body.select{ |n| n.is_a?(Stone::AST::Assignment) }.map(&:name)
+      end
+
+      private def bound_variables
+        parameters + defined_variables
+      end
+
+      private def free_variables
+        variables_referenced - bound_variables
       end
 
     end

@@ -22,6 +22,10 @@ module Stone
         "#{name} := #{rvalue}"
       end
 
+      override def children
+        [rvalue].flatten
+      end
+
     end
 
   end

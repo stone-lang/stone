@@ -126,3 +126,28 @@ fib(1)
 fib(11)
 #= Number.Integer(89)
 ~~~
+
+Function definitions can be nested, and returned.
+
+~~~ stone
+adder := (x) => {
+    add_x := (y) => { x + y }
+    add_x
+}
+add1 := adder(1)
+add1(4)
+#= Number.Integer(5)
+
+adder := (x) => {
+    (y) => { x + y }
+}
+add1 := adder(1)
+add1(4)
+#= Number.Integer(5)
+~~~
+
+Because the value of `x` in the above example is defined in the _outer_ scope
+and referenced in the _inner_ scope, this is an example of a closure.
+However, since Stone does not allow variables to be mutated, closures are more
+limited than in other languages — you won't be able to use them to carry state.
+TODO: Explain what a scope is, and how they're created.

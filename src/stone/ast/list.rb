@@ -62,7 +62,7 @@ module Stone
         "#{type}(#{@value.map{ |v| v.to_s(:untyped) }.join(', ')})"
       end
 
-      def children
+      override def children
         @value
       end
 

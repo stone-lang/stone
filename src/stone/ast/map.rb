@@ -49,7 +49,7 @@ module Stone
       end
 
       def to_s
-        "#{type}(#{@value.map{ |k,v| "Pair(#{k.to_s(:untyped)}, #{v.to_s(:untyped)})"}.join(', ')})"
+        "#{type}(#{@value.map{ |k, v| "Pair(#{k.to_s(untyped: true)}, #{v.to_s(untyped: true)})" }.join(', ')})"
       end
 
       def children

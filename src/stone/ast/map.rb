@@ -39,10 +39,10 @@ module Stone
 
       def methods # rubocop:disable Metrics/AbcSize
         @methods ||= {
-          includes?: ->(_, element) { Boolean.new(@value.map{ |k,v| [k.value, v.value] }.to_h[element.first.value] == element.second.value) },
+          includes?: ->(_, element) { Boolean.new(@value.map{ |k, v| [k.value, v.value] }.to_h[element.first.value] == element.second.value) },
           has_key?: ->(_, key) { Boolean.new(@value.keys.map(&:value).include?(key.value)) },
           has_value?: ->(_, value) { Boolean.new(@value.values.map(&:value).include?(value.value)) },
-          get: ->(context, key) { @value.select { |k,v| k.value == key.value }.values.first },
+          get: ->(_context, key) { @value.select { |k, _v| k.value == key.value }.values.first },
           map: ->(context, fn) { map("map", context, fn) },
           each: ->(context, fn) { map("each", context, fn) },
         }
@@ -57,7 +57,7 @@ module Stone
       end
 
       def child_types
-        children.map{ |k,v| [k.type, v.type] }.uniq
+        children.map{ |k, v| [k.type, v.type] }.uniq
       end
 
       private def map(name, context, function)

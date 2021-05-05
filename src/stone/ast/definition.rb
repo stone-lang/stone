@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Assignment < Node
+    class Definition < Node
 
       attr_reader :name
       attr_reader :rvalue
@@ -20,6 +20,10 @@ module Stone
 
       def to_s
         "#{name} := #{rvalue}"
+      end
+
+      override def children
+        [rvalue].flatten
       end
 
     end

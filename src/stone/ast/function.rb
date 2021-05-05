@@ -29,6 +29,10 @@ module Stone
         Range.new(parameters.count, parameters.count)
       end
 
+      def type
+        "Function"
+      end
+
       def to_s
         "(#{parameters.join(", ")}) => {\n    #{body}\n}"
       end

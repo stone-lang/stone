@@ -3,6 +3,7 @@ module Stone
   module Top
 
     CONTEXT = {
+      type: Stone::AST::BuiltinFunction.new("type", 1..1, ->(ctxt, args){ builtin_type(ctxt, args) }),
       TRUE: Stone::AST::Boolean.new(true),
       FALSE: Stone::AST::Boolean.new(false),
       NULL: Stone::AST::Null.new(nil),
@@ -15,6 +16,10 @@ module Stone
       min: Stone::AST::BuiltinFunction.new("min", 1..Float::INFINITY, ->(ctxt, args){ builtin_min(ctxt, args) }),
       max: Stone::AST::BuiltinFunction.new("max", 1..Float::INFINITY, ->(ctxt, args){ builtin_max(ctxt, args) }),
     }
+
+    def self.builtin_type(_context, args)
+      args.first.type.to_s
+    end
 
     # TODO: We can remove these when we have classes and (default) constructors working.
     def self.builtin_List(_context, args)

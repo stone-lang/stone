@@ -15,9 +15,9 @@ module Stone
 
       def call(source_files:, markdown:, **_args)
         each_input_file(source_files, markdown: markdown) do |input|
-          puts language.ast(input).map{ |node|
+          puts(language.ast(input).filter_map{ |node|
             node.evaluate(Stone::Top::CONTEXT)
-          }.compact
+          })
         rescue Parslet::ParseFailed => e
           puts e.parse_failure_cause.ascii_tree
           exit 1

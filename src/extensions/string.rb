@@ -13,7 +13,7 @@ class String
   end
 
   def drop(count = 1)
-    self.chars.drop(count).join("")
+    self.chars.drop(count).join
   end
 
   # Allow Scheme-style `tail`.
@@ -23,7 +23,7 @@ class String
   end
 
   def last(count = 1)
-    self.chars.last(count).join("")
+    self.chars.last(count).join
   end
 
 end

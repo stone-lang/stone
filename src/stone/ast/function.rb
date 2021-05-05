@@ -22,7 +22,7 @@ module Stone
         parameters.zip(arguments).each do |param, arg|
           context[param] = arg
         end
-        body.map{ |x| x.evaluate(context) }.compact.last
+        body.filter_map{ |x| x.evaluate(context) }.last
       end
 
       def arity

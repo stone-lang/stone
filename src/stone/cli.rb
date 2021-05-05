@@ -15,6 +15,6 @@ end
 
 
 # Load all the sub-commands.
-Dir[File.join(__dir__, "cli", "*.rb")].sort.each do |file|
+Dir[File.join(__dir__, "cli", "*.rb")].each do |file|
   require file
 end

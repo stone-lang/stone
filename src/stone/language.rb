@@ -1,5 +1,5 @@
 # Load all the sub-languages.
-Dir[File.join(__dir__, "language", "*.rb")].sort.each do |file|
+Dir[File.join(__dir__, "language", "*.rb")].each do |file|
   require file
 end
 

@@ -17,7 +17,7 @@ module Stone
 
       def call(parent_context)
         context = Hash.new{ |_h, k| parent_context[k] }
-        body.map{ |x| x.evaluate(context) }.compact.last
+        body.filter_map{ |x| x.evaluate(context) }.last
       end
 
       def to_s

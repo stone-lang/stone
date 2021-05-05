@@ -55,7 +55,7 @@ module Stone
         ">=" => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value >= r.value }.all? },
         "==" => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length == 1 }, # rubocop:disable Style/Semicolon
         "!=" => ->(_c, _o, operands){ operands.map{ |o| n = o.normalized!; [n.type, n.value] }.uniq.length != 1 }, # rubocop:disable Style/Semicolon
-        "++" => ->(_c, _o, operands){ operands.map(&:value).join("") },
+        "++" => ->(_c, _o, operands){ operands.map(&:value).join },
         ">!" => ->(_c, _o, operands){ operands.map(&:value).max },
         "<!" => ->(_c, _o, operands){ operands.map(&:value).min },
         "|>" => ->(ct, _o, operands){ operands.reduce{ |l, r| r.call(ct, [l]) } },
@@ -103,7 +103,7 @@ module Stone
 
       private def evaluate_operation(context, operator, operands)
         return Error.new("UnknownOperator", operator) unless known_operator?(operator)
-        operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?{ |o| o.is_a?(Boolean) }
+        operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?(Boolean)
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
         result_type = OPERATION_RESULT_TYPES[operator]
         result_type.new!(operation.call(context, operator, operands))
@@ -139,7 +139,7 @@ module Stone
 
       # This one's a bit rough, but we should probably make it more like evaluate_mixed_arithmethic_operations.
       private def evaluate_lower_precedence_operations(context, operators, operands) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity
-        expr = operands.zip(operators).flatten.compact.each_cons(3).map { |ops|
+        expr = operands.zip(operators).flatten.compact.each_cons(3).filter_map { |ops|
           if !ops[1].is_a?(String)
             nil
           elsif LOWER_PRECEDENCE_OPERATORS.include?(ops[1])
@@ -147,7 +147,7 @@ module Stone
           else
             evaluate_operation(context, ops[1], [ops[0], ops[2]])
           end
-        }.compact
+        }
         expr = [operands.first] + expr if expr.first.is_a?(String)
         expr = expr + [operands.last] if expr.last.is_a?(String)
         remaining_operators = expr.select{ |x| x.is_a?(String) }

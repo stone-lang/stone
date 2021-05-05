@@ -11,9 +11,9 @@ module Stone
     class Base
 
       def evaluate(input, single_line: false)
-        puts ast(input, single_line: single_line).map{ |node|
+        puts(ast(input, single_line: single_line).filter_map{ |node|
           node.evaluate(Stone::Top::CONTEXT)
-        }.compact
+        })
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree
         exit 1

@@ -1,11 +1,11 @@
 Boolean := Class({
     @name := "Boolean"
 
-    #Values := Enum(TRUE, FALSE)
+    #.Values := Enum(TRUE, FALSE)
 
     # Return the "opposite", or "inverse"; AKA "not".
     # TODO: Find the proper correct name and synonyms to use.
-    #complement := __BUILTIN__.Boolean.complement
+    #@complement := __BUILTIN__.Boolean.complement
 
 
     # Temporary implementation, until we implement Enum.
@@ -13,13 +13,13 @@ Boolean := Class({
     TRUE := 1
     FALSE := 0
 
-    value :: Integer
+    @value :: Integer
 
-    Create(value) := { @value = value }
+    .create(value) := { @value = value }
 
-    complement := { @value.even? }
+    @complement := { @value.even? }
 
-    as_text := { Array("FALSE", "TRUE").at(@value + 1) }
+    @as_text := { List("FALSE", "TRUE").at(@value + 1) }
 })
 
 

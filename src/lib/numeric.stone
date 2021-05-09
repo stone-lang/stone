@@ -1,0 +1,72 @@
+# Numeric represents Numbers and other things like Date, Time, and Measurement.
+# They allow some subset of the Arithmetic operators.
+
+Numeric.Sign := Enum(Negative: -1, Zero: 0, Positive: +1)
+Numeric.Signed := Interface {
+    @sign := Abstract[Numeric.Sign]
+    @negative? := { @sign == Numeric.Sign.Negative }
+    @zero? := { @sign == Numeric.Sign.Zero }
+    @positive? := { @sign == Numeric.Sign.Positive }
+    @abs := { if(@negative?, { 0 - @ }, { @ }) }
+}
+
+# Numeric.Overflow represents a condition where the mathematical operation cannot return a result,
+# because the result would not fit within the range of the Numeric type being operated on.
+# Implementations of this interface include:
+#   Number.Overflow
+#   Number.Underflow
+Numeric.Overflow := Interface {
+}
+
+# Numeric.Infinite includes any representation of infinity or infinitesimal.
+# Implementations of this interface include:
+#   Number.Infinity.Positive
+#   Number.Infinity.Negative
+#   Number.Infinitesimal.Positive
+#   Number.Infinitesimal.Negative
+Numeric.Infinite := Interface {
+}
+
+Numeric.Addition := Interface {
+    @+ := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite]
+}
+
+Numeric.Subtraction := Interface {
+    @- := Abstract[type(.) | Numeric.Underflow | Numeric.Infinite]
+}
+
+Numeric.Multiplication := Interface {
+    @× := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite]
+    @* := @×
+}
+
+Numeric.Division := Interface {
+    @÷ := Abstract[type(.) | Numeric.Underflow | Numeric.Infinite | Numeric.NaN]
+    @/ := @÷
+}
+
+Numeric.Arithmetic := Interface(
+    implements = List(
+        Numeric.Addition,
+        Numeric.Subtraction,
+        Numeric.Multiplication,
+        Numeric.Division,
+    )
+)
+
+
+# Number.Integer and machine integers like C.Int64 support the Numeric.Integer interface.
+Numeric.Integer := Interface(
+    implements = List(
+        Numeric.Sign
+        Numeric.Arithmetic
+    )
+) {
+    # These will have a value of the same type as the class that implements the interface.
+    .MINIMUM := Abstract[type(.)]
+    .MAXIMUM := Abstract[type(.)]
+
+    # NOTE: Might add `+1`/`-1` and/or `++`/`--` as aliases for these. (NOTE: Not like C's `++` and `--`.)
+    @succ := Abstract[type(.) | Numeric.Overflow | Numeric.Infinity.Positive]
+    @pred := Abstract[type(.) | Numeric.Underflow | Numeric.Infinity.Negative]
+}

@@ -1,98 +1,128 @@
-# Things like Date and Time and Measurement are Numeric, in addition to Number.
-# They allow Arithmetic operators.
-# TODO: How do we handle when it’s only a subset of the operators?
-# We might need an interface for each operation.
-# In that case, it’s not clear that Numeric would be a useful concept anymore.
-# I suppose Numeric might mean Addable + Multiplyable + some other operations
-Numeric := Interface.Definition(name: “Numeric”, {
-    
-})
+Number := Interface(
+    implements := List(
+        Numeric.Arithmetic,
+        Comparable,
+        Orderable
+    )
+)
+
+# NOTE: It took me a while to realize that this should be an Interface, not a Type.Union.
+# Classes that implement this interface include:
+#   Number.Integer
+#   Number.Decimal
+#   Number.Rational
+#   Number.FloatingPoint
+#   Number.Posit
+Number.Real := Interface()
 
 
-Number := Interface({
-
-    @interfaces := List(Numeric, Comparable)
-    
-    # Assuming we have Number.Root(n, r), which represents the r'th root of n, where n and r are Rational.
-    # We might skip having the Root class, and just implement everything in Algebraic.
-    # But I think the union would be best.
-    Algebraic := Type.Union(Integer, Root)
-    
-    # Transcendental number - cannot be found as a result of an algebraic equation with integer coefficients
-    Transcendental := Type.difference(Complex, Algebraic)
-    
-    # Do we have the Circle-Ellipse problem here?
-    # Complex has-an Imaginary and has-a Real. An Imaginary is-a Complex.
-    # I need to think about how Imaginary and Algebraic relate.
-    Imaginary := ...
-    Complex := ...
-}
-
-
-# NOTE: We call it `FloatingPoint` instead of `Float`, as syntactic vinegar.
-# For the majority of cases, you should choose Decimal instead of FloatingPoint.
-# Also, using FloatingPoint should require an explicit `import`.
-Number.FloatingPoint := ...
-
-# TODO: How can we change this, depending on if we’ve included the Posit library?
-# Or added other numeric types that would be considered “Real”?
-# Maybe we can append to a Type.Union?
-# Probably has to be resolved in a prelude.
-# Maybe just have some conditionals when the property is computed?
-Number.Real := Property[Type] { Type.Union(Number.Integer, Number.Decimal,
-    Number.Rational, Number.FloatingPoint, Number.Posit) }
-
-# These values should probably be all-caps, but I don’t like that for some reason.
+# The atoms should probably be all-caps, but I don’t like that for some reason.
 # TODO: Make sure these are all used appropriately everywhere necessary.
 # TODO: Make sure we handle math with all of these, in combination with each other.
 # TODO: Do we need NaN or an Error if we add positive and negative Infinity?
 #    Yes, follow Ruby’s lead here.
 #    Or multiply an Infinity and an Infinitesimal.
 #    Would NaN be another Infinity in that case?
-Infinity := Type.Enum(name: “Infinity”, value: Positive, value: Negative, implements: Numeric)
-Infinitesimal := Type.Enum(name: “Infinitesimal”, value: Positive, value: Negative, implements: Numeric)
+Number.Infinity := Interface(implements = Numeric.Infinite)
+Number.Infinity.Negative := Atom(implements = Number.Infinity)
+Number.Infinity.Positive := Atom(implements = Number.Infinity)
+
+Number.Infinitesimal := Interface(implements = Numeric.Infinite)
+Number.Infinitesimal.Negative := Atom(implements = Number.Infinitesimal)
+Number.Infinitesimal.Positive := Atom(implements = Number.Infinitesimal)
 
 
-Polynomial := Class(name: “Polynomial”, implements: Numeric, {
-    ...
-})
+Number.Integer := Class(
+    implements = List(Number, Numeric.Integer)
+) {
+    @even? := __BUILTIN__.Integer.even?
+    @odd? := { !@even? }
 
-
-Number.Integer := Class ({
-    @name := "Integer"
-    @interfaces := List(Number)
-
-    even? := __BUILTIN__.Integer.even?
-    odd? := { !even? }
-
-    # TODO: Define an interface for these. Most Number classes should implement these; Complex cannot, AFAIK.
-    zero? := { @ =? 0 }
-    positive? := { @ > 0 }
-    negative? := { @ < 0 }
-})
+    # Implement the Numeric.Signed interface (part of Numeric.Integer)
+    # NOTE: `@ ⊙ x` is the operator version of `@⊙(x)`
+    @sign := {
+        if(@ =? 0, {
+            Numeric.Sign.Zero
+        }, {
+            # This nested `if` tells me that we need a `cond` implementation, or early return.
+            if(@ > 0, { Numeric.Sign.Positive }, { Numeric.Sign.Negative })
+        })
+    }
+}
 
 Number.Integer.Positive := Class({
-    @superclass := Number.Integer
-    Positive := { @.positive? }
+    .superclass := Number.Integer
+    .Positive := Invariant({ @.positive? })
 })
 
 Number.Integer.NonNegative := Class({
-    @superclass := Number.Integer
-    NonNegative := { !@.negative? }
+    .superclass := Number.Integer
+    .NonNegative := Invariant({ !@.negative? })
 })
 
-# For counting the size or length of anything.
-# Need the `Infinity.Positive` bit for at least `Type.cardinality`.
-Number.Integer.Cardinal := Type.Union(Integer.NonNegative, Infinity.Positive)
-    
-# For describing the position of anything. Note that this is 1-based.
-# Also note that we don’t allow negative numbers for referencing the 
+# For counting the number, size, or length of anything.
+# If you think "how many", then this is probably the correct choice. (But also check Number.Integer.Distributive.)
+# Need the `Infinity.Positive` bit for at least `Type.cardinality`, unless `Cardinality` is another type.
+Number.Integer.Cardinal := Type.Union(Integer.NonNegative, Infinity.Positive)  # FIXME: This should not just be an alias.
+Number.Cardinal := Number.Integer.Cardinal
+
+# For describing the position, order, or rank of anything.
+# If you might say "first", "second", or "nth", you probably want an Ordinal.
+# Note that this is 1-based, because there's never a "zeroth" thing in the real world.
+# Also note that we don’t allow negative numbers for referencing the
 # position relative to the end of something; we’ll have separate methods.
-Number.Integer.Ordinal := Integer.Positive
+Number.Integer.Ordinal := Integer.Positive  # FIXME: This should not just be an alias.
+Number.Ordinal := Number.Integer.Ordinal
 
 Number.Natural := Number.Integer.Positive
 Number.Whole := Number.Integer.NonNegative
 
-# Distributive means "in groups of".
+# Distributive means "in groups of", "how many times each", or "how many at a time"
+# There are only a few English words for these, including "singly", "doubly", "binary", etc.
+# If you say "per", "by", "at a time", "of each", "in", "in groups of", or "to a",
+# then this is probably the right choice.
 # This should be used for iteration and grouping.
+# TODO: Should this be used for arity? I don't think so, because arity seems to mean "how many" arguments.
+# See https://en.wikipedia.org/wiki/Distributive_numeral#English
 Number.Integer.Distributive := Integer.NonNegative
+
+# Nominal means "name".
+# This should be used for numeric identifiers (IDs), ZIP codes, model numbers, serial numbers, etc.
+# NOTE: Each of those examples should really be their own separate class,
+# because you should not be able to do things like put a ZIP code into a serial number field.
+Number.Integer.Nominal := Integer.NonNegative
+# FIXME: Nominal numbers can be compared for equality, but not order.
+# FIXME: Nominal numbers shouldn't have any mathematical operations.
+# TODO: Those 2 pieces of information tell me that this should be probably NOT be a subclass.
+#       I don't *think* it's a superclass, either; probably more like a "has-a" relationship.
+# TODO: And it should probably be a machine-sized integer, not an arbitrary-length integer.
+
+
+# An algebraic number is "any complex number that is a root of a non-zero polynomial in 1 variable with rational coefficients".
+Number.Algebraic := Interface()
+
+# Represents the r'th root of n, where n and r are Rational.
+# We might skip having the Root class, and just implement everything in Algebraic.
+Number.Root := Class(implements = Number.Algebraic) {
+    @n := Property[Rational]
+    @r := Property[Rational]
+}
+
+# A transcendental number is any complex (or real) number that is NOT an algebraic number.
+# NOTE: We'll probably have to implement this as a subclass of Number.Complex with an Invariant or as an Interface.
+# PI and E are transcendental, so we might have classes for them that would implement this if it's an Interface.
+Number.Transcendental := Type.difference(Number.Complex, Number.Algebraic)
+
+# Do we have the Circle-Ellipse problem here?
+# Complex has-an Imaginary and has-a Real. An Imaginary is-a Complex.
+# I need to think about how Imaginary and Algebraic relate.
+Number.Imaginary := Class()
+Number.Complex := Class()
+
+# NOTE: We call it `FloatingPoint` instead of `Float`, as syntactic vinegar.
+# For the majority of cases, you should choose Decimal instead of FloatingPoint.
+# Also, using FloatingPoint should require an explicit `import`.
+Number.FloatingPoint := ...
+
+
+Polynomial := Class(implements = Numeric.Arithmetic)

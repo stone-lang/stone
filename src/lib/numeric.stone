@@ -32,7 +32,7 @@ Numeric.Addition := Interface {
 }
 
 Numeric.Subtraction := Interface {
-    @- := Abstract[type(.) | Numeric.Underflow | Numeric.Infinite]
+    @- := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite]
 }
 
 Numeric.Multiplication := Interface {
@@ -41,9 +41,10 @@ Numeric.Multiplication := Interface {
 }
 
 Numeric.Division := Interface {
-    @÷ := Abstract[type(.) | Numeric.Underflow | Numeric.Infinite | Numeric.NaN]
+    @÷ := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite | Numeric.NaN]
     @/ := @÷
 }
+
 
 Numeric.Arithmetic := Interface(
     implements = List(
@@ -64,9 +65,11 @@ Numeric.Integer := Interface(
 ) {
     # These will have a value of the same type as the class that implements the interface.
     .MINIMUM := Abstract[type(.)]
-    .MAXIMUM := Abstract[type(.)]
+    .MAXIMUM := Abstract[type(.)]}
 
     # NOTE: Might add `+1`/`-1` and/or `++`/`--` as aliases for these. (NOTE: Not like C's `++` and `--`.)
-    @succ := Abstract[type(.) | Numeric.Overflow | Numeric.Infinity.Positive]
-    @pred := Abstract[type(.) | Numeric.Underflow | Numeric.Infinity.Negative]
+    @succ := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite]
+    @pred := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite]
+
+    @divisible_by?(n) := Abstract[Boolean]
 }

@@ -75,16 +75,19 @@ max <| identity <| List(1, 2, 3, 4)
 Function Definition
 -------------------
 
-You can define your own functions.
+You can define your own functions, using the lambda (`λ`) operator.
+You may also use the "stabby lambda" syntax (`->`).
+Your IDE or text editor should make it easy for you to type in the `λ` symbol ---
+it might even change `->` to `λ` for you.
 
 ~~~ stone
-square := (x) => {
+square := λ(x) {
     x * x
 }
 square(4)
 #= Number.Integer(16)
 
-sum_of_squares := (x, y) => {
+sum_of_squares := ->(x, y) {
     xx := x * x
     yy := y * y
     xx + yy
@@ -102,23 +105,23 @@ sum_of_squares(3)
 Functions are first-class — you can pass a function to a function.
 
 ~~~ stone
-add := (x, y) => {
+add := λ(x, y) {
     x + y
 }
-apply := (f, x, y) => {
+apply := λ(f, x, y) {
     f(x, y)
 }
 apply(add, 1, 2)
 #= Number.Integer(3)
 
-apply((x, y) => { x + y }, 1, 2)
+apply(λ(x, y) { x + y }, 1, 2)
 #= Number.Integer(3)
 ~~~
 
 Functions can implement recursion.
 
 ~~~ stone
-fib := (n) => {
+fib := λ(n) {
     if(n < 2, { n }, { fib(n - 1) + fib(n - 2) })
 }
 fib(1)

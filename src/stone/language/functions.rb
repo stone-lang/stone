@@ -8,7 +8,7 @@ module Stone
       def grammar
         Class.new(super) do |_klass|
           override rule(:expression) { function | operation | function_call | literal | block | parenthetical_expression }
-          rule!(:function) { parens(parameter_list) >> whitespace >> str("=>") >> whitespace >> function_body }
+          rule!(:function) { lambda_operator >> parens(parameter_list) >> whitespace >> function_body }
           rule!(:parameter_list) { (parameter >> (str(",") >> whitespace >> parameter).repeat(0)).repeat(0) }
           rule!(:parameter) { identifier }
           rule(:function_body) { block }
@@ -18,6 +18,7 @@ module Stone
           rule!(:function_call) { identifier.as(:identifier) >> parens(argument_list.maybe) }
           rule!(:argument_list) { (argument >> (str(",") >> whitespace >> argument).repeat(0)).repeat(0) }
           rule!(:argument) { expression }
+          rule(:lambda_operator) { (str("λ") | str("->")).ignore }
         end
       end
 

@@ -24,7 +24,7 @@ type(1.0)
 type(1/2)
 #= Number.Rational
 
-f := (x) => { 2 * x }
+f := λ(x) { 2 * x }
 type(f)
 #= Function
 ~~~

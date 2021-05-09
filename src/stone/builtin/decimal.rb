@@ -4,7 +4,7 @@ require "extensions/integer"
 
 module Stone
 
-  module AST
+  module Builtin
 
     class Decimal < Number
 
@@ -13,7 +13,7 @@ module Stone
       attr_reader :whole, :fraction, :exponent
 
       def initialize(decimal)
-        @source_location = get_source_location(decimal)
+        @source_location = nil # WAS: get_source_location(decimal)
         whole, fraction, exponent = decimal.to_s.split(/[.eE\u23E8]/)
         compute_components!(whole, fraction, exponent)
         digits = "#{whole}#{fraction}"
@@ -32,7 +32,7 @@ module Stone
       end
 
       def normalized!
-        Rational.new(numerator, denominator).normalized! # Note that this is Stone's Rational.
+        Stone::Builtin::Rational.new(numerator, denominator).normalized! # Note that this is Stone's Rational.
       end
 
       def sign

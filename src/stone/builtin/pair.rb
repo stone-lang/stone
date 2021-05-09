@@ -1,9 +1,11 @@
 require "extensions/enumerable"
 
+require "stone/builtin/object"
+
 
 module Stone
 
-  module AST
+  module Builtin
 
     class Pair < Object
 
@@ -50,7 +52,7 @@ module Stone
         "#{type}(#{@first.to_s(untyped: true)}, #{@second.to_s(untyped: true)})"
       end
 
-      def children
+      override def children
         [@first, @second]
       end
 

@@ -1,6 +1,10 @@
+require "stone/builtin/function"
+require "stone/builtin/value"
+
+
 module Stone
 
-  module AST
+  module Builtin
 
     class Any < Value
 

@@ -1,6 +1,6 @@
 module Stone
 
-  module AST
+  module Builtin
 
     class Text < Value
 

@@ -1,5 +1,7 @@
 require "extensions/boolean"
 
+require "stone/builtin/any"
+
 
 module Stone
 
@@ -30,23 +32,23 @@ module Stone
         "➕" => "∨",
       }
       OPERATION_RESULT_TYPES = {
-        "+" => Number,
-        "-" => Number,
-        "*" => Number,
-        "/" => Rational,
-        "<!" => Number,
-        ">!" => Number,
-        "==" => Boolean,
-        "!=" => Boolean,
-        "<" => Boolean,
-        "<=" => Boolean,
-        ">" => Boolean,
-        ">=" => Boolean,
-        "∧" => Boolean,
-        "∨" => Boolean,
-        "++" => Text,
-        "|>" => Any,
-        "<|" => Any,
+        "+" => Stone::Builtin::Number,
+        "-" => Stone::Builtin::Number,
+        "*" => Stone::Builtin::Number,
+        "/" => Stone::Builtin::Rational,
+        "<!" => Stone::Builtin::Number,
+        ">!" => Stone::Builtin::Number,
+        "==" => Stone::Builtin::Boolean,
+        "!=" => Stone::Builtin::Boolean,
+        "<" => Stone::Builtin::Boolean,
+        "<=" => Stone::Builtin::Boolean,
+        ">" => Stone::Builtin::Boolean,
+        ">=" => Stone::Builtin::Boolean,
+        "∧" => Stone::Builtin::Boolean,
+        "∨" => Stone::Builtin::Boolean,
+        "++" => Stone::Builtin::Text,
+        "|>" => Stone::Builtin::Any,
+        "<|" => Stone::Builtin::Any,
       }
       OPERATIONS = {
         "<" => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value < r.value }.all? },
@@ -72,7 +74,7 @@ module Stone
       attr_reader :operands
 
       def initialize(operators, operands)
-        @source_location = operands.first.source_location
+        @source_location = nil # WAS: operands.first.source_location
         @operators = operators.map(&:to_s).map{ |o| OPERATOR_MAP.fetch(o){ o } }
         @operator = @operators.first
         @operands = operands
@@ -81,7 +83,7 @@ module Stone
       def evaluate(context)
         evaluated_operands = operands.map{ |o| o.evaluate(context) }
         return error?(evaluated_operands) if error?(evaluated_operands)
-        return Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
+        return Stone::Builtin::Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
         if mixed_operators?
           evaluate_mixed_operations(context, operators, evaluated_operands)
         else
@@ -90,8 +92,8 @@ module Stone
       end
 
       def self.builtin_divide(dividend, divisor)
-        dividend = Rational.new(dividend) if dividend.is_a?(::Integer)
-        divisor = Rational.new(divisor) if divisor.is_a?(::Integer)
+        dividend = Stone::Builtin::Rational.new(dividend) if dividend.is_a?(::Integer)
+        divisor = Stone::Builtin::Rational.new(divisor) if divisor.is_a?(::Integer)
         # Note that we're returning a native Ruby `Rational` here.
         Rational((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
       end
@@ -102,8 +104,8 @@ module Stone
       end
 
       private def evaluate_operation(context, operator, operands)
-        return Error.new("UnknownOperator", operator) unless known_operator?(operator)
-        operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?(Boolean)
+        return Stone::Builtin::Error.new("UnknownOperator", operator) unless known_operator?(operator)
+        operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?(Stone::Builtin::Boolean)
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
         result_type = OPERATION_RESULT_TYPES[operator]
         result_type.new!(operation.call(context, operator, operands))
@@ -164,7 +166,7 @@ module Stone
 
       # This is almost as bad. Maybe worse in some ways.
       private def evaluate_mixed_comparison_operations(context, operators, operands)
-        Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
+        Stone::Builtin::Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
           a && evaluate_operation(context, x.last, x.first).value
         })
       end

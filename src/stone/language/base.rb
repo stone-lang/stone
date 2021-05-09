@@ -1,6 +1,6 @@
 require "extensions/module"
 
-require "stone/ast/base"
+require "stone/ast/node"
 
 require "parslet"
 require "extensions/parslet"

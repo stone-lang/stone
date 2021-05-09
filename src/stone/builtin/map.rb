@@ -1,9 +1,11 @@
 require "extensions/enumerable"
 
+require "stone/builtin/object"
+
 
 module Stone
 
-  module AST
+  module Builtin
 
     class Map < Object
 
@@ -25,6 +27,15 @@ module Stone
         else
           @type_specifier
         end
+      end
+
+      def call(_parent_context, arguments)
+        key = arguments.first
+        @value.select { |k, _v| k.value == key.value }.values.first
+      end
+
+      def arity
+        1..1 # If we treat a Map as a function, it'll take 1 argument (a key).
       end
 
       def properties
@@ -52,7 +63,7 @@ module Stone
         "#{type}(#{@value.map{ |k, v| "Pair(#{k.to_s(untyped: true)}, #{v.to_s(untyped: true)})" }.join(', ')})"
       end
 
-      def children
+      override def children
         @value
       end
 
@@ -61,13 +72,13 @@ module Stone
       end
 
       private def map(name, context, function)
-        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
+        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Stone::AST::Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 1 argument") unless function.arity.include?(1)
         List.new(@value.map{ |x| function.call(context, [x]) })
       end
 
       private def reduce(name, context, function, initial_value: nil, reverse: false)
-        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
+        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Stone::AST::Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 2 arguments") unless function.arity.include?(2)
         reverse_or_not = reverse ? :reverse : :itself
         list = value.__send__(reverse_or_not)

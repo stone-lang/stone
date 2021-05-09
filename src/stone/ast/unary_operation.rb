@@ -22,7 +22,7 @@ module Stone
         when BOOLEAN_NOT
           boolean_not(evaluated_operand)
         else
-          Error.new("UnknownOperator", operator)
+          Stone::Builtin::Error.new("UnknownOperator", operator)
         end
       end
 
@@ -31,9 +31,9 @@ module Stone
       end
 
       private def boolean_not(operand)
-        return Error.new("TypeError", "Boolean NOT operand must be a Boolean value: #{operand}") unless operand.is_a?(Boolean)
+        return Stone::Builtin::Error.new("TypeError", "Boolean NOT operand must be a Boolean value: #{operand}") unless operand.is_a?(Stone::Builtin::Boolean)
         return operand.to_s if operator.size.even?
-        Boolean.new(!operand.value)
+        Stone::Builtin::Boolean.new(!operand.value)
       end
 
     end

@@ -1,19 +1,19 @@
-require "stone/ast/error"
-
-
 module Stone
 
-  module AST
+  module Builtin
 
-    class Value < Node
+    class Value
 
       # NOTE: This should be an object of a native Ruby class.
       attr_reader :value
 
       def initialize(slice_or_string)
-        @source_location = get_source_location(slice_or_string)
         @value = slice_or_string.to_s
         normalize!
+      end
+
+      def self.new!(value)
+        new(value)
       end
 
       def evaluate(_context)
@@ -35,17 +35,20 @@ module Stone
       def normalized!
         self
       end
-
     end
 
   end
 
 end
 
-require "stone/ast/any"
-require "stone/ast/null"
-require "stone/ast/boolean"
-require "stone/ast/number"
-require "stone/ast/text"
 
-require "stone/ast/object"
+require "stone/builtin/boolean"
+# require "stone/builtin/class"
+require "stone/builtin/error"
+require "stone/builtin/list"
+require "stone/builtin/map"
+require "stone/builtin/null"
+require "stone/builtin/number"
+require "stone/builtin/object"
+require "stone/builtin/pair"
+require "stone/builtin/text"

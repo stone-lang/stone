@@ -21,7 +21,7 @@ module Stone
           suite.run(input) do
             language.ast(input)
           rescue Parslet::ParseFailed => e
-            suite.add_failure(input, Stone::AST::Error.new("ParseError", e.parse_failure_cause))
+            suite.add_failure(input, Stone::Builtin::Error.new("ParseError", e.parse_failure_cause))
             []
           end
         end

@@ -42,7 +42,7 @@ module Stone
       end
 
       private def arity_error(function, actual_argument_count)
-        Error.new("ArityError", "'#{name}' expects #{arity_error_expected_text(function.arity)}, got #{actual_argument_count}")
+        Stone::Builtin::Error.new("ArityError", "'#{name}' expects #{arity_error_expected_text(function.arity)}, got #{actual_argument_count}")
       end
 
       private def arity_error_expected_text(expected_arity)

@@ -1,15 +1,18 @@
+require "stone/builtin/value"
+
+
 module Stone
 
-  module AST
+  module Builtin
 
     class Null < Value
 
-      def type
-        "Null"
+      def initialize
+        @value = nil
       end
 
-      def normalize!
-        @value = nil
+      def type
+        "Null"
       end
 
       def to_s(untyped: false)

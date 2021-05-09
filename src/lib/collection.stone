@@ -3,43 +3,39 @@
         * Other than maybe `Function`
 
 
-Container := Interface({
+Container := Interface(implements = List(Foldable)) {
 
-    @name := "Container"
-    @interfaces := List(Foldable)
+    @size :: Number.Integer.Cardinal
 
-    size :: Number.Integer.Cardinal
-
-    includes?(element) := { ... }  # Think of it as "if this includes that".
+    @includes?(element) := { ... }  # Think of it as "if this includes that".
 
     # Most of this should probably be in Foldable.
 
-    map(fn) := { ... }
+    @map(fn) := { ... }
 
-    any?(fn) := { ... }
-    all?(fn) := { ... }
-    one?(fn) := { ... }
-    none?(fn) := { ... }
+    @any?(fn) := { ... }
+    @all?(fn) := { ... }
+    @one?(fn) := { ... }
+    @none?(fn) := { ... }
 
-    sliced(n) := { ... }  # Sliced into "blocks" of n elements each.
-    group_by(fn) := { ... }
-    sorted := { ... }
-    sorted_by(fn) := { ... }
+    @sliced(n) := { ... }  # Sliced into "blocks" of n elements each.
+    @group_by(fn) := { ... }
+    @sorted := { ... }
+    @sorted_by(fn) := { ... }
 
-    find
-    filter
-    unique
-    uniq := unique
-    reduce := foldl
-    
-    inject := foldl
-    collect := map
-    select
-    detect
-    reject
+    @find := { ... }
+    @filter := { ... }
+    @unique := { ... }
+    @uniq := @unique
+    @reduce := @foldl
 
-    tally(Function) :: Map[Any, Number.Integer.Cardinal]
-    tally(fn) := { ... }
+    @inject := @foldl
+    @collect := @map
+    @select := { ... }
+    @detect := { ... }
+    @reject := { ... }
+
+    @tally(Function) :: Map[Any, Number.Integer.Cardinal]
+    @tally(fn) := { ... }
 
 })
-    

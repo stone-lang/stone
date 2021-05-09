@@ -1,0 +1,39 @@
+# TODO: Write a complete test suite for this class.
+
+# We're implementing this using a Church encoding (i.e. made up completely of functions).
+
+Pair := (f, s) => { (x) => { x(f, s) } }
+first := (p) => { p((f, s) => { f } ) }
+second := (p) => { p((f, s) => { s } ) }
+eq := (a, b) => { and(first(a) == first(b), second(a) == second(b)) }
+
+
+### Tests
+
+Pair := (f, s) => { (x) => { x(f, s) } }
+first := (p) => { p((f, s) => { f } ) }
+first(Pair(1, 2))
+
+ab := Pair(1, 2)
+
+Pair
+#first
+#second
+first(ab)
+#second(ab)
+
+#assert(first(ab) == 1)
+#assert(second(ab) == 2)
+
+#assert(eq(Pair(1, 2), Pair(1, 2)))
+
+
+#identity := (x) => { x }
+#identity(123)
+#identity("abc")
+#identity
+
+
+TRUE := (t, f) => { t }
+or := (this, that) => { this(TRUE, that) }
+or(TRUE, TRUE)

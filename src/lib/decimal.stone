@@ -4,16 +4,16 @@
 
 Integer.PowerOfTen := Class(superclass: Integer, {
 
-    DivisibleByTen := Invariant { this.divisibly_by?(10) }
+    .DivisibleByTen := Invariant { @divisibly_by?(10) }
 
 })
 
 
 Number.Decimal := Class(implements: Rational, {
 
-    numerator :: Integer
-    denominator :: Integer.PowerOfTen
+    @numerator :: Integer
+    @denominator :: Integer.PowerOfTen
 
-    as_text := { ... }
+    @as_text := { ... }
 
 })

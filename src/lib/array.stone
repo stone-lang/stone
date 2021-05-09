@@ -1,12 +1,11 @@
 
 Array := Class[T = Anything]({
 
-    @name := "Array"
-    @superclass := List[T]  # This might eventually become an implementation of List, instead of a subclass.
+    .superclass := List[T]  # This might eventually become an implementation of List, instead of a subclass.
 
     # Note: index is an Ordinal, so it starts at 1.
-    at(index :: Ordinal) := { ... }
-    
-    last := { ... }
-    take(n :: 
+    @at(index :: Number.Integer.Ordinal) := { ... }
+
+    @last := { ... }
+    @take(n :: Number.Integer.Cardinal)
 }

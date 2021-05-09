@@ -30,9 +30,12 @@ Style/BlockDelimiters:
     - let!
     - subject
 
-# Allow non-ASCII identifiers.
+# Allow non-ASCII identifiers, and in comments.
 Naming/AsciiIdentifiers:
   Enabled: false
+Style/AsciiComments:
+  Enabled: false
+
 
 # Some of our classes are going to be long.
 Metrics/ClassLength:

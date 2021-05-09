@@ -24,7 +24,7 @@ module Stone
       end
 
       def error?(children)
-        [children].flatten.find{ |child| child.is_a?(Error) }
+        [children].flatten.find{ |child| child.is_a?(Stone::Builtin::Error) }
       end
 
       def get_source_location(slice_or_ast_node)
@@ -51,13 +51,12 @@ end
 require "stone/ast/type"
 
 require "stone/ast/comment"
-require "stone/ast/value"
 require "stone/ast/operation"
 require "stone/ast/block"
 require "stone/ast/function_call"
 require "stone/ast/method_call"
 require "stone/ast/property_access"
 require "stone/ast/function"
-require "stone/ast/builtin_function"
 require "stone/ast/definition"
 require "stone/ast/variable_reference"
+require "stone/builtin/value"

@@ -1,15 +1,18 @@
+require "stone/builtin/value"
+
+
 module Stone
 
-  module AST
+  module Builtin
 
     class Boolean < Value
 
-      def type
-        "Boolean"
+      def initialize(true_or_false)
+        @value = true_or_false
       end
 
-      def normalize!
-        @value = ["TRUE", "true", true].include?(@value)
+      def type
+        "Boolean"
       end
 
       def to_s(untyped: false)

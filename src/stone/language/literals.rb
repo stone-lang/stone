@@ -27,17 +27,21 @@ module Stone
         Class.new(super) do |_klass|
 
           rule(integer: simple(:i)) {
-            AST::Integer.new(i)
+            Stone::Builtin::Integer.new(i)
           }
           rule(decimal: simple(:d)) {
-            AST::Decimal.new(d)
+            Stone::Builtin::Decimal.new(d)
           }
           rule(rational: {numerator: simple(:numerator), denominator: simple(:denominator)}) {
             # TODO: Need a better way to determine whether the denominator is 0.
-            denominator.to_s == "0" ? AST::Error.new("DivisionByZero", "invalid rational literal") : AST::Rational.new(numerator, denominator)
+            if denominator.to_s == "0"
+              Stone::Builtin::Error.new("DivisionByZero", "invalid rational literal")
+            else
+              Stone::Builtin::Rational.new(numerator, denominator)
+            end
           }
           rule(string: simple(:t)) {
-            AST::Text.new(t)
+            Stone::Builtin::Text.new(t)
           }
 
         end

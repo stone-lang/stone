@@ -21,14 +21,21 @@ module Stone
 
       private def repl_1_line(line, context)
         ast = language.ast(line, single_line: true)
-        case result = ast.evaluate(context)
-        when AST::Error
-          puts "#! #{result}"
-        when AST::Value
-          puts "#= #{result}"
-        end
+        result = ast.evaluate(context)
+        puts "#{repl_result_prefix(result)} #{result}"
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree
+      end
+
+      private def repl_result_prefix(result)
+        case result
+        when Builtin::Error
+          "#!"
+        when Builtin::Value
+          "#="
+        else
+          "#?"
+        end
       end
 
     end

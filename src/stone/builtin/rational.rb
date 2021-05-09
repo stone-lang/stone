@@ -1,6 +1,6 @@
 module Stone
 
-  module AST
+  module Builtin
 
     class Rational < Number
 
@@ -8,7 +8,7 @@ module Stone
       attr_reader :denominator
 
       def initialize(numerator, denominator = 1)
-        @source_location = get_source_location(numerator)
+        @source_location = nil # WAS: get_source_location(numerator)
         if numerator.is_a?(Rational)
           @numerator = numerator.numerator
           @denominator = numerator.denominator

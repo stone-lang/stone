@@ -3,33 +3,31 @@ require "extensions/enumerable"
 
 module Stone
 
-  module AST
+  module Builtin
 
-    class List < Object
+    class Class < Function
 
-      def initialize(slice_or_string_or_list, type_specifier: Any)
-        if slice_or_string_or_list.is_a?(Array)
-          @value = slice_or_string_or_list
-        else
-          super(slice_or_string_or_list)
-        end
-        @type_specifier = type_specifier
+      attr_reader :name
+      attr_reader :default_constructor
+
+      def initialize(name, _arity, default_constructor, properties, methods)
+        @name = name
+        @arity = properties.size
+        @default_constructor = default_constructor
+        @properties = properties
+        @methods = methods
+      end
+
+      def klass
+        "Class"
       end
 
       def type
-        "List[#{type_specifier}]"
+        "Class(\"#{name}\")"
       end
 
-      def type_specifier
-        if @type_specifier == Any && child_types.same?
-          child_types.uniq.only
-        else
-          @type_specifier.type
-        end
-      end
-
-      def normalize!
-        @value = @value.split(/,\s*/) if @value.is_a?(String)
+      def call(parent_context, arguments)
+        proc.call(parent_context, arguments)
       end
 
       def properties
@@ -62,7 +60,7 @@ module Stone
         "#{type}(#{@value.map{ |v| v.to_s(untyped: true) }.join(', ')})"
       end
 
-      def children
+      override def children
         @value
       end
 
@@ -71,13 +69,13 @@ module Stone
       end
 
       private def map(name, context, function)
-        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
+        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Stone::AST::Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 1 argument") unless function.arity.include?(1)
         List.new(@value.map{ |x| function.call(context, [x]) })
       end
 
       private def reduce(name, context, function, initial_value: nil, reverse: false)
-        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Function)
+        return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(Stone::AST::Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 2 arguments") unless function.arity.include?(2)
         reverse_or_not = reverse ? :reverse : :itself
         list = value.__send__(reverse_or_not)

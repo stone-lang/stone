@@ -108,9 +108,9 @@ It takes a function that takes 1 argument.
 
 ~~~ stone
 list := List(1, 2, 3)
-square := (x) => { x * x }
+square := λ(x) { x * x }
 
-list.map((x) => { 2 * x })
+list.map(λ(x) { 2 * x })
 #= List[Number.Integer](2, 4, 6)
 
 list.map(square)
@@ -119,7 +119,7 @@ list.map(square)
 list.each(square)
 #= List[Number.Integer](1, 4, 9)
 
-list.each((x, y) => { x + y })
+list.each(λ(x, y) { x + y })
 #! ArityError: 'each' argument 'function' must take 1 argument
 
 list.map(123)
@@ -139,20 +139,20 @@ These functions take a function that takes 2 arguments.
 
 ~~~ stone
 list := List(1, 2, 3, 4)
-add := (x, y) => { x + y }
-sub := (x, y) => { x - y }
-square := (x) => { x * x }
+add := λ(x, y) { x + y }
+sub := λ(x, y) { x - y }
+square := λ(x) { x * x }
 
 list.reduce(add)
 #= Number.Integer(10)
 
-list.reduce((x, y) => { x * y })
+list.reduce(λ(x, y) { x * y })
 #= Number.Integer(24)
 
 list.fold(add, 1)
 #= Number.Integer(11)
 
-list.fold((x, y) => { x * y }, 1)
+list.fold(λ(x, y) { x * y }, 1)
 #= Number.Integer(24)
 
 list.foldl(sub, 0)

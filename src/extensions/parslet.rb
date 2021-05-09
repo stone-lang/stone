@@ -14,4 +14,12 @@ module ParsletExtensions
     str("(").ignore >> exp >> str(")").ignore
   end
 
+  def curly_braces(exp)
+    str("{").ignore >> exp >> str("}").ignore
+  end
+
+  def square_brackets(exp)
+    str("[").ignore >> exp >> str("]").ignore
+  end
+
 end

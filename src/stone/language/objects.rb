@@ -8,7 +8,7 @@ module Stone
       def grammar
         Class.new(super) do |_klass|
           override rule(:expression) { function | operation | function_call | literal | method_call | property_access | variable_reference | block | parenthetical_expression } # rubocop:disable Layout/LineLength
-          rule!(:method_call) { variable_reference.as(:object) >> str(".") >> identifier.as(:method) >> str("(") >> argument_list >> str(")") }
+          rule!(:method_call) { variable_reference.as(:object) >> str(".") >> identifier.as(:method) >> parens(argument_list) }
           # TODO: This should really be an expression instead of a variable reference.
           rule!(:property_access) { variable_reference.as(:object) >> str(".") >> identifier.as(:property) }
         end

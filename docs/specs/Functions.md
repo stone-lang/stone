@@ -129,3 +129,28 @@ fib(1)
 fib(11)
 #= Number.Integer(89)
 ~~~
+
+
+Anonymous Functions
+-------------------
+
+You don't actually have to give a function a name to use it.
+You can just create it and call it directly.
+
+~~~ stone
+(λ(x) { x + 1 })(1)
+#= Number.Integer(2)
+~~~
+
+You can pass an anonymous function as an argument to another function.
+
+~~~ stone
+#l := List(2, 3, 1)
+#List.sort(λ(l, r) { l >= r })
+##= List[Number.Integer](1, 2, 3)
+~~~
+
+You can have a function return an anonymous function.
+
+~~~ stone
+~~~

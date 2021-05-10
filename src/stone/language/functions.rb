@@ -15,7 +15,8 @@ module Stone
           rule(:block) { curly_braces((whitespace | eol).repeat(0) >> block_body.as(:block) >> (whitespace | eol).repeat(0)) }
           rule(:block_body) { (statement >> (whitespace | eol).repeat(0)).repeat(1) }
           # TODO: This should really be an expression instead of a variable reference.
-          rule!(:function_call) { identifier.as(:identifier) >> parens(argument_list.maybe) }
+          # rule!(:function_call) { identifier.as(:identifier) >> parens(argument_list.maybe) }
+          rule!(:function_call) { expression.as(:function) >> parens(argument_list.maybe) }
           rule!(:argument_list) { (argument >> (str(",") >> whitespace >> argument).repeat(0)).repeat(0) }
           rule!(:argument) { expression }
           rule(:lambda_operator) { (str("λ") | str("->")).ignore }
@@ -27,8 +28,11 @@ module Stone
           rule(argument: simple(:argument)) {
             argument
           }
-          rule(function_call: {identifier: simple(:function_name), argument_list: sequence(:arguments)}) {
-            AST::FunctionCall.new(function_name, arguments)
+          # rule(function_call: {identifier: simple(:function_name), argument_list: sequence(:arguments)}) {
+          #   AST::FunctionCall.new(function_name, arguments)
+          # }
+          rule(function_call: {function: sequence(:function), argument_list: sequence(:arguments)}) {
+            AST::FunctionCall.new(function, arguments)
           }
           rule(block: sequence(:block_body)) {
             AST::Block.new(block_body)

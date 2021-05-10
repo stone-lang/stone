@@ -28,6 +28,10 @@ module Stone
         end
       end
 
+      def callable?
+        respond_to?(:call)
+      end
+
       def normalize!
       end
 

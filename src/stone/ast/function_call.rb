@@ -4,17 +4,17 @@ module Stone
 
     class FunctionCall < Node
 
-      attr_reader :name
+      attr_reader :function
       attr_reader :arguments
 
-      def initialize(name, arguments)
-        @source_location = name.line_and_column
-        @name = name.to_s.to_sym
+      def initialize(function, arguments)
+        @source_location = nil # WAS: name.line_and_column
+        @function = function
         @arguments = arguments
       end
 
       def to_s
-        "#{name}(#{arguments.join(', ')})"
+        "[FunctionCall](#{arguments.join(', ')})"
       end
 
       def value
@@ -25,7 +25,7 @@ module Stone
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
         function = context[name]
-        return Error.new("UnknownFunction", name) unless callable?(function)
+        return Stone::Builtin::Error.new("UnknownFunction", name) unless callable?(function)
         # TODO: Check argument types.
         return arity_error(function, arguments.count) unless correct_arity?(function, arguments.count)
         function.call(context, evaluated_arguments)

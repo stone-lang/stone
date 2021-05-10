@@ -13,6 +13,7 @@ module Stone
       desc "Accept interactive manual input, and show the result of each top-level expression"
 
       def call(**_args)
+        load_prelude
         puts "Stone REPL"
         while (input = Readline.readline("#> ", true))
           repl_1_line(input, Stone::Top::CONTEXT)

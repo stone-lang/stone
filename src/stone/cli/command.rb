@@ -42,6 +42,25 @@ module Stone
         ast.respond_to?(:compact) ? ast.compact : ast
       end
 
+      private def load_prelude
+        language.ast(prelude).each do |node|
+          node.evaluate(Stone::Top::CONTEXT)
+        end
+      end
+
+      private def prelude
+        File.open(prelude_file).read
+      rescue Errno::ENOENT
+        # BUG: If we leave this "file" (or ANY file) empty, `language.ast()` will CRASH.
+        # This is because the returned AST node won't have an `each` method.
+        # The solution to this is likely to expose the `top` grammar element.
+        "1 + 1"
+      end
+
+      private def prelude_file
+        ENV["STONE_PRELUDE"] || ""
+      end
+
     end
 
   end

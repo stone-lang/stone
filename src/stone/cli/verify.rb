@@ -14,9 +14,9 @@ module Stone
       option :debug, type: :boolean, default: false
       option :markdown, type: :boolean, default: false
 
-      def call(source_files:, debug:, markdown:, **_args)
+      def call(source_files:, debug:, markdown:, **_args) # rubocop:disable Metrics/MethodLength
         suite = Stone::Verification::Suite.new(debug: debug)
-
+        load_prelude
         each_input_file(source_files, markdown: markdown) do |input|
           suite.run(input) do
             language.ast(input)
@@ -27,6 +27,7 @@ module Stone
         end
         suite.complete
       end
+
     end
 
     register "verify", Verify

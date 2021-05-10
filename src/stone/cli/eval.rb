@@ -14,6 +14,7 @@ module Stone
       option :markdown, type: :boolean, default: false
 
       def call(source_files:, markdown:, **_args)
+        load_prelude
         each_input_file(source_files, markdown: markdown) do |input|
           puts language.ast(input).map{ |node|
             node.evaluate(Stone::Top::CONTEXT)

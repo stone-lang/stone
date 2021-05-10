@@ -12,7 +12,7 @@ lint: markdownlint rubocop
 
 
 verify-specs: bundle
-	bin/stone verify --debug docs/specs/*.md
+	STONE_PRELUDE='docs/specs/prelude.stone' bin/stone verify --debug docs/specs/*.md
 
 rspec: bundle
 	bundle exec rspec

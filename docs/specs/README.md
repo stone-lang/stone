@@ -8,6 +8,7 @@ These are the executable specifications for the Stone programming language.
 * [Expressions](Expressions.md)
 * [Functions](Functions.md)
 * [Collections](Collections.md)
+* [Prelude](Prelude.md)
 
 
 Conventions

@@ -1,1 +1,3 @@
 CUSTOM_PRELUDE_HAS_BEEN_RUN := TRUE
+
+identity := λ(x) { x }

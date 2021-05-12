@@ -34,8 +34,20 @@ module Stone
         Range.new(parameters.count, parameters.count)
       end
 
-      def to_s
-        "(#{parameters.join(", ")}) => {\n    #{body}\n}"
+      def type
+        "Function"
+      end
+
+      def to_s(_untyped: false)
+        "Function(#{parameters.join(", ")}) => {\n    #{body}\n}"
+      end
+
+      def normalized!
+        self
+      end
+
+      def value
+        self
       end
 
       override def children

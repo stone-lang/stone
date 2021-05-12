@@ -11,6 +11,7 @@ TODO
 - [x] Add a license
 - [x] Write a basic README
 - [x] Add a TODO list
+- [ ] Keep a change log
 - [ ] Add a code of conduct
 - [ ] Set up GitHub pages
 - [ ] Point domain at GitHub pages
@@ -54,11 +55,30 @@ Specifications
 
 - [x] Literals
     - [x] Integers
-    - [x] Booleans
-    - [x] Null
     - [x] Text strings
     - [x] Decimal floating-point numbers
     - [x] Rationals
+    - [x] Null
+    - [x] Booleans
+- [ ] Functions
+    - [ ] Anonymous functions (lambda)
+        - [ ] Applying an anonymous function
+    - [x] Function definition
+        - [ ] with formal parameters on left-hand side of `:=`
+    - [x] Function call
+        - [x] Arity checking
+    - [ ] Closures
+        - [ ] Downward funarg problem
+        - [ ] Upward funarg problem
+    - [x] Recursion
+        - [ ] Tail call optimization (TCO)
+    - [x] First-class functions
+    - [ ] Varargs
+    - [ ] Default arguments
+    - [ ] Named arguments
+    - [ ] Properties
+        - [ ] arity
+        - [ ] signature
 - [ ] Expressions
     - [x] Parenthetical expressions
     - [ ] Arithmetic operators
@@ -101,16 +121,6 @@ Specifications
     - [x] Assignment
     - [x] Referencing
     - [x] References to enclosing scopes
-- [ ] Functions
-    - [x] Function definition
-    - [x] Function call
-        - [x] Arity checking
-    - [ ] Default arguments
-    - [ ] Named arguments
-    - [ ] Varargs
-    - [ ] Closures
-    - [x] Recursion
-    - [x] First-class functions
 - [ ] Classes
     - [ ] Class definition
     - [ ] Class instantiation
@@ -144,6 +154,11 @@ Specifications
         - [ ] Re-ordering (reversed, sorted)
         - [ ] Misc (slice, split, join, ...)
     - [ ] Map
+        - [x] Creation
+        - [x] Basics (empty?, has_key?, size/length)
+        - [x] Access (get)
+        - [x] Iteration (map/each)
+        - [ ] Reduction (reduce/inject/fold/foldl, foldr)
 - [ ] Types
     - [ ] Annotations
     - [ ] Type inference

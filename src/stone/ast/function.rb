@@ -33,8 +33,16 @@ module Stone
         "Function"
       end
 
-      def to_s
-        "(#{parameters.join(", ")}) => {\n    #{body}\n}"
+      def to_s(_untyped: false)
+        "Function(#{parameters.join(", ")}) => {\n    #{body}\n}"
+      end
+
+      def normalized!
+        self
+      end
+
+      def value
+        self
       end
 
     end

@@ -25,7 +25,7 @@ module Stone
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
         function = context[name]
-        return Error.new("UnknownFunction", name) unless callable?(function)
+        return Stone::Builtin::Error.new("UnknownFunction", name) unless callable?(function)
         # TODO: Check argument types.
         return arity_error(function, arguments.count) unless correct_arity?(function, arguments.count)
         function.call(context, evaluated_arguments)

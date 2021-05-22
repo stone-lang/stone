@@ -14,7 +14,7 @@ module Stone
       end
 
       def evaluate(_context)
-        self
+        self # TODO: create a Builtin::Function.
       end
 
       def call(parent_context, arguments)
@@ -29,7 +29,7 @@ module Stone
         Range.new(parameters.count, parameters.count)
       end
 
-      # TODO: This needs to go away.
+      # TODO: This needs to go away when we generate a Builtin::Function Value.
       def type
         "Function"
       end

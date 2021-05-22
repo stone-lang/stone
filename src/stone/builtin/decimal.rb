@@ -13,7 +13,6 @@ module Stone
       attr_reader :whole, :fraction, :exponent
 
       def initialize(decimal)
-        @source_location = nil # WAS: get_source_location(decimal)
         whole, fraction, exponent = decimal.to_s.split(/[.eE\u23E8]/)
         compute_components!(whole, fraction, exponent)
         digits = "#{whole}#{fraction}"

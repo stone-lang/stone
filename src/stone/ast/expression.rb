@@ -15,6 +15,7 @@ module Stone
 end
 
 
+require "stone/ast/literal"
 require "stone/ast/variable_reference"
 require "stone/ast/operation"
 require "stone/ast/block"

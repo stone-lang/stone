@@ -46,3 +46,8 @@ Measurement.Turn := import("https://stone-lang.org/measurement/turn")
 TAU := τ
 PI := π
 
+IO := import("https://stone-lang.org/io")
+IO.File := import("https://stone-lang.org/io/file")
+STDIN := IO.File.fd(0)
+STDOUT := IO.File.fd(1)
+STDERR := IO.File.fd(2)

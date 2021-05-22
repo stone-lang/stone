@@ -7,7 +7,7 @@ module Stone
 
   module AST
 
-    class BinaryOperation < Node
+    class BinaryOperation < Expression
 
       OPERATOR_MAP = {
         "➕" => "+",

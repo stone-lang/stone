@@ -277,7 +277,6 @@ Stone has division, too, but it's a little different — it returns a Rational r
 3 / 1/3
 #= Number.Integer(9)
 
-
 identity(1) + identity(2)
 #= Number.Integer(3)
 ~~~

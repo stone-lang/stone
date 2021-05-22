@@ -10,7 +10,7 @@ module Stone
       def initialize(name_slice, rvalue)
         @source_location = name_slice.line_and_column
         @name = name_slice.to_s.to_sym
-        @rvalue = rvalue
+        @rvalue = rvalue # This will be an AST::Expression.
       end
 
       def evaluate(context)

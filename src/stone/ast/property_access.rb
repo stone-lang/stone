@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class PropertyAccess < Node
+    class PropertyAccess < Expression
 
       attr_reader :object
       attr_reader :property_name

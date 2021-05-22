@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class MethodCall < Node
+    class MethodCall < Expression
 
       attr_reader :object
       attr_reader :method_name

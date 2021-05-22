@@ -11,10 +11,6 @@ module Stone
         @text = comment_text_slice.to_s
       end
 
-      def type
-        nil
-      end
-
       def to_s
         text
       end

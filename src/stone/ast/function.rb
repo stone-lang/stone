@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class Function < Node
+    class Function < Expression
 
       attr_reader :parameters
       attr_reader :body
@@ -29,6 +29,7 @@ module Stone
         Range.new(parameters.count, parameters.count)
       end
 
+      # TODO: This needs to go away.
       def type
         "Function"
       end

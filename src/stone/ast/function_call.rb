@@ -2,7 +2,7 @@ module Stone
 
   module AST
 
-    class FunctionCall < Node
+    class FunctionCall < Expression
 
       attr_reader :name
       attr_reader :arguments

@@ -15,10 +15,6 @@ module Stone
         fail NotImplementedError
       end
 
-      def type
-        fail NotImplementedError
-      end
-
       def to_s
         fail NotImplementedError
       end
@@ -49,14 +45,7 @@ end
 
 
 require "stone/ast/type"
-
 require "stone/ast/comment"
-require "stone/ast/operation"
-require "stone/ast/block"
-require "stone/ast/function_call"
-require "stone/ast/method_call"
-require "stone/ast/property_access"
-require "stone/ast/function"
 require "stone/ast/definition"
-require "stone/ast/variable_reference"
+require "stone/ast/expression"
 require "stone/builtin/value"

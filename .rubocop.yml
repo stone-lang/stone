@@ -90,3 +90,6 @@ Layout/EmptyLineBetweenDefs:
   Enabled: false
 Layout/EmptyLinesAroundBlockBody:
   Enabled: false
+Style/PercentLiteralDelimiters:
+  Exclude:
+    - 'src/stone/ast/binary_operation.rb'

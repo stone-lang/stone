@@ -19,8 +19,6 @@ module Stone
         exit 1
       end
 
-      abstract :compile
-
       def ast(input, single_line: false)
         parse_tree = parse(input, single_line: single_line)
         transformer.apply(parse_tree)

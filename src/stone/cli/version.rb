@@ -5,7 +5,7 @@ require "stone/version"
 module Stone
   module CLI
 
-    class Version < Stone::CLI::Command
+    class Version < CLI::Command
 
       desc "Print version"
 

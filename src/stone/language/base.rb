@@ -12,7 +12,7 @@ module Stone
 
       def evaluate(input, single_line: false)
         puts(ast(input, single_line: single_line).filter_map{ |node|
-          node.evaluate(Stone::Top::CONTEXT)
+          node.evaluate(Top::CONTEXT)
         })
       rescue Parslet::ParseFailed => e
         puts e.parse_failure_cause.ascii_tree

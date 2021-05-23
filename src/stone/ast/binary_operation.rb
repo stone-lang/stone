@@ -32,23 +32,23 @@ module Stone
         "➕" => "∨",
       }
       OPERATION_RESULT_TYPES = {
-        "+" => Stone::Builtin::Number,
-        "-" => Stone::Builtin::Number,
-        "*" => Stone::Builtin::Number,
-        "/" => Stone::Builtin::Rational,
-        "<!" => Stone::Builtin::Number,
-        ">!" => Stone::Builtin::Number,
-        "==" => Stone::Builtin::Boolean,
-        "!=" => Stone::Builtin::Boolean,
-        "<" => Stone::Builtin::Boolean,
-        "<=" => Stone::Builtin::Boolean,
-        ">" => Stone::Builtin::Boolean,
-        ">=" => Stone::Builtin::Boolean,
-        "∧" => Stone::Builtin::Boolean,
-        "∨" => Stone::Builtin::Boolean,
-        "++" => Stone::Builtin::Text,
-        "|>" => Stone::Builtin::Any,
-        "<|" => Stone::Builtin::Any,
+        "+" => Builtin::Number,
+        "-" => Builtin::Number,
+        "*" => Builtin::Number,
+        "/" => Builtin::Rational,
+        "<!" => Builtin::Number,
+        ">!" => Builtin::Number,
+        "==" => Builtin::Boolean,
+        "!=" => Builtin::Boolean,
+        "<" => Builtin::Boolean,
+        "<=" => Builtin::Boolean,
+        ">" => Builtin::Boolean,
+        ">=" => Builtin::Boolean,
+        "∧" => Builtin::Boolean,
+        "∨" => Builtin::Boolean,
+        "++" => Builtin::Text,
+        "|>" => Builtin::Any,
+        "<|" => Builtin::Any,
       }
       OPERATIONS = {
         "<" => ->(_c, _o, operands){ operands.map(&:normalized!).each_cons(2).map{ |l, r| l.value < r.value }.all? },
@@ -83,7 +83,7 @@ module Stone
       def evaluate(context)
         evaluated_operands = operands.map{ |o| o.evaluate(context) }
         return error?(evaluated_operands) if error?(evaluated_operands)
-        return Stone::Builtin::Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
+        return Builtin::Error.new("MixedOperatorsError", "Add parentheses where appropriate") if disallowed_mixed_operators?
         if mixed_operators?
           evaluate_mixed_operations(context, operators, evaluated_operands)
         else
@@ -92,8 +92,8 @@ module Stone
       end
 
       def self.builtin_divide(dividend, divisor)
-        dividend = Stone::Builtin::Rational.new(dividend) if dividend.is_a?(::Integer)
-        divisor = Stone::Builtin::Rational.new(divisor) if divisor.is_a?(::Integer)
+        dividend = Builtin::Rational.new(dividend) if dividend.is_a?(::Integer)
+        divisor = Builtin::Rational.new(divisor) if divisor.is_a?(::Integer)
         # Note that we're returning a native Ruby `Rational` here.
         Rational((dividend.numerator * divisor.denominator), (dividend.denominator * divisor.numerator))
       end
@@ -104,8 +104,8 @@ module Stone
       end
 
       private def evaluate_operation(context, operator, operands)
-        return Stone::Builtin::Error.new("UnknownOperator", operator) unless known_operator?(operator)
-        operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?(Stone::Builtin::Boolean)
+        return Builtin::Error.new("UnknownOperator", operator) unless known_operator?(operator)
+        operator = BOOLEAN_OPERATOR_MAP.fetch(operator){ operator } if operands.all?(Builtin::Boolean)
         operation = OPERATIONS.fetch(operator){ OPERATIONS[:DEFAULT] }
         result_type = OPERATION_RESULT_TYPES[operator]
         result_type.new!(operation.call(context, operator, operands))
@@ -166,7 +166,7 @@ module Stone
 
       # This is almost as bad. Maybe worse in some ways.
       private def evaluate_mixed_comparison_operations(context, operators, operands)
-        Stone::Builtin::Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
+        Builtin::Boolean.new(operands.each_cons(2).zip(operators).reduce(true) { |a, x|
           a && evaluate_operation(context, x.last, x.first).value
         })
       end

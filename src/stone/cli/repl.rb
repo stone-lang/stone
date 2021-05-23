@@ -8,7 +8,7 @@ require "stone/top"
 module Stone
   module CLI
 
-    class REPL < Stone::CLI::Command
+    class REPL < CLI::Command
 
       desc "Accept interactive manual input, and show the result of each top-level expression"
 
@@ -16,7 +16,7 @@ module Stone
         load_prelude
         puts "Stone REPL"
         while (input = Readline.readline("#> ", true))
-          repl_1_line(input, Stone::Top::CONTEXT)
+          repl_1_line(input, Top::CONTEXT)
         end
       end
 

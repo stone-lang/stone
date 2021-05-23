@@ -15,7 +15,7 @@ module Stone
       abstract :to_s
 
       def error?(children)
-        [children].flatten.find{ |child| child.is_a?(Stone::Builtin::Error) }
+        [children].flatten.find{ |child| child.is_a?(Builtin::Error) }
       end
 
       def get_source_location(slice_or_ast_node)

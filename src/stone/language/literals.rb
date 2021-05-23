@@ -36,21 +36,21 @@ module Stone
         Class.new(super) do |_klass|
 
           rule(integer: simple(:i)) {
-            Stone::AST::Integer.new(i)
+            AST::Integer.new(i)
           }
           rule(decimal: simple(:d)) {
-            Stone::AST::Decimal.new(d)
+            AST::Decimal.new(d)
           }
           rule(rational: {numerator: simple(:numerator), denominator: simple(:denominator)}) {
             # TODO: Need a better way to determine whether the denominator is 0.
             if denominator.to_s == "0"
-              Stone::Builtin::Error.new("DivisionByZero", "invalid rational literal")
+              Builtin::Error.new("DivisionByZero", "invalid rational literal")
             else
-              Stone::AST::Rational.new(numerator, denominator)
+              AST::Rational.new(numerator, denominator)
             end
           }
           rule(text: simple(:t)) {
-            Stone::AST::Text.new(t)
+            AST::Text.new(t)
           }
 
         end

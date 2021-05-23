@@ -66,9 +66,9 @@ module Stone
       private def process_ast(source_code, ast) # rubocop:disable Metrics/AbcSize,Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
         r = ast.chunk_while{ |node| !special_comment?(node) }.reduce([]){ |results, (*code, special_comment)|
           # Evaluate all the code (except comments), but keep only the last result.
-          actual_result = code.reject{ |node| node.is_a?(Stone::AST::Comment) }.map{ |node| node.evaluate(Stone::Top::CONTEXT) }.last
+          actual_result = code.reject{ |node| node.is_a?(AST::Comment) }.map{ |node| node.evaluate(Top::CONTEXT) }.last
           source_code_chunk = code_between(source_code, special_comment, code&.first)
-          spec = Stone::Verification::Spec.new(source_code_chunk, special_comment, actual_result)
+          spec = Verification::Spec.new(source_code_chunk, special_comment, actual_result)
           results << spec.run.tap { |result| print result unless result.nil? }
         }.compact
       rescue NoMethodError => e
@@ -82,7 +82,7 @@ module Stone
       #       results
       #       x << X.new(x.verification_results << spec_result(source_code, node, x.last_special_comment, x.last_result), x.last_result, node)
       #     else
-      #       x << X.new(x.verification_results, node.evaluate(Stone::Top::CONTEXT), x.last_special_comment)
+      #       x << X.new(x.verification_results, node.evaluate(Top::CONTEXT), x.last_special_comment)
       #     end
       #   }.first
       # rescue NoMethodError => e
@@ -96,13 +96,13 @@ module Stone
       #     next unless special_comment?(node)
       #     last_special_comment = ast[0..i-1].reverse.find{|n| special_comment?(n) }
       #     # pp last_special_comment
-      #     last_code_node = ast[0..i-1].reverse.reject{|n| n.is_a?(Stone::AST::Comment) }&.first
+      #     last_code_node = ast[0..i-1].reverse.reject{|n| n.is_a?(AST::Comment) }&.first
       #     # pp "last code node: #{last_code_node}"
-      #     result = last_code_node.evaluate(Stone::Top::CONTEXT)
+      #     result = last_code_node.evaluate(Top::CONTEXT)
       #     # pp "result: #{result}"
       #     code = code_between(source_code, node, last_special_comment)
       #     # pp "code: #{code}"
-      #     spec = Stone::Verification::Spec.new(code, node, result)
+      #     spec = Verification::Spec.new(code, node, result)
       #     # pp "spec: #{spec}"
       #     spec.run.tap { |result| print result unless result.nil? }
       #   }.compact # TODO: Can we use `filter_map` with `with_index` to eliminate the `compact`?
@@ -119,7 +119,7 @@ module Stone
       #     if special_comment?(node)
       #       x << X.new(x.verification_results << spec_result(source_code, node, x.last_special_comment, x.last_result), x.last_result, node)
       #     else
-      #       x << X.new(x.verification_results, node.evaluate(Stone::Top::CONTEXT), x.last_special_comment)
+      #       x << X.new(x.verification_results, node.evaluate(Top::CONTEXT), x.last_special_comment)
       #     end
       #   }.first
       # rescue NoMethodError => e
@@ -132,7 +132,7 @@ module Stone
       #     if special_comment?(node)
       #       [verification_results << spec_result(source_code, node, last_special_comment, last_result), last_result, node]
       #     else
-      #       [verification_results, node.evaluate(Stone::Top::CONTEXT), last_special_comment]
+      #       [verification_results, node.evaluate(Top::CONTEXT), last_special_comment]
       #     end
       #   }.first
       # rescue NoMethodError => e
@@ -143,15 +143,15 @@ module Stone
       #   last_special_comment = nil
       #   last_result = nil
       #   ast.map{ |node|
-      #     if node.is_a?(Stone::AST::Comment)
+      #     if node.is_a?(AST::Comment)
       #       if special_comment?(node)
-      #         spec = Stone::Verification::Spec.new(code_between(source_code, node, last_special_comment), node, last_result)
+      #         spec = Verification::Spec.new(code_between(source_code, node, last_special_comment), node, last_result)
       #         last_special_comment = node
       #         spec.run.tap { |result| print result unless result.nil? }
       #       end
       #     else
       #       begin
-      #         last_result = node.evaluate(Stone::Top::CONTEXT)
+      #         last_result = node.evaluate(Top::CONTEXT)
       #         nil
       #       rescue NoMethodError => e
       #         binding.pry if debug # rubocop:disable Lint/Debugger
@@ -162,13 +162,13 @@ module Stone
 
       private def spec_result(source_code, node, last_special_comment, last_result)
         code = code_between(source_code, node, last_special_comment)
-        spec = Stone::Verification::Spec.new(code, node, last_result)
+        spec = Verification::Spec.new(code, node, last_result)
         spec.run.tap { |result| print result unless result.nil? }
       end
 
       private def special_comment?(node)
-        return false unless node.is_a?(Stone::AST::Comment)
-        node.to_s =~ Stone::Verification::Spec::COMMENT_WITH_EXPECTED_RESULT || node.to_s =~ Stone::Verification::Spec::COMMENT_WITH_EXPECTED_ERROR
+        return false unless node.is_a?(AST::Comment)
+        node.to_s =~ Verification::Spec::COMMENT_WITH_EXPECTED_RESULT || node.to_s =~ Verification::Spec::COMMENT_WITH_EXPECTED_ERROR
       end
 
       private def code_between(source_code, comment, last_special_comment) # rubocop:disable Metrics/AbcSize

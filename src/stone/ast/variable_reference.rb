@@ -12,7 +12,7 @@ module Stone
       end
 
       def evaluate(context)
-        context[name] || Stone::Builtin::Error.new("UndefinedVariable", name)
+        context[name] || Builtin::Error.new("UndefinedVariable", name)
       end
 
       def to_s

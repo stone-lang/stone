@@ -6,7 +6,7 @@ require "stone/cli/command"
 module Stone
   module CLI
 
-    class Parse < Stone::CLI::Command
+    class Parse < CLI::Command
 
       desc "Output the parse tree"
       argument :source_files, type: :array, required: true, desc: "Source files"

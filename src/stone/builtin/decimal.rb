@@ -31,7 +31,7 @@ module Stone
       end
 
       def normalized!
-        Stone::Builtin::Rational.new(numerator, denominator).normalized! # Note that this is Stone's Rational.
+        Builtin::Rational.new(numerator, denominator).normalized! # Note that this is Stone's Rational.
       end
 
       def sign

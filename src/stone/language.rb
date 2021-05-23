@@ -10,7 +10,7 @@ module Stone
   module Language
 
     # Determine the highest-level language (it'll have the most ancestors).
-    DEFAULT = Stone::Language::Base.descendants.max_by { |lang| lang.ancestors.size }
+    DEFAULT = Language::Base.descendants.max_by { |lang| lang.ancestors.size }
 
   end
 end

@@ -7,7 +7,7 @@ require "stone/top"
 module Stone
   module CLI
 
-    class Eval < Stone::CLI::Command
+    class Eval < CLI::Command
 
       desc "Output the result of each top-level expression (non-interactive REPL)"
       argument :source_files, type: :array, required: true, desc: "Source files"
@@ -17,7 +17,7 @@ module Stone
         load_prelude
         each_input_file(source_files, markdown: markdown) do |input|
           puts(language.ast(input).filter_map{ |node|
-            node.evaluate(Stone::Top::CONTEXT)
+            node.evaluate(Top::CONTEXT)
           })
         rescue Parslet::ParseFailed => e
           puts e.parse_failure_cause.ascii_tree

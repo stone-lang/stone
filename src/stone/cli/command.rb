@@ -24,7 +24,7 @@ module Stone
       end
 
       private def language
-        @language ||= Stone::Language::DEFAULT.new
+        @language ||= Language::DEFAULT.new
       end
 
       private def markdown_code_blocks(file)
@@ -37,14 +37,14 @@ module Stone
       end
 
       private def transform(parse_tree)
-        transformer = Stone::Transform.new
+        transformer = Transform.new
         ast = transformer.apply(parse_tree)
         ast.respond_to?(:compact) ? ast.compact : ast
       end
 
       private def load_prelude
         language.ast(prelude).each do |node|
-          node.evaluate(Stone::Top::CONTEXT)
+          node.evaluate(Top::CONTEXT)
         end
       end
 

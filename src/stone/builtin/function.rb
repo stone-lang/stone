@@ -26,8 +26,12 @@ module Stone
         proc.call(parent_context, arguments)
       end
 
+      def type
+        "Builtin.Function"
+      end
+
       def to_s(_untyped: false)
-        "BuiltinFunction(name: #{name}, arity: #{arity})"
+        "Function(name: #{name}, arity: #{arity})"
       end
 
     end

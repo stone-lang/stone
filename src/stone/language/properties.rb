@@ -3,7 +3,7 @@ require "stone/language/variables"
 
 module Stone
   module Language
-    class Objects < Variables
+    class Properties < Variables
 
       def grammar
         Class.new(super) do |_klass|

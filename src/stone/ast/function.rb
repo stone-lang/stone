@@ -13,8 +13,12 @@ module Stone
         @parameters = parameters.map(&:to_sym)
       end
 
+      def value
+        self
+      end
+
       def evaluate(_context)
-        self # TODO: create a Builtin::Function.
+        self
       end
 
       def call(parent_context, arguments)
@@ -36,14 +40,6 @@ module Stone
 
       def to_s(_untyped: false)
         "Function(#{parameters.join(", ")}) => {\n    #{body}\n}"
-      end
-
-      def normalized!
-        self
-      end
-
-      def value
-        self
       end
 
     end

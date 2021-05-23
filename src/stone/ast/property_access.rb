@@ -4,28 +4,23 @@ module Stone
 
     class PropertyAccess < Expression
 
-      attr_reader :object
+      attr_reader :value
       attr_reader :property_name
 
-      def initialize(object, property_name)
-        @object = object
+      def initialize(value, property_name)
+        @value = value
         @property_name = property_name.to_sym
-        @source_location = get_source_location(object)
+        @source_location = get_source_location(value)
       end
 
       def evaluate(context)
-        evaluated_object = object.evaluate(context)
-        return evaluated_object if error?(evaluated_object)
-        property_value = evaluated_object.properties[property_name]
-        if property_value.nil?
-          Error.new("InvalidProperty", property_name.to_s)
-        else
-          property_value
-        end
+        evaluated_value = value.evaluate(context)
+        return evaluated_value if error?(evaluated_value)
+        evaluated_value.property(property_name)
       end
 
       def to_s
-        "#{object}.#{property_name}"
+        "#{value}.#{property_name}"
       end
 
     end

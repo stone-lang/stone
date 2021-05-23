@@ -7,6 +7,8 @@ module Stone
 
     class Boolean < Value
 
+      attr_reader :value
+
       def initialize(true_or_false)
         @value = true_or_false
       end
@@ -14,6 +16,10 @@ module Stone
       def type
         "Boolean"
       end
+
+      PROPERTIES = {
+        not: ->(this){ Booolean.new(!this.value) }, # TODO: Needs a test.
+      }
 
       def to_s(untyped: false)
         if untyped

@@ -27,6 +27,19 @@ module Stone
         self
       end
 
+      PROPERTIES = {
+        type: ->(this){ this.type },
+      }
+
+      # WARNING: Be sure to call `super` if you override this!
+      # NOTE: You will normally just define `PROPERTIES` in the subclass.
+      overridable def property(name)
+        self.class.ancestors.select{ |c| c <= Stone::Builtin::Value }.each do |klass|
+          return klass.const_get(:PROPERTIES)[name][self] if klass.const_get(:PROPERTIES)&.has_key?(name)
+        end
+        Builtin::Error.new("PropertyUnknownError: '#{name}' not recognized by #{type}")
+      end
+
       def to_s(untyped: false)
         if untyped
           value

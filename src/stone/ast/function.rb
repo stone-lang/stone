@@ -38,6 +38,12 @@ module Stone
         "Function"
       end
 
+      # TODO: This needs to go away when we generate a Builtin::Function Value.
+      def property(name)
+        return type if name == :type
+        Builtin::Error.new("PropertyUnknownError: '#{name}' not recognized by #{type}")
+      end
+
       def to_s(_untyped: false)
         "Function(#{parameters.join(", ")}) => {\n    #{body}\n}"
       end

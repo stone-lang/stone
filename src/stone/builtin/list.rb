@@ -10,12 +10,8 @@ module Stone
       attr_reader :value
 
       def initialize(list, type_specifier: Any)
-        if list.is_a?(Array)
-          @value = list
-        else
-          fail "WTF? Expected an Array, got a #{list.class}."
-          super(list)
-        end
+        fail "WTF? Expected an Array, got a #{list.class}." unless list.is_a?(Array)
+        @value = list
         @type_specifier = type_specifier
       end
 
@@ -31,18 +27,16 @@ module Stone
         end
       end
 
-      def properties
-        @properties ||= {
-          size: Integer.new(@value.size),
-          length: Integer.new(@value.size),
-          empty?: Boolean.new(@value.size.zero?),
-          first: @value.first,
-          head: @value.first,
-          last: @value.last,
-          rest: List.new(@value.rest),
-          tail: List.new(@value.tail),
-        }
-      end
+      PROPERTIES = {
+        size: ->(this) { Integer.new(this.value.size) },
+        length: ->(this) { Integer.new(this.value.size) },
+        empty?: ->(this) { Boolean.new(this.value.size.zero?) },
+        first: ->(this) { this.value.first },
+        head: ->(this) { this.value.first },
+        last: ->(this) { this.value.last },
+        rest: ->(this) { List.new(this.value.drop(1)) },
+        tail: ->(this) { List.new(this.value.drop(1)) },
+      }
 
       def methods # rubocop:disable Metrics/AbcSize
         @methods ||= {

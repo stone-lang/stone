@@ -7,6 +7,8 @@ module Stone
 
     class Map < Value
 
+      attr_reader :value
+
       def initialize(hashmap, type_specifier: [Any, Any])
         # TODO: Check that they're all pairs.
         @type_specifier = type_specifier
@@ -36,15 +38,13 @@ module Stone
         1..1 # If we treat a Map as a function, it'll take 1 argument (a key).
       end
 
-      def properties
-        @properties ||= {
-          keys: List.new(@value.keys),
-          values: List.new(@value.values),
-          size: Integer.new(@value.size),
-          length: Integer.new(@value.size),
-          empty?: Boolean.new(@value.size.zero?),
-        }
-      end
+      PROPERTIES = {
+        keys: ->(this){ List.new(this.value.keys) },
+        values: ->(this){ List.new(this.value.values) },
+        size: ->(this){ Integer.new(this.value.size) },
+        length: ->(this){ Integer.new(this.value.size) },
+        empty?: ->(this){ Boolean.new(this.value.size.zero?) },
+      }
 
       def methods # rubocop:disable Metrics/AbcSize
         @methods ||= {

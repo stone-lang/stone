@@ -29,17 +29,15 @@ module Stone
         end
       end
 
-      def properties
-        @properties ||= {
-          first: @first,
-          second: @second,
-          last: @second,
-          left: @first,
-          right: @second,
-          key: @first,
-          value: @second
-        }
-      end
+      PROPERTIES = {
+        first: ->(this){ this.first },
+        second: ->(this){ this.second },
+        last: ->(this){ this.second },
+        left: ->(this){ this.first },
+        right: ->(this){ this.second },
+        key: ->(this){ this.first },
+        value: ->(this){ this.second },
+      }
 
       def methods
         @methods ||= {

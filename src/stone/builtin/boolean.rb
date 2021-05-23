@@ -18,7 +18,7 @@ module Stone
       end
 
       PROPERTIES = {
-        not: ->(this){ Booolean.new(!this.value) }, # TODO: Needs a test.
+        not: ->(this) { Boolean.new(!this.value) },
       }
 
       def to_s(untyped: false)

@@ -18,9 +18,7 @@ module Stone
         end
       end
 
-      def type
-        "Number"
-      end
+      abstract :type
 
     end
 

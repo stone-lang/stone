@@ -6,7 +6,7 @@ all: setup verify-specs rspec
 setup: setup-overcommit
 
 console:
-	bundle exec irb -I src -rubygems -r stone/cli.rb
+	bundle exec pry -I src -r stone/cli
 
 lint: markdownlint rubocop
 

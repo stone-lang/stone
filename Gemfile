@@ -23,6 +23,7 @@ gem "pry"
 
 # Console
 gem "irb"
+gem "awesome_print"
 
 # ANSI colors for the console
 gem "rainbow"

@@ -11,13 +11,8 @@ module Stone
         new(*args)
       end
 
-      def evaluate(_context)
-        fail NotImplementedError
-      end
-
-      def to_s
-        fail NotImplementedError
-      end
+      abstract :evaluate
+      abstract :to_s
 
       def error?(children)
         [children].flatten.find{ |child| child.is_a?(Stone::Builtin::Error) }

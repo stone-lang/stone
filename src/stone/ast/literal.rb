@@ -8,9 +8,7 @@ module Stone
         value
       end
 
-      def value
-        fail NotImplementedError
-      end
+      abstract :value
 
     end
 

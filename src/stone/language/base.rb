@@ -19,9 +19,7 @@ module Stone
         exit 1
       end
 
-      def compile(input)
-        fail NotImplementedError
-      end
+      abstract :compile
 
       def ast(input, single_line: false)
         parse_tree = parse(input, single_line: single_line)

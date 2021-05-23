@@ -1,6 +1,6 @@
 class Module
 
-  # Document methods that NEED to be overridden by child classes.
+  # Document methods that MUST be overridden by child classes.
   def abstract(method_name)
     define_method(method_name) do
       fail NotImplementedError

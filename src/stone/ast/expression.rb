@@ -4,9 +4,7 @@ module Stone
 
     class Expression < Node
 
-      def value
-        fail NotImplementedError
-      end
+      abstract :value
 
     end
 

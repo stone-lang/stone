@@ -1,13 +1,11 @@
 require "extensions/enumerable"
 
-require "stone/builtin/object"
-
 
 module Stone
 
   module Builtin
 
-    class Pair < Object
+    class Pair < Value
 
       attr_reader :first
       attr_reader :second

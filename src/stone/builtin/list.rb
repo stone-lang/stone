@@ -1,17 +1,19 @@
 require "extensions/enumerable"
-require "stone/builtin/object"
 
 
 module Stone
 
   module Builtin
 
-    class List < Object
+    class List < Value
+
+      attr_reader :value
 
       def initialize(list, type_specifier: Any)
         if list.is_a?(Array)
           @value = list
         else
+          fail "WTF? Expected an Array, got a #{list.class}."
           super(list)
         end
         @type_specifier = type_specifier

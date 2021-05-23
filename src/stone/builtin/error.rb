@@ -2,7 +2,7 @@ module Stone
 
   module Builtin
 
-    class Error
+    class Error < Any
 
       attr_reader :name
       attr_reader :description

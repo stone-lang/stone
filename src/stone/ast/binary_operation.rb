@@ -1,6 +1,6 @@
 require "extensions/boolean"
 
-require "stone/builtin/any"
+require "stone/builtin/value"
 
 
 module Stone

@@ -1,13 +1,11 @@
 require "extensions/enumerable"
 
-require "stone/builtin/object"
-
 
 module Stone
 
   module Builtin
 
-    class Map < Object
+    class Map < Value
 
       def initialize(hashmap, type_specifier: [Any, Any])
         # TODO: Check that they're all pairs.

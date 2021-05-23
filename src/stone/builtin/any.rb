@@ -1,7 +1,3 @@
-require "stone/builtin/function"
-require "stone/builtin/value"
-
-
 module Stone
 
   module Builtin
@@ -25,3 +21,13 @@ module Stone
   end
 
 end
+
+
+require "stone/builtin/function"
+require "stone/builtin/boolean"
+require "stone/builtin/number"
+require "stone/builtin/text"
+require "stone/builtin/pair"
+require "stone/builtin/list"
+require "stone/builtin/map"
+require "stone/builtin/error"

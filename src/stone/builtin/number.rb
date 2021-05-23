@@ -2,7 +2,7 @@ module Stone
 
   module Builtin
 
-    class Number < Value
+    class Number < Any
 
       def self.new!(value) # rubocop:disable Metrics/MethodLength, Metrics/AbcSize
         if value.is_a?(::Integer)

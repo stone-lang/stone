@@ -39,7 +39,6 @@ module Stone
 end
 
 
-require "stone/ast/type"
 require "stone/ast/comment"
 require "stone/ast/definition"
 require "stone/ast/expression"

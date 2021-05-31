@@ -1,6 +1,3 @@
-require "stone/builtin/value"
-
-
 module Stone
 
   module Builtin

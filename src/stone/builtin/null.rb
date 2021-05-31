@@ -1,8 +1,4 @@
-require "stone/builtin/value"
-
-
 module Stone
-
   module Builtin
 
     class Null < Value
@@ -26,5 +22,4 @@ module Stone
     end
 
   end
-
 end

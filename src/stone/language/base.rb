@@ -32,6 +32,9 @@ module Stone
         end
       end
 
+      VALID_IDENTIFIER_CHARACTERS = /[\p{Letter}\p{Number}\p{Mark}\p{Symbol}\p{Punctuation}]/
+      INVALID_IDENTIFIER_CHARACTERS = %[",.;:^#@`(){}\\[\\]«»\\\\]  # NOTE: These are escaped to be used in a RegExp.
+
       overridable def grammar
         Class.new(Parslet::Parser) do |_klass|
           include ParsletExtensions
@@ -45,7 +48,9 @@ module Stone
           overridable rule(:expression) { parenthetical_expression }
           rule(:parenthetical_expression) { parens(whitespace? >> expression >> whitespace?) }
           rule(:blank_line) { whitespace? >> line_comment.as(:comment).maybe >> eol }
-          rule(:identifier) { match["[:alpha:]\\?_"] >> match["[:alnum:]\\?_"].repeat(0) }
+          rule(:identifier) { invalid_identifier_prefix.absent? >> identifier_character.repeat(1) }
+          rule(:identifier_character) { match[INVALID_IDENTIFIER_CHARACTERS].absent? >> match(VALID_IDENTIFIER_CHARACTERS) }
+          rule(:invalid_identifier_prefix) { match["+-"].maybe >> match["[:digit:]"] }
           rule(:whitespace) { (block_comment | (eol.absent? >> match('\s'))).repeat(1) }
           rule(:whitespace?) { whitespace.maybe }
           rule(:eol) { str("\n") }

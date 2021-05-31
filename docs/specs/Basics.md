@@ -46,7 +46,11 @@ Variables
 
 Stone has variables, much like any other programming language.
 Variable names, along with function names, property names, and method names, are called _identifiers_.
-An identifier must start with a letter, and can contain letters, numbers, and underscores.
+
+An identifier must not start with a number.
+An identifier cannot contain whitespace, (non-printable) control characters,
+or any of these characters: ``:",.;#@`^\()[]{}«»``
+Other than that, an identifier can any combination of letters, numbers, and symbols.
 
 ~~~ stone
 a := 123

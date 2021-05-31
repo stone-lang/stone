@@ -93,3 +93,11 @@ Layout/EmptyLinesAroundBlockBody:
 Style/PercentLiteralDelimiters:
   Exclude:
     - 'src/stone/ast/binary_operation.rb'
+
+# Be a bit more lenient with RSpec: don't require filename to match class; allow more than 1 expectation per example.
+RSpec/FilePath:
+  Enabled: False
+RSpec/MultipleExpectations:
+  Max: 10
+RSpec/ExampleLength:
+  Max: 10

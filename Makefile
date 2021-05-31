@@ -5,7 +5,11 @@ all: setup verify-specs rspec
 
 setup: setup-overcommit
 
-console:
+test: specs
+
+specs: rspec verify-specs
+
+console: bundle
 	bundle exec pry -I src -r stone/cli
 
 lint: markdownlint rubocop
@@ -38,4 +42,4 @@ rubocop:
 markdownlint:
 	markdownlint *.md docs
 
-.PHONY: all setup console lint verify-specs rspec setup-overcommit bundle rubocop markdownlint
+.PHONY: all setup test specs console lint verify-specs rspec setup-overcommit bundle rubocop markdownlint

@@ -22,21 +22,21 @@ Perl-style comments begin with a `#` and continue to the end of the line.
 #= Number.Integer(789)
 ~~~
 
-C-style block comments start with `/*` and end with `*/`.
-Note that C-style comments cannot be nested;
-the first `*/` will always end the comment and return to processing code.
+Block comments start with `#[` and end with `]#`.
+Note that block comments cannot be nested;
+the first `]#` will always end the comment and return to processing code.
 
 ~~~ stone
-123 /* This is a comment. */
+123 #[ This is a comment. ]#
 #= Number.Integer(123)
 
-1 /* This is a comment. */ + 2
+1 #[ This is a comment. ]# + 2
 #= Number.Integer(3)
 
-456 /* This is a
+456 #[ This is a
        multi-line
        comment.
-     */
+]#
 #= Number.Integer(456)
 ~~~
 

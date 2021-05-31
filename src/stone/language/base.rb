@@ -51,7 +51,7 @@ module Stone
           rule(:eol) { str("\n") }
           rule(:eof) { any.absent? }
           rule(:line_comment) { str("#") >> (eol.absent? >> any).repeat(0) }
-          rule(:block_comment) { str("/*") >> (str("*/").absent? >> any).repeat(0) >> str("*/") }
+          rule(:block_comment) { str("#[") >> (str("]#").absent? >> any).repeat(0) >> str("]#") }
         end
       end
 

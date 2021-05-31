@@ -300,35 +300,37 @@ The `>!` operator returns the maximum of the operands.
 ~~~
 
 
-### Boolean Operators
+### Boolean Operations
 
 The simplest operation we can perform is Boolean negation (usually pronounced "not").
-This is done using the `!` character as a unary prefix operator.
-The `¬` (Unicode "not sign") may also be used.
+This is done using the `¬` function.
+That's the Unicode "not sign".
+If your IDE or text editor does not make that easy for you,
+the `!` function is an alias.
 
 ~~~ stone
-!TRUE
+¬(TRUE)
 #= Boolean(Boolean.FALSE)
 
-!FALSE
+¬(FALSE)
 #= Boolean(Boolean.TRUE)
 
-!!TRUE
+¬(¬(TRUE))
 #= Boolean(Boolean.TRUE)
 
-!!FALSE
+¬(¬(FALSE))
 #= Boolean(Boolean.FALSE)
 
-¬TRUE
+!(TRUE)
 #= Boolean(Boolean.FALSE)
 
-¬FALSE
+!(FALSE)
 #= Boolean(Boolean.TRUE)
 
-¬¬TRUE
+!(!(TRUE))
 #= Boolean(Boolean.TRUE)
 
-!¬TRUE
+!(¬(TRUE))
 #= Boolean(Boolean.TRUE)
 ~~~
 

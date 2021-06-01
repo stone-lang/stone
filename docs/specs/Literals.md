@@ -242,8 +242,8 @@ Text is enclosed in double quotes:
 "#10 Downing Street"
 #= Text("#10 Downing Street")
 
-"We do block comments /* like this */"
-#= Text("We do block comments /* like this */")
+"We do block comments #[ like this ]#"
+#= Text("We do block comments #[ like this ]#")
 ~~~
 
 NOTE: There is no escaping or interpolation of any kind for text literals.

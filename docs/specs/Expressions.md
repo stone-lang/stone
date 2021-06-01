@@ -302,36 +302,40 @@ The `>!` operator returns the maximum of the operands.
 
 ### Boolean Operations
 
-The simplest operation we can perform is Boolean negation (usually pronounced "not").
-This is done using the `¬` function.
-That's the Unicode "not sign".
-If your IDE or text editor does not make that easy for you,
-the `!` function is an alias.
+The simplest operation we can perform is Boolean negation, commonly known as "not".
+This is done using the `not` property.
+If you're more of a symbol person, you can use the `¬` or `!` alias.
 
 ~~~ stone
-¬(TRUE)
+TRUE.not
 #= Boolean(Boolean.FALSE)
 
-¬(FALSE)
+FALSE.not
 #= Boolean(Boolean.TRUE)
 
-¬(¬(TRUE))
-#= Boolean(Boolean.TRUE)
-
-¬(¬(FALSE))
+TRUE.¬
 #= Boolean(Boolean.FALSE)
 
-!(TRUE)
+FALSE.¬
+#= Boolean(Boolean.TRUE)
+
+TRUE.!
 #= Boolean(Boolean.FALSE)
 
-!(FALSE)
+FALSE.!
 #= Boolean(Boolean.TRUE)
 
-!(!(TRUE))
-#= Boolean(Boolean.TRUE)
+#TRUE.¬.¬
+##= Boolean(Boolean.TRUE)
 
-!(¬(TRUE))
-#= Boolean(Boolean.TRUE)
+#TRUE.!.!
+##= Boolean(Boolean.TRUE)
+
+#TRUE.¬.!
+##= Boolean(Boolean.TRUE)
+
+#TRUE.¬.!.not
+##= Boolean(Boolean.FALSE)
 ~~~
 
 We can also perform conjunction ("and") and disjunction ("or") operations on Booleans.

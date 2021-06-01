@@ -6,8 +6,6 @@ module Stone
       type: Builtin::Function.new("type", 1..1, ->(ctxt, args){ builtin_type(ctxt, args) }),
       TRUE: Builtin::Boolean.new(true),
       FALSE: Builtin::Boolean.new(false),
-      '¬': Builtin::Function.new("¬", 1..1, ->(ctxt, args){ builtin_not(ctxt, args) }),
-      '!': Builtin::Function.new("!", 1..1, ->(ctxt, args){ builtin_not(ctxt, args) }),
       NULL: Builtin::Null.new,
       List: Builtin::Function.new("List", 0..Float::INFINITY, ->(ctxt, args){ builtin_List(ctxt, args) }),
       Pair: Builtin::Function.new("Pair", 2..2, ->(ctxt, args){ builtin_Pair(ctxt, args[0], args[1]) }),
@@ -20,10 +18,6 @@ module Stone
 
     def self.builtin_type(_context, args)
       args.first.type.to_s
-    end
-
-    def self.builtin_not(_context, args)
-      Builtin::Boolean.new(!args.first.value)
     end
 
     # TODO: We can remove these when we have classes and (default) constructors working.

@@ -16,6 +16,8 @@ module Stone
 
       PROPERTIES = {
         not: ->(this) { Boolean.new(!this.value) },
+        '¬': ->(this) { Boolean.new(!this.value) },
+        '!': ->(this) { Boolean.new(!this.value) },
       }
 
       def to_s(untyped: false)

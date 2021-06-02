@@ -18,9 +18,11 @@ module Stone
         @debug = debug
       end
 
-      def run(source_code)
+      # FIXME: It's time for an abstraction that encapsulates a file being verified.
+      #        We'll have a "fake" file (named "-") if there's no actual file. (Null Object pattern).
+      def run(source_code, filename: nil)
         return if source_code.empty?
-        @results += process_ast(source_code, yield)
+        @results += process_ast(source_code, yield, filename: filename)
       end
 
       def complete
@@ -63,12 +65,12 @@ module Stone
         @successes ||= results.compact.select(&:success?)
       end
 
-      private def process_ast(source_code, ast) # rubocop:disable Metrics/AbcSize,Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
+      private def process_ast(source_code, ast, filename: nil) # rubocop:disable Metrics/AbcSize,Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
         r = ast.chunk_while{ |node| !special_comment?(node) }.reduce([]){ |results, (*code, special_comment)|
           # Evaluate all the code (except comments), but keep only the last result.
           actual_result = code.reject{ |node| node.is_a?(AST::Comment) }.map{ |node| node.evaluate(Top::CONTEXT) }.last
           source_code_chunk = code_between(source_code, special_comment, code&.first)
-          spec = Verification::Spec.new(source_code_chunk, special_comment, actual_result)
+          spec = Verification::Spec.new(source_code_chunk, special_comment, actual_result, filename: filename)
           results << spec.run.tap { |result| print result unless result.nil? }
         }.compact
       rescue NoMethodError => e

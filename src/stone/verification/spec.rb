@@ -15,16 +15,18 @@ module Stone
       attr_reader :code
       attr_reader :comment
       attr_reader :actual_result
+      attr_reader :filename
 
-      def initialize(code, comment, actual_result)
+      def initialize(code, comment, actual_result, filename: nil)
         @code = code
         @comment = comment.to_s
         @actual_result = actual_result.to_s
+        @filename = filename
       end
 
       def run
         return nil unless expected_result || expected_error
-        Result.new(code, expected_result || expected_error, actual_result, actual_error, expecting_error: expected_error)
+        Result.new(code, expected_result || expected_error, actual_result, actual_error, expecting_error: expected_error, filename: filename)
       end
 
       private def actual_error

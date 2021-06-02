@@ -14,11 +14,11 @@ module Stone
           file = File.open(filename) # TODO: Handle `-` and handle missing files.
           if filename.end_with?(".md") || (filename == "-" && markdown)
             markdown_code_blocks(file).each do |code_block|
-              block.call(code_block)
+              block.call(filename, code_block)
             end
           else
             input = file.read
-            block.call(input.end_with?("\n") ? input : input << "\n")
+            block.call(filename, input.end_with?("\n") ? input : input << "\n")
           end
         end
       end

@@ -13,7 +13,7 @@ module Stone
       option :markdown, type: :boolean, default: false
 
       def call(source_files:, markdown:, **_args)
-        each_input_file(source_files, markdown: markdown) do |input|
+        each_input_file(source_files, markdown: markdown) do |_filename, input|
           puts language.parse(input)
         rescue Parslet::ParseFailed => e
           puts e.parse_failure_cause.ascii_tree

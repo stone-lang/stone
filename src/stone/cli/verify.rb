@@ -17,8 +17,8 @@ module Stone
       def call(source_files:, debug:, markdown:, **_args) # rubocop:disable Metrics/MethodLength
         suite = Verification::Suite.new(debug: debug)
         load_prelude
-        each_input_file(source_files, markdown: markdown) do |input|
-          suite.run(input) do
+        each_input_file(source_files, markdown: markdown) do |filename, input|
+          suite.run(input, filename: filename) do
             language.ast(input)
           rescue Parslet::ParseFailed => e
             suite.add_failure(input, Builtin::Error.new("ParseError", e.parse_failure_cause))

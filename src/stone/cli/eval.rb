@@ -15,7 +15,7 @@ module Stone
 
       def call(source_files:, markdown:, **_args)
         load_prelude
-        each_input_file(source_files, markdown: markdown) do |input|
+        each_input_file(source_files, markdown: markdown) do |_filename, input|
           puts(language.ast(input).filter_map{ |node|
             node.evaluate(Top::CONTEXT)
           })

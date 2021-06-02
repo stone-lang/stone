@@ -26,11 +26,7 @@ module Stone
 
       def run
         return nil unless expected_result || expected_error
-        Result.new(code, expected_result || expected_error, actual_result, actual_error, expecting_error: expected_error, filename: filename)
-      end
-
-      private def actual_error
-        actual_result if expected_error
+        Result.new(code, expected_result || expected_error, actual_result, expecting_error: expected_error, filename: filename)
       end
 
       private def expected_result

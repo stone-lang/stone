@@ -7,29 +7,22 @@ module Stone
 
     class Result
 
-      attr_reader :code, :expected, :actual, :error, :expecting_error, :success, :filename
+      attr_reader :code, :expected, :actual, :expecting_error, :success, :filename
 
-      # TODO: Combine `actual` and `error` - we can't get both
-      #       We can look to see if it's an Error or not
       # TODO: Make an abstraction for an Expectation.
       #       Should include whether an error or another value is expected.
       # TODO: Make an abstraction for Code.
       #       Should include filename and line number.
-      # rubocop:disable Metrics/ParameterLists
-      def initialize(code, expected, actual, error = nil, expecting_error: false, filename: nil)
+      def initialize(code, expected, actual, expecting_error: false, filename: nil)
         @code = code
         @expected = expected
         @actual = actual
-        @error = error
         @expecting_error = expecting_error
         @filename = filename
       end
-      # rubocop:enable Metrics/ParameterLists
 
       def success?
-        if expecting_error
-          @success = (expected == error)
-        elsif error
+        if !expecting_error && actual.is_a?(Builtin::Error)
           @success = false
         else
           @success = (expected == actual)

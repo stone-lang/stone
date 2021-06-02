@@ -33,7 +33,7 @@ module Stone
 
       # This will probably only be used to register parse errors.
       def add_failure(code, error_message)
-        @results << Result.new(code, nil, nil, error_message)
+        @results << Result.new(code, nil, error_message)
       end
 
       private def totals

@@ -24,6 +24,16 @@ module Enumerable
     first
   end
 
+  # Allow Rails-style `second`.
+  def second
+    self[1]
+  end
+
+  # Prefer 1-based indexing to get the `nth` element.
+  def nth(n) # rubocop:disable Naming/MethodParameterName
+    self[n - 1]
+  end
+
   def map_dig(*args)
     map{ |a| a.dig(*args) }
   end

@@ -29,3 +29,14 @@ l.first
 l.last
 #= Number.Integer(3)
 ~~~
+
+Methods
+-------
+
+A method is a property that can be called as a function.
+
+~~~ stone
+t := "hello"
+t.includes?("he")
+#= Boolean(Boolean.TRUE)
+~~~

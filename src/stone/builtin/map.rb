@@ -38,24 +38,21 @@ module Stone
         1..1 # If we treat a Map as a function, it'll take 1 argument (a key).
       end
 
+      # rubocop:disable Layout/LineLength, Style/Semicolon, Lint/RedundantCopDisableDirective
       PROPERTIES = {
         keys: ->(this){ List.new(this.value.keys) },
         values: ->(this){ List.new(this.value.values) },
         size: ->(this){ Integer.new(this.value.size) },
         length: ->(this){ Integer.new(this.value.size) },
         empty?: ->(this){ Boolean.new(this.value.size.zero?) },
+        includes?: ->(this) { Function.new("includes?", 1..1, ->(_ctxt, args){ Boolean.new(this.value.map{ |k, v| [k.value, v.value] }.to_h[args.first.first.value] == args.first.second.value) }) },
+        has_key?: ->(this) { Function.new("has_key?", 1..1, ->(_ctxt, args){ Boolean.new(this.value.keys.map(&:value).include?(args.only.value)) }) },
+        has_value?: ->(this) { Function.new("has_value?", 1..1, ->(_ctxt, args){ Boolean.new(this.value.values.map(&:value).include?(args.only.value)) }) },
+        get: ->(this){ Function.new("get", 1..1, ->(_ctxt, args){ this.value.select { |k, _v| k.value == args.first.value }.values.first }) },
+        # map: ->(this){ Function.new("map", 1..1, ->(ctxt, args){ this.map("map", ctxt, args.first) }) },
+        # each: ->(this){ Function.new("each", 1..1, ->(ctxt, args){ this.map("each", ctxt, args.first) }) },
       }
-
-      def methods # rubocop:disable Metrics/AbcSize
-        @methods ||= {
-          includes?: ->(_, element) { Boolean.new(@value.map{ |k, v| [k.value, v.value] }.to_h[element.first.value] == element.second.value) },
-          has_key?: ->(_, key) { Boolean.new(@value.keys.map(&:value).include?(key.value)) },
-          has_value?: ->(_, value) { Boolean.new(@value.values.map(&:value).include?(value.value)) },
-          get: ->(_context, key) { @value.select { |k, _v| k.value == key.value }.values.first },
-          map: ->(context, fn) { map("map", context, fn) },
-          each: ->(context, fn) { map("each", context, fn) },
-        }
-      end
+      # rubocop:enable Layout/LineLength, Style/Semicolon, Lint/RedundantCopDisableDirective
 
       def to_s
         "#{type}(#{@value.map{ |k, v| "Pair(#{k.to_s(untyped: true)}, #{v.to_s(untyped: true)})" }.join(', ')})"
@@ -69,13 +66,13 @@ module Stone
         children.map{ |k, v| [k.type, v.type] }.uniq
       end
 
-      private def map(name, context, function)
+      def map(name, context, function)
         return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(AST::Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 1 argument") unless function.arity.include?(1)
         List.new(@value.map{ |x| function.call(context, [x]) })
       end
 
-      private def reduce(name, context, function, initial_value: nil, reverse: false)
+      def reduce(name, context, function, initial_value: nil, reverse: false)
         return Error.new("TypeError", "'#{name}' argument 'function' must have type Function[Any](Any)") unless function.is_a?(AST::Function)
         return Error.new("ArityError", "'#{name}' argument 'function' must take 2 arguments") unless function.arity.include?(2)
         reverse_or_not = reverse ? :reverse : :itself

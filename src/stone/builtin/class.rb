@@ -30,6 +30,7 @@ module Stone
         proc.call(parent_context, arguments)
       end
 
+      # FIXME: Move all these into PROPERTIES.
       def properties
         @properties ||= {
           size: Integer.new(@value.size),
@@ -43,6 +44,7 @@ module Stone
         }
       end
 
+      # FIXME: Move all these into PROPERTIES.
       def methods # rubocop:disable Metrics/AbcSize
         @methods ||= {
           includes?: ->(_, element) { Boolean.new(@value.map(&:value).include?(element.value)) },

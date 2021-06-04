@@ -17,6 +17,7 @@ module Stone
         reversed: ->(this) { Text.new(this.value.reverse) },
         lower_cased: ->(this) { Text.new(this.value.downcase) },
         upper_cased: ->(this) { Text.new(this.value.upcase) },
+        includes?: ->(this) { Function.new("includes?", 1..1, ->(_ctxt, args){ Boolean.new(this.value.include?(args.only.value)) }) },
       }
 
       def to_s(untyped: false)

@@ -39,11 +39,6 @@ module Stone
         value: ->(this){ this.second },
       }
 
-      def methods
-        @methods ||= {
-        }
-      end
-
       def to_s(*)
         "#{type}(#{@first.to_s(untyped: true)}, #{@second.to_s(untyped: true)})"
       end

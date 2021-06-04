@@ -1,7 +1,7 @@
 SHELL := /bin/bash
 BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
 
-all: setup verify-specs rspec
+all: setup test
 
 setup: setup-overcommit
 

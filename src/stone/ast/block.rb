@@ -1,7 +1,7 @@
+require "stone/context"
+
 module Stone
-
   module AST
-
     class Block < Node
 
       attr_reader :body
@@ -16,7 +16,7 @@ module Stone
       end
 
       def call(parent_context)
-        context = Hash.new{ |_h, k| parent_context[k] }
+        context = Context.new(parent_context)
         body.filter_map{ |x| x.evaluate(context) }.last
       end
 
@@ -25,7 +25,5 @@ module Stone
       end
 
     end
-
   end
-
 end

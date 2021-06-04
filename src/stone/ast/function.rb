@@ -1,7 +1,7 @@
+require "stone/context"
+
 module Stone
-
   module AST
-
     class Function < Expression
 
       attr_reader :parameters
@@ -22,7 +22,7 @@ module Stone
       end
 
       def call(parent_context, arguments)
-        context = Hash.new{ |_h, k| parent_context[k] }
+        context = Context.new(parent_context)
         parameters.zip(arguments).each do |param, arg|
           context[param] = arg
         end
@@ -49,7 +49,5 @@ module Stone
       end
 
     end
-
   end
-
 end

@@ -1,1 +1,2 @@
+-I src
 --require spec_helper

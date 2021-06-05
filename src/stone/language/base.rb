@@ -33,7 +33,7 @@ module Stone
       end
 
       VALID_IDENTIFIER_CHARACTERS = /[\p{Letter}\p{Number}\p{Mark}\p{Symbol}\p{Punctuation}]/
-      INVALID_IDENTIFIER_CHARACTERS = %[",.;:^#@`(){}\\[\\]«»\\\\]  # NOTE: These are escaped to be used in a RegExp.
+      INVALID_IDENTIFIER_CHARACTERS = %[λ",.;:^#@`(){}\\[\\]«»\\\\]  # NOTE: These are escaped to be used in a RegExp.
 
       overridable def grammar
         Class.new(Parslet::Parser) do |_klass|

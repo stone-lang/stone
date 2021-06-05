@@ -32,7 +32,7 @@ RSpec.describe Stone::Language::Base do
     end
 
     it "must not contain any disallowed characters" do
-      %[()[]{}«»#,.:;@^`"\\].each_char do |character|
+      %[()[]{}«»#λ,.:;@^`"\\].each_char do |character|
         expect(parser.identifier).not_to parse("a#{character}")
       end
     end

@@ -1,4 +1,4 @@
-ruby "3.0.1"
+ruby file: ".tool-versions"
 
 source "https://rubygems.org"
 
@@ -10,6 +10,7 @@ gem "overcommit"
 gem "rubocop", require: false
 gem "rubocop-rspec", require: false
 gem "rubocop-performance", require: false
+gem "ruby-lsp", require: false
 
 # Specifications
 gem "rspec"
@@ -19,11 +20,11 @@ gem "kramdown"
 gem "parslet"
 
 # Debugging
-gem "pry"
+gem "debug", ">= 1.0.0"
 
 # Console
 gem "irb"
-gem "awesome_print"
+gem "amazing_print"
 
 # ANSI colors for the console
 gem "rainbow"

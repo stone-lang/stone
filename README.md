@@ -1,30 +1,29 @@
-The Stone Programming Language
-==============================
+# The Stone Programming Language
 
-Stone is a multi-paradigm programming language. It combines the ideas of object-oriented, functional,
-and actor-based languages. It is a typed language, with immutability and strictness by default.
+Stone is a multi-paradigm programming language.
+It combines the ideas of object-oriented, functional, and actor-based languages.
+It is a typed language, with immutability and strictness by default.
 
-This is a *very* new language, but I've been thinking about the design of the language for
-quite some time. The design documents can be found in [docs/design](docs/design).
+This is a *very* new language,
+but I've been thinking about the design of the language for quite some time.
+The design documents can be found in [docs/design](docs/design).
 
 
-Goals
------
+## Goals
 
 I have several goals that I keep in mind when designing and implementing Stone.
 My top-level goals are:
 
-* Have fun
-* See if I can make something useful
-* Make a general-purpose language
-* Keep the language high-level
-* Correctness is more important than speed
+- Have fun
+- See if I can make something useful
+- Make a general-purpose language
+- Keep the language high-level
+- Correctness is more important than speed
 
 For more details, see the [Goals](docs/design/Goals.md) in the design documents.
 
 
-Specifications
---------------
+## Specifications
 
 The language is described in Markdown, with code blocks showing example code.
 The code blocks also show the expected result of evaluating the code.
@@ -33,8 +32,7 @@ all the example code is checked to ensure that it evaluates to the expected resu
 These can be found in [docs/specs](docs/specs).
 
 
-Building
---------
+## Building
 
 We're using standard `make` to build the system.
 
@@ -48,8 +46,7 @@ make verify-specs
 ~~~
 
 
-Running
--------
+## Running
 
 Binaries are located in the `bin` directory:
 
@@ -60,14 +57,19 @@ Binaries are located in the `bin` directory:
     * `stone parse` - Output the parse tree
 
 
-License
--------
+## License
 
-Stone is released under the MIT license. See the [license](/LICENSE) file for details.
+Stone is released under the MIT license. See the [license](/LICENSE.txt) file for details.
 
 
-Thanks
-------
+## Changelog
+
+See the [changelog](CHANGELOG.md) file for information about what changes have been made in each release.
+
+
+## Thanks
 
 Thanks to some advice from my friends in the STL Polyglots group in selecting the name.
 Especially Deech.
+
+Thanks to ChatGPT and GitHub Copilot for lots of good advice.

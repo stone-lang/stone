@@ -1,6 +1,6 @@
 ---
 
-require:
+plugins:
   - rubocop-rspec
   - rubocop-performance
 
@@ -12,6 +12,7 @@ AllCops:
   Exclude:
     - 'church*.rb'
     - 'vendor/**/*'
+  NewCops: disable
 
 # Allow longer lines.
 Layout/LineLength:
@@ -23,7 +24,7 @@ Style/BlockDelimiters:
   EnforcedStyle: semantic
   FunctionalMethods:
     - expect
-  IgnoredMethods:
+  AllowedMethods:
     - rule
     - rule!
     - let
@@ -65,19 +66,19 @@ Style/SelfAssignment:
 
 # The `grammar` and `transforms` methods are DSLs; don't worry about their size/complexity.
 Metrics/AbcSize:
-  IgnoredMethods:
+  AllowedMethods:
     - grammar
     - transforms
 Metrics/MethodLength:
-  IgnoredMethods:
+  AllowedMethods:
     - grammar
     - transforms
 Metrics/PerceivedComplexity:
-  IgnoredMethods:
+  AllowedMethods:
     - grammar
     - transforms
 Metrics/CyclomaticComplexity:
-  IgnoredMethods:
+  AllowedMethods:
     - grammar
     - transforms
 
@@ -95,8 +96,8 @@ Style/PercentLiteralDelimiters:
     - 'src/stone/ast/binary_operation.rb'
 
 # Be a bit more lenient with RSpec: don't require filename to match class; allow more than 1 expectation per example.
-RSpec/FilePath:
-  Enabled: False
+RSpec/SpecFilePathFormat:
+  Enabled: false
 RSpec/MultipleExpectations:
   Max: 10
 RSpec/ExampleLength:

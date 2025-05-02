@@ -1,4 +1,4 @@
-# TODO: Use 
+# TODO: Use Text in most places, if the string is expected to represent human language.
 
 
 # Contains only a single Unicode character, including composite characters.
@@ -24,10 +24,14 @@ Text.Glyph := ...
 # Lower level, for manipulating sequences of characters.
 Text.String := Class(implements: Collection.Ordered, implements: Sequence.Finite, {
 
-    slice(start_index, end_index) := { ... }
-    substring(start_index, length) := { ... }
-    begins_with?(str) := { ... }
-    ends_with?(str) := { ... }
+    bytes :: System.ByteVector
+    byte-count :: Integer
+    size :: 
+
+    slice(start-index, end-index) := { ... }
+    substring(start-index, length) := { ... }
+    begins-with?(str) := { ... }
+    ends-with?(str) := { ... }
     contains?(str) := { ... }
     reversed := { ... }
     interpolated(mappings :: Pair...) := { ... }
@@ -37,12 +41,19 @@ Text.String := Class(implements: Collection.Ordered, implements: Sequence.Finite
 
 
 # Contains written language text.
-Text := Class.Definition({
+Text := Class.define({
 
+    # This should probably be a has-a, not an is-a relationship.
     @superclass := Text.String
 
+    interpolated :: (Pair...)
+    interpolated := @superclass.interpolated
+
     capitalized := { ... }
-    uppercased := { ... }
-    lowercased := { ... }
+    upper-cased := { ... }
+    lower-cased := { ... }
+    title-cased := { ... }
+    kabob-cased := { ... }
+    camel-cased := { ... }
 
 })

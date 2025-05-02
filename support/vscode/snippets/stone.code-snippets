@@ -1,0 +1,9 @@
+{
+    "lambda": {
+        "prefix": "lambda",
+        "description": "lambda expression",
+        "body": [
+            "λ(${1:parameters}) { ${2:body} }"
+        ]
+    }
+}

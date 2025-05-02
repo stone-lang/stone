@@ -31,7 +31,7 @@ module Stone
       PROPERTIES = {
         size: ->(this) { Integer.new(this.value.size) },
         length: ->(this) { Integer.new(this.value.size) },
-        empty?: ->(this) { Boolean.new(this.value.size.zero?) },
+        empty?: ->(this) { Boolean.new(this.value.empty?) },
         first: ->(this) { this.value.first },
         # second: ->(this) { this.value.second },
         head: ->(this) { this.value.first },

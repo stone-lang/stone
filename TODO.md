@@ -24,7 +24,7 @@ TODO
 - [ ] Other testing
     - [ ] Unit tests
     - [ ] Property-based tests
-    - [ ] Testing optimizations (compare with unoptimized version)
+    - [ ] Optimization testing (compare with unoptimized version)
     - [ ] Code coverage
     - [ ] Benchmarking (for hotspot location)
 - [ ] Add design docs
@@ -61,7 +61,7 @@ Specifications
     - [x] Null
     - [x] Booleans
 - [ ] Functions
-    - [ ] Anonymous functions (lambda)
+    - [x] Anonymous functions (lambda)
         - [ ] Applying an anonymous function
     - [x] Function definition
         - [ ] with formal parameters on left-hand side of `:=`
@@ -76,9 +76,12 @@ Specifications
     - [ ] Varargs
     - [ ] Default arguments
     - [ ] Named arguments
-    - [ ] Properties
+    - [ ] Properties of functions
         - [ ] arity
         - [ ] signature
+        - [ ] AST
+        - [ ] body text
+        - [ ] source_location
 - [ ] Expressions
     - [x] Parenthetical expressions
     - [ ] Arithmetic operators
@@ -109,6 +112,8 @@ Specifications
     - [x] Function application operators
     - [ ] Function composition operators
 - [x] Exceptions
+    - [ ] Catching
+    - [ ] Propagation
 - [x] Comments
     - [x] Per-line
     - [x] Bracketed
@@ -172,7 +177,7 @@ Specifications
     - [ ] Files
     - [ ] Get random number
     - [ ] Get date/time
-
+    - [ ] Sockets
 
 Design Docs
 -----------

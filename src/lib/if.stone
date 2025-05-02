@@ -1,0 +1,127 @@
+# Various ideas of how we should implement `if`, `then`, `else`, etc.
+# That probably includes `case` or `cond` as well.
+
+# Let's solve the [dangling else] problem, and just use functions instead of special forms.
+if(c, t, e) := { c.then(t).else(e) }
+
+
+Boolean.to_Text(@) := { @.then({ "TRUE" }).else({ "FALSE" }) }
+
+Boolean.then(then_block) := { Boolean.TrueThen(then_block) }
+Boolean.then(then_block) := { Boolean.FalseThen(then_block) }
+Boolean.TrueThen := {
+    @then_block := Property(Block)
+    .create := Constructor(@then_block)
+    @else(else_block) := { @then_block.run() }
+}
+Boolean.FalseThen := {
+    @then_block := Property(Block)
+    .create := Constructor(@then_block)
+    @else(else_block) := { else_block.run() }
+}
+
+# I like these a lot.
+(x == 1).then({ "TRUE" }).else({ "FALSE" })
+{ x == 1 }.then({ "TRUE" }).else({ "FALSE" })
+
+# I like these, but I think `and` and `or` imply that the result should be a Boolean.
+# We could do these in either order (using builder pattern), but require both.
+(x == 1).and({ "TRUE" }).or({ "FALSE" })
+(x == 1).or({ "FALSE" }).and({ "TRUE" })
+
+
+
+x = if(c, { "true" },e)
+
+x = case(
+    (a == b) : ,
+)
+
+# NOTE: All `if().then()` must also have a `.else()`, or you'll have a `Boolean.Case` object.
+# NOTICE THAT this solves the dangling else problem, and uses only methods and blocks.
+if(1 + 1 == 2).then({ "equal" }).else({ "not equal })
+if(1 + 1 == 2).then({
+    "equal"
+}).else({
+    "not equal
+})
+if(1 + 1 == 2).then({
+    "equal"
+}).elseif(1 + 1 == 3).then({
+    "weird"
+}).else({
+    "not equal
+})
+
+
+
+else_if := add another case existing cases
+
+if := Boolean.If
+
+Boolean.If := Class(Record) {
+    @condition := Property(Boolean)
+    .create := Constructor(@, @then_block)
+    @then(then_block) := Boolean.Case(@condition, @then_block)
+    @else_if(condition) := Boolean.Case()
+}
+
+Boolean.If.Case := Class(Record) {
+    @condition := Property(Boolean)
+    @
+}
+
+# TODO: Implement elseif; that will likely require keeping a map of `conditions` to `then`s.
+Boolean.Then := Class(Record) {
+    # keys = conditions, values = block to run if that condition is true
+    @cases := Property(Map[Boolean : Block])
+    .create := Constructor(condition, then_block) {
+        @cases = Map(condition : then_block)
+    }
+    @else(else_block) := { @condition.if(@then_block, else_block) }
+}
+
+Boolean := Class {
+    @then(t) := { Boolean.Then(@, t) }
+}
+
+
+$STDIO.OUT << "x:"
+x << $STDIO.IN.get_line.to_Integer
+$STDIO.OUT << (x.positive?).then {
+    "x is positive"
+}.else_if(x.negative?).then {
+    "x is negative"
+}.else {
+    "x is zero"
+}
+
+
+sign_as_string(x) := {
+    # NOTE: Believe it or not, the `if` is OPTIONAL! We can make it work with or without the `if`.
+    # I prefer NOT using the `if`; it feels more symmetric to using `x.map` instead of `foreach(x)`.
+    # We could have if(c,t,e) be the primitive, and build Boolean@then off of that.
+    # FIXME: This won't work, because the `then` will return a Text.
+    if(x.positive?).then {
+        "positive"
+    }.else_if(x.negative?).then {
+        "negative"
+    }.else {
+        "zero"
+    }
+}
+sign_as_string(x) := {
+    if(x.positive?, then: {
+        "positive"
+    }, else_if: {x.negative?}, then: {
+        "negative"
+    }, else: {
+        "zero"
+    })
+}
+sign_as_string(1)
+#= Text("positive")
+sign_as_string(-1)
+#= Text("negative")
+sign_as_string(0)
+#= Text("zero")

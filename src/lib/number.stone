@@ -71,8 +71,12 @@ Number.Cardinal := Number.Integer.Cardinal
 # Note that this is 1-based, because there's never a "zeroth" thing in the real world.
 # Also note that we don’t allow negative numbers for referencing the
 # position relative to the end of something; we’ll have separate methods.
-Number.Integer.Ordinal := Integer.Positive  # FIXME: This should not just be an alias.
+Number.Integer.Ordinal := Number.Integer.Positive  # FIXME: This should not just be an alias.
 Number.Ordinal := Number.Integer.Ordinal
+
+# For 0-based indexing.
+Number.Integer.Index := Number.Integer.NonNegative  # FIXME: This should not just be an alias.
+Number.Index := Number.Integer.Index
 
 Number.Natural := Number.Integer.Positive
 Number.Whole := Number.Integer.NonNegative

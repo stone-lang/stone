@@ -40,6 +40,6 @@ rubocop:
 	bundle exec rubocop .
 
 markdownlint:
-	markdownlint *.md docs
+	markdownlint-cli2 *.md **/*.md !Homebrew.md
 
 .PHONY: all setup test specs console lint verify-specs rspec setup-overcommit bundle rubocop markdownlint

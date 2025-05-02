@@ -35,7 +35,7 @@ module Stone
         @properties ||= {
           size: Integer.new(@value.size),
           length: Integer.new(@value.size),
-          empty?: Boolean.new(@value.size.zero?),
+          empty?: Boolean.new(@value.empty?),
           first: @value.first,
           head: @value.first,
           last: @value.last,

@@ -1,25 +1,52 @@
-Boolean := Class({
-    @name := "Boolean"
+# Temporary implementation, until we implement Enum.
+# Note that we didn't use anything requiring a Boolean to implement this.
+# However, we do have a circular dependency, because Integer has methods that return Booleans.
+# The solution to the circular dependency is probably to have most Boolean methods defined with _BUILTINs.
+# IIRC, we can implement all operations in terms of 1 or 2 primitive operations.
 
-    #.Values := Enum(TRUE, FALSE)
+Boolean.FALSE := 0
+Boolean.TRUE := 1
 
-    # Return the "opposite", or "inverse"; AKA "not".
-    # TODO: Find the proper correct name and synonyms to use.
-    #@complement := __BUILTIN__.Boolean.complement
+Boolean := Class(
+    # This automagically gives us:
+    #   `Boolean(value = 1)` # named argument; value is 0 or 1
+    #   `Boolean(0)` # anonymous argument
+    #   `Boolean.value` # getter
+    # NOTE: You can override the default `create`.
+    # NOTE: You can elide the getter by prefixing the instance variable with an underscore (_).
+    value :: Integer
 
-
-    # Temporary implementation, until we implement Enum.
-
-    TRUE := 1
     FALSE := 0
+    TRUE := 1
 
-    @value :: Integer
+    ## Properties
 
-    .create(value) := { @value = value }
+    # NOTE: `this` is always of the type of the enclosing class, so does not need to be specified.
+    # The use of `this` indicates that it's a computed property or a method, not a function.
+    # If it takes no other arguments, it's a computed property.
+    not :: (this) => Boolean
+    not := { this.xor(TRUE) }
+    ¬ :: (this) => Boolean
+    ¬ := not
+    complement :: (this) => Boolean
+    complement := not
+    as_text :: (this) => Text
+    as_text := { List("FALSE", "TRUE").at-index(this.value) }
 
-    @complement := { @value.even? }
+    ## Methods
 
-    @as_text := { List("FALSE", "TRUE").at(@value + 1) }
-})
-
-
+    # NOTE: We could/should let these take an arbitrary number of arguments.
+    and :: (this, other :: Boolean) => Boolean
+    and := λ(other) { Boolean(this.value * other.value) }
+    or :: (this, other :: Boolean) => Boolean
+    or := λ(other) { Boolean((this.value + other.value) <! 1) }
+    # NOTE: I'm not sure if it makes sense for `xor` to take an arbitrary number of arguments.
+    xor :: (this, other :: Boolean) => Boolean
+    xor := λ(other) { Boolean((this.value - other.value).abs) }
+    ∧ :: (this, other :: Boolean) => Boolean
+    ∧ := and
+    ∨ :: (this, other :: Boolean) => Boolean
+    ∨ := or
+    ⊻ :: (this, other :: Boolean) => Boolean
+    ⊻ := xor
+)

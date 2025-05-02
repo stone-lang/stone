@@ -1,26 +1,63 @@
-List := Class({
-    .name = "List",
-    .interfaces := List(Sequence.Finite, Collection.Ordered),
+List := Class(
+    parameters = [ElementType :: Type]
 
-    # Temporary implementation using a linked list.
-    @first :: Anything | Null
-    @rest :: List | Null
-    @length :: Ordinal
-    @last :: Anything | Null  # Performance optimization.
+    interfaces = [
+        Sequence.Finite
+        Collection.Ordered
+    ]
 
-    # TODO: Implement a doubly-linked list, so "foldr" has decent performance.
+    types = [
+        MapFunction :: (element :: ElementType) => MapResultType
+        MapResultType :: Type
+        FoldFunction :: (accumulator :: FoldResultType, element :: ElementType) => FoldResultType
+        FoldResultType :: Type
+    ]
 
-    # TODO: This is really going to need to be a built-in.
-    .create(values_...) := {  # Trailing underscore means "don't pass by name".
-        @first = values.first
-        @rest = values.rest
-        @length = values.length
-        @last = values.last
-    }
+    initializers = [
+        # NOTE: This custom creator will set `first`, `rest`, `last`, and `length` for us.
+        # Trailing underscore means "don't allow passing by name".
+        create :: (elements_ :: ElementType...) => List[ElementType]
+        create := __BUILTIN__.List.create
+    ]
 
-    @foldl := { ... }
-    @foldr := { ... }
-    @fold := @foldl  # NOTE: Some other languages treat `fold` as `foldr` (for reasons I can't fathom).
+    instance-variables = [
+        # Temporary implementation using a linked list.
+        first :: ElementType | Null
+        rest :: List[ElementType] | Null
+        length :: Ordinal
+        last :: ElementType | Null  # Performance optimization.
+    ]
 
-    @as_text := { ... }
-})
+    methods = [
+        # Why yes, we *do* support *both* 1-based and 0-based indexing!
+        # At the cost of only a few extra keystrokes.
+        # But also providing the benefit of clarity:
+        #   * `first` is equivalent to `nth(1)`
+        nth :: (n_ :: Number.Ordinal) => ElementType | Sequence.OutOfBounds
+        nth-last :: (n_ :: Number.Ordinal) => ElementType | Sequence.OutOfBounds
+        # Perhaps we should allow negative indexes here, because `reverse-at` isn't a great name, and I can't think of anything better. Plus, most languages allow it.
+        at :: (index :: Number.Index) => ElementType | Sequence.OutOfBounds
+        reverse-at :: (index :: Number.Index) => ElementType | Sequence.OutOfBounds
+
+        foldl :: (initial :: FoldResultType, fn :: FoldFunction) => FoldResultType
+        foldr :: (initial :: FoldResultType, fn :: FoldFunction) => FoldResultType
+
+        # NOTE: Some other languages treat `fold` as `foldr` (for reasons I can't fathom).
+        fold := foldl
+        reduce := fold
+
+        map :: (MapFunction) => List[MapResultType]
+
+        as_text :: Text
+
+        at := λ(index) { nth(index + 1) }
+        reverse-at := λ(index) { nth-last(index + 1) }
+    ]
+)
+
+# TODO: Implement a doubly-linked list, so "foldr" has decent performance.
+
+#### IDEA: Rope-based list implementation
+## Basically, this gives us a combo of a linked list and a vector (C array).
+## This would be preferable for medium-sized lists.
+## For larger lists, using HAMT would be preferable.

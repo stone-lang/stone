@@ -1,0 +1,6 @@
+
+
+# Turn(1) is 360 degrees, which is 2 pi radians.
+Turn := Class(
+
+)

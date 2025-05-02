@@ -4,31 +4,34 @@ module Stone
 
     class FunctionCall < Expression
 
-      attr_reader :name
+      attr_accessor :function
       attr_reader :arguments
 
-      def initialize(name, arguments)
-        @source_location = name.line_and_column
+      def initialize(function, arguments)
+        debug?
+        @source_location = function.line_and_column rescue nil # rubocop:disable Style/RescueModifier
         @name = name.to_s.to_sym
+        @function = function
         @arguments = arguments
       end
 
       def to_s
-        "#{name}(#{arguments.join(', ')})"
+        "#{function}(#{arguments.join(', ')})"
       end
 
       def value
         self
       end
 
-      def evaluate(context) # rubocop:disable Metrics/AbcSize
+      def evaluate(context)
+        evaluated_function = function.evaluate(context)
         evaluated_arguments = arguments.map{ |a| a.evaluate(context) }
         return error?(evaluated_arguments) if error?(evaluated_arguments)
-        function = context[name]
-        return Builtin::Error.new("UnknownFunction", name) unless callable?(function)
+        # TODO: It'd be nice if we could display the name of the uncallable.
+        return Builtin::Error.new("UnknownFunction") unless callable?(evaluated_function)
         # TODO: Check argument types.
-        return arity_error(function, arguments.count) unless correct_arity?(function, arguments.count)
-        function.call(context, evaluated_arguments)
+        return arity_error(evaluated_function, arguments.count) unless correct_arity?(evaluated_function, arguments.count)
+        evaluated_function.call(context, evaluated_arguments)
       end
 
       # NOTE: A (default) Class constructor can be called with 0 arguments; a function/method cannot.
@@ -42,7 +45,8 @@ module Stone
       end
 
       private def arity_error(function, actual_argument_count)
-        Builtin::Error.new("ArityError", "'#{name}' expects #{arity_error_expected_text(function.arity)}, got #{actual_argument_count}")
+        # TODO: It'd be nice if we could display the name of the uncallable.
+        Builtin::Error.new("ArityError", "expected #{arity_error_expected_text(function.arity)}, got #{actual_argument_count}")
       end
 
       private def arity_error_expected_text(expected_arity)

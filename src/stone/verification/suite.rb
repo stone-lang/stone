@@ -1,4 +1,3 @@
-require "pry"
 require "kramdown"
 require "rainbow"
 
@@ -65,16 +64,20 @@ module Stone
         @successes ||= results.compact.select(&:success?)
       end
 
-      private def process_ast(source_code, ast, filename: nil) # rubocop:disable Metrics/AbcSize,Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
-        r = ast.chunk_while{ |node| !special_comment?(node) }.reduce([]){ |results, (*code, special_comment)|
+      private def process_ast(source_code, ast, filename: nil) # rubocop:disable Metrics/MethodLength,Metrics/AbcSize,Metrics/CyclomaticComplexity
+        _r = ast.chunk_while{ |node| !special_comment?(node) }.reduce([]){ |results, (*code, special_comment)|
           # Evaluate all the code (except comments), but keep only the last result.
-          actual_result = code.reject{ |node| node.is_a?(AST::Comment) }.map{ |node| node.evaluate(Top::CONTEXT) }.last
+          actual_result = code.reject{ |node|
+            debug?
+            node.is_a?(AST::Comment)
+          }.map{ |node| node.evaluate(Top::CONTEXT) }.last # rubocop:disable Style/MultilineBlockChain
           source_code_chunk = code_between(source_code, special_comment, code&.first)
           spec = Verification::Spec.new(source_code_chunk, special_comment, actual_result, filename: filename)
           results << spec.run.tap { |result| print result unless result.nil? }
         }.compact
-      rescue NoMethodError => e
-        binding.pry if debug # rubocop:disable Lint/Debugger
+      rescue NoMethodError
+        debug?
+        []
       end
 
       private def spec_result(source_code, node, last_special_comment, last_result)

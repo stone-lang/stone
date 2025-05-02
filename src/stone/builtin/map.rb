@@ -44,7 +44,7 @@ module Stone
         values: ->(this){ List.new(this.value.values) },
         size: ->(this){ Integer.new(this.value.size) },
         length: ->(this){ Integer.new(this.value.size) },
-        empty?: ->(this){ Boolean.new(this.value.size.zero?) },
+        empty?: ->(this){ Boolean.new(this.value.empty?) },
         includes?: ->(this) { Function.new("includes?", 1..1, ->(_ctxt, args){ Boolean.new(this.value.map{ |k, v| [k.value, v.value] }.to_h[args.first.first.value] == args.first.second.value) }) },
         has_key?: ->(this) { Function.new("has_key?", 1..1, ->(_ctxt, args){ Boolean.new(this.value.keys.map(&:value).include?(args.only.value)) }) },
         has_value?: ->(this) { Function.new("has_value?", 1..1, ->(_ctxt, args){ Boolean.new(this.value.values.map(&:value).include?(args.only.value)) }) },

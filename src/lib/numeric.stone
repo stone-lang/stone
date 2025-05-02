@@ -1,7 +1,7 @@
 # Numeric represents Numbers and other things like Date, Time, and Measurement.
 # They allow some subset of the Arithmetic operators.
 
-Numeric.Sign := Enum(Negative: -1, Zero: 0, Positive: +1)
+Numeric.Sign := Enum(`Negative`: -1, `Zero`: 0, `Positive`: +1)
 Numeric.Signed := Interface {
     @sign := Abstract[Numeric.Sign]
     @negative? := { @sign == Numeric.Sign.Negative }
@@ -43,6 +43,7 @@ Numeric.Multiplication := Interface {
 Numeric.Division := Interface {
     @÷ := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite | Numeric.NaN]
     @/ := @÷
+    @divisible_by?(n) := Abstract[Boolean]
 }
 
 
@@ -59,7 +60,7 @@ Numeric.Arithmetic := Interface(
 # Number.Integer and machine integers like C.Int64 support the Numeric.Integer interface.
 Numeric.Integer := Interface(
     implements = List(
-        Numeric.Sign
+        Numeric.Signed
         Numeric.Arithmetic
     )
 ) {
@@ -70,6 +71,4 @@ Numeric.Integer := Interface(
     # NOTE: Might add `+1`/`-1` and/or `++`/`--` as aliases for these. (NOTE: Not like C's `++` and `--`.)
     @succ := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite]
     @pred := Abstract[type(.) | Numeric.Overflow | Numeric.Infinite]
-
-    @divisible_by?(n) := Abstract[Boolean]
 }

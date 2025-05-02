@@ -45,7 +45,7 @@ module Stone
           rule(:line) { statement_line | blank_line }
           rule(:statement_line) { whitespace? >> statement >> whitespace? >> (eol | line_comment.present?) }
           overridable rule(:statement) { expression }
-          overridable rule(:expression) { parenthetical_expression }
+          overridable rule!(:expression) { parenthetical_expression }
           rule(:parenthetical_expression) { parens(whitespace? >> expression >> whitespace?) }
           rule(:blank_line) { whitespace? >> line_comment.as(:comment).maybe >> eol }
           rule(:identifier) { invalid_identifier_prefix.absent? >> identifier_character.repeat(1) }

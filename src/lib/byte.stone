@@ -1,0 +1,48 @@
+System.CPU.Bits[bit_count] = Class {
+    as_text := { ... } # Prints `bit_count` binary digits (`0`s and `1`s).
+    bytes := { ... } # List of System.CPU.Byte that would represent this set of bits.
+    ints := { ... } # List of System.CPU.Integer that would represent this set of bits.
+    ones := { ... } # How many bits are `1`?
+    zeros := { ... } # How many bits are `0`?
+    zeroes := zeros
+    ones_complement := { ... } # Flips all the bits.
+    twos_complement := { ... } # Flip sign of a signed binary.
+    not := ones_complement
+    hamming_weight := ones
+    popcount := ones
+    hamming_distance(from) := { ... }
+    and(that) := { ... }
+    or(that) := { ... }
+    xor(that) := { ... }
+    mask(that) := { this.and(that.ones_complement) }
+    set(bits...) := { ... } # Set (to `1`) bits by position (0-based).
+    clear(bits...) := { ... } # Clear (to `0`) bits by position (0-based).
+    shift_left(by) := { ... }
+    shift_right(by) := { ... }
+    rotate_left(by) := { ... }
+    rotl := rotate_left
+    rotate_right(by) := { ... }
+    rotr := rotate_right
+}
+
+System.CPU.Byte := Class {
+    # TODO: Need to know whether to treat the value as signed or not. (Possibly only for `as_text`.)
+    .BITS := 8
+    # Could remove `{}` and `(this)`, except `this` wouldn't exist in that context, AFAICT.
+    as_text := { C.Function("byte_to_text", String, [Machine.Byte], this.__value__)(this) }
+    bits := { System.CPU.Bits[BITS](this.__value__) }
+    # TODO: Math
+}
+
+System.CPU.Integer := Class {
+    .BITS := 64 # NOTE: This MIGHT be 32. Need to figure out how to determine this.
+    as_text := { C.Function("int_to_text", String, [System.CPU.Integer], this.__value__)(this) }
+    bits := { System.CPU.Bits[BITS](this.__value__) }
+    # TODO: Math
+}
+
+C.String := Class {
+    .create(s) := constructor { C.Function("cstring_to_string", C.String, [Text.String])(s) }
+    as_text := { C.string_to_text(this.__value__) }
+    length := { C.Function("strlen", System.CPU.Int, [C.String], this.__value__)(this) }
+}

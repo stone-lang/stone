@@ -28,7 +28,7 @@ module Stone
       end
 
       PROPERTIES = {
-        type: ->(this){ this.type },
+        type: lambda(&:type),
       }
 
       # WARNING: Be sure to call `super` if you override this!

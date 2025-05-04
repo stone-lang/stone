@@ -1,0 +1,61 @@
+{
+    "name": "stone",
+    "displayName": "Stone Language",
+    "description": "Provides snippets, syntax highlighting, bracket matching, and folding in Stone files.",
+    "version": "0.1.0",
+    "publisher": "stone-lang",
+    "license": "MIT",
+    "engines": {
+        "vscode": "^1.55.0"
+    },
+    "contributes": {
+        "languages": [
+            {
+                "id": "stone",
+                "aliases": [
+                    "Stone",
+                    "stone-lang"
+                ],
+                "extensions": [
+                    ".stone"
+                ]
+            }
+        ],
+        "grammars": [
+            {
+                "language": "stone",
+                "scopeName": "source.stone",
+                "path": "./syntaxes/stone.tmLanguage.json"
+            }
+        ],
+        "semanticTokenScopes": [
+            {
+                "language": "stone",
+                "scopes": {
+                    "property": [
+                        "variable.other.property.stone"
+                    ],
+                    "variable": [
+                        "variable.other.stone"
+                    ],
+                    "function": [
+                        "entity.name.function.stone"
+                    ],
+                    "namespace": [
+                        "entity.name.type.namespace.stone"
+                    ]
+                }
+            }
+        ],
+        "snippets": [
+            {
+                "language": "stone",
+                "path": "./snippets/stone.code-snippets"
+            }
+        ]
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/stone-lang/stone.git"
+    }
+}

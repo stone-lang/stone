@@ -50,11 +50,11 @@ make verify-specs
 
 Binaries are located in the `bin` directory:
 
-* `stone`
-    * `stone eval` - Output the result of each top-level expression (non-interactive REPL)
-    * `stone repl` - Accept interactive manual input, and show the result of each top-level expression
-    * `stone verify` - Verify that results of top-level expressions match expectations in comments
-    * `stone parse` - Output the parse tree
+- `stone`
+    - `stone eval` - Output the result of each top-level expression (non-interactive REPL)
+    - `stone repl` - Accept interactive manual input, and show the result of each top-level expression
+    - `stone verify` - Verify that results of top-level expressions match expectations in comments
+    - `stone parse` - Output the parse tree
 
 
 ## License

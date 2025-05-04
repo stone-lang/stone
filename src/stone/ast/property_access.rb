@@ -4,23 +4,23 @@ module Stone
 
     class PropertyAccess < Expression
 
-      attr_reader :value
+      attr_accessor :subject
       attr_reader :property_name
 
-      def initialize(value, property_name)
-        @value = value
+      def initialize(subject, property_name)
+        @subject = subject
         @property_name = property_name.to_sym
-        @source_location = get_source_location(value)
+        @source_location = get_source_location(subject)
       end
 
       def evaluate(context)
-        evaluated_value = value.evaluate(context)
-        return evaluated_value if error?(evaluated_value)
-        evaluated_value.property(property_name)
+        evaluated_subject = subject.evaluate(context)
+        return evaluated_subject if error?(evaluated_subject)
+        evaluated_subject.property(property_name)
       end
 
       def to_s
-        "#{value}.#{property_name}"
+        "#{subject}.#{property_name}"
       end
 
     end

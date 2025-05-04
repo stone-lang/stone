@@ -1,5 +1,15 @@
 #! /usr/bin/env bundle exec ruby
 
+require "debug"
+if ENV.fetch("DEBUG", "0") == "0"
+  def debug?
+    false
+  end
+else
+  def debug?
+    binding.break # rubocop:disable Lint/Debugger
+  end
+end
 
 $LOAD_PATH << "src"
 require "stone/cli"

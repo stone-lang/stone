@@ -1,13 +1,13 @@
-require "stone/language/literals"
+require "stone/language/properties"
 
 
 module Stone
   module Language
-    class Operators < Literals
+    class Operators < Properties
 
       def grammar
         Class.new(super) do |_klass|
-          override rule(:expression) { literal | operation | parenthetical_expression }
+          override rule(:expression) { (subject >> (property_access | function_call).repeat) | operation }
           rule!(:operation) { operand >> (whitespace >> operator >> whitespace >> operand).repeat(1) >> whitespace? }
           # TODO: This should really be an expression (other than an operation).
           rule!(:operand) { function_call | literal | variable_reference | parenthetical_expression }

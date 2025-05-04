@@ -9,7 +9,7 @@ module Stone
 
       def grammar
         Class.new(super) do |_klass|
-          override rule(:expression) { literal | parenthetical_expression }
+          override rule!(:expression) { literal | parenthetical_expression }
           rule(:literal) { decimal | rational | integer | text }
           rule!(:integer) { binary_integer | octal_integer | hexadecimal_integer | decimal_integer }
           rule!(:decimal) { decimal_integer >> str(".") >> unsigned_decimal_integer >> (match["eE#{DECIMAL_EXPONENT_SYMBOL}"] >> decimal_integer).maybe }

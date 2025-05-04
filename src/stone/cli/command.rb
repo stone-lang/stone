@@ -25,6 +25,7 @@ module Stone
 
       private def language
         @language ||= Language::DEFAULT.new
+        # @language ||= Language::Variables.new
       end
 
       private def markdown_code_blocks(file)

@@ -30,13 +30,13 @@ module Stone
       end
 
       PROPERTIES = {
-        first: ->(this){ this.first },
-        second: ->(this){ this.second },
-        last: ->(this){ this.second },
-        left: ->(this){ this.first },
-        right: ->(this){ this.second },
-        key: ->(this){ this.first },
-        value: ->(this){ this.second },
+        first: lambda(&:first),
+        second: lambda(&:second),
+        last: lambda(&:second),
+        left: lambda(&:first),
+        right: lambda(&:second),
+        key: lambda(&:first),
+        value: lambda(&:second),
       }
 
       def to_s(*)

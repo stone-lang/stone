@@ -1,0 +1,15 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../Code/grammy"
+		}
+	],
+	"settings": {
+		"cSpell.ignoreWords": [
+			"worktree"
+		]
+	}
+}

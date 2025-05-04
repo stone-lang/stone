@@ -34,8 +34,8 @@ module Enumerable
     self[n - 1]
   end
 
-  def map_dig(*args)
-    map{ |a| a.dig(*args) }
+  def map_dig(*)
+    map{ |a| a.dig(*) }
   end
 
 end

@@ -1,3 +1,4 @@
+# WONTDO: Use HAMT Lists instead. Only Bytes and Bits need Vectors.
 Array := Class[T = Anything]({
 
     .name := "Array"

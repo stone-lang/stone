@@ -1,17 +1,316 @@
-Consider `Time.Moment` for a given point in time
-	* Or perhaps `Time.Point`
-	* `Time.Moment` has a date and a `Time.OfDay`, and is in UTC
-		* `Time.OfDay` is timezone-less
-			* Need a better name for that
-				* Time.WithinDay
-				* Time.Clock
-	* Will have another class for a time with a time zone included
-		* Will be a bit more than a time plus a time zone, as we'll need to handle conversions
-		* Will want to handle DST changes that cause certain times to be non-existent or duplicated
-		* Will also want constraints about dates
-	* Inspired by Racket's "Gregor" library
-	* Will also have `Time.Duration` and `Time.Interval`
-		* Probably don't need them both, as for example, subtracting 2 dates would give you a `Time.Interval` of 3 days, which seems to be the same as a `Date.Duration` of 3 days
-	* It might make sense for `Date` to be within the `Time` namespace
-		* It does deal with time
-		* Seems like dates are just times with less granularity
+# Primary inspiration: Racket's "Gregor" library
+# TODO: Look at other date/time libraries:
+#   - Racket's "Gregor" library
+#   - Ruby
+#   - JavaScript
+#   - Elixir
+#   - Crystal
+#   - Elm
+#   - Haskell
+#   - Idris
+
+
+# TODO: Figure out how this should work a bit more.
+# We should have input and output declarations:
+#   now :< $TIME_CLOCK
+#   puts :> $STDOUT
+
+
+# This is an $INPUT dependency.
+# Accessing it will make the caller (stack) impure/non-deterministic.
+$TIME_CLOCK :: $INPUT
+
+
+# Time represents a moment or point in time.
+# Times are in UTC. Use Time.WithZone for time zone handling.
+# Conceptually, a Time has a Date and a Time.OfDay.
+
+Time := Class(
+
+	class-methods: {
+		now :< $TIME_CLOCK
+		now :: Time
+		now := { $TIME_CLOCK }
+	}
+
+	# We'll probably use the Julian day epoch (January 1, −4712 (4713 BCE)).
+	# We need full nanosecond precision.
+	# We'd like to have enough range to cover back to the creation of the Universe.
+	# It may make more sense to store as Integer seconds plus Integer.NonNegative nanoseconds.
+	seconds-since-epoch :: Number.Decimal
+
+	date :: Time.Date
+	date := { ... }
+
+	time-of-day :: Time.OfDay
+	time-of-day := { ... }
+
+	- :: (Time) -> Time.Duration
+	- := (beginning) -> { this.seconds_since_epoch - beginning.seconds_since_epoch }
+
+	formatted :: (Text) -> Text
+	formatted := (format) -> { format.interpolate(components) }
+
+	components := ([
+		`year`: date.year
+		`month`: date.month
+		`day`: date.day_of_month
+		`weekday`: date.day_of_week
+		`hour`: time_of_day.hour
+		`minutes`: time_of_day.minutes
+		`seconds`: time_of_day.seconds
+	])
+
+)
+
+# We'll probably use the Julian day epoch (January 1, −4712 (4713 BCE)).
+Time.EPOCH := Time(seconds-since-epoch: 0)
+
+Time.FORMATS := ([
+	`iso-8601`: "..."
+	`rfc-822`: "..."
+	`rfc-2822`: "..."
+	`rfc-3339`: "..."
+])
+
+# QUESTION: Will this make Time.Interval == Range[Time]? I think so!
+Time.Interval :: Range[Time]
+
+Time.Duration := import("time/duration")
+Time.OfDay := import("time/of-day")
+Time.Date := import("time/date")
+Time.Calendar := import("time/calendar")
+Time.WithTimeZone := import("time/with-time-zone")
+Time.Zone := import("time/zone")
+
+Time
+
+
+# ---
+
+
+# WithTimeZone represents a time with a time zone included.
+
+# TODO: Handle conversions between time zones.
+# TODO: Handle DST changes that cause certain times to be non-existent or duplicated.
+
+WithTimeZone := Class(
+
+)
+
+Zone := import("time/zone")
+
+WithTimeZone
+
+
+# ---
+
+
+# A duration is the amount of time that passes between 2 events.
+Duration := Class(
+
+	# We'll need at least nanosecond precision.
+	# We should support attosecond precision if we can, for use in particle physics.
+	# It may make more sense to store as Integer seconds plus Integer.NonNegative nanoseconds or attoseconds.
+	seconds :: Decimal.NonNegative
+
+	s := seconds
+
+	milliseconds :: Decimal.NonNegative
+	milliseconds := { seconds * 1_000 }
+	ms := milliseconds
+
+	microseconds :: Decimal.NonNegative
+	microseconds := { seconds * 1_000_000 }
+	µs := microseconds
+
+	nanoseconds :: Decimal.NonNegative
+	nanoseconds := { seconds * 1_000_000_000 }
+	ns := nanoseconds
+
+	picoseconds :: Decimal.NonNegative
+	picoseconds := { seconds * 1_000_000_000_000 }
+	ps := picoseconds
+
+	femtoseconds :: Decimal.NonNegative
+	femtoseconds := { seconds * 1_000_000_000_000_000 }
+	fs := femtoseconds
+
+	attoseconds :: Decimal.NonNegative
+	attoseconds := { seconds * 1_000_000_000_000_000_000 }
+	as := attoseconds
+
+	minutes :: Decimal.NonNegative
+	minutes := { seconds / 60 }
+
+	hours :: Decimal.NonNegative
+	hours := { seconds / 60 / 60 }
+
+	days :: Decimal.NonNegative
+	days := { seconds / 60 / 60 / 24 }
+
+)
+
+Duration.new :: (Integer.NonNegative, Integer.NonNegative, Integer.NonNegative, Decimal.NonNegative) -> Duration
+Duration.new := (days = 0, hours = 0, minutes = 0, seconds = 0.0) -> {
+	Duration.__new__(`seconds`: seconds + minutes * 60 + hours * 60 * 60 + days * 60 * 60 * 24)
+}
+
+
+# ---
+
+
+# TODO: Consider renaming this "TimeOfDay" or "WithinDay".
+
+# Time.OfDay represents the time shown on a wall clock.
+# Conceptually, a Time.OfDay consists of hours, minutes, and seconds.
+
+TimeOfDay := Class(
+
+	hour :: Integer.NonNegative
+	minutes :: Integer.NonNegative
+	seconds :: Number.Decimal.NonNegative
+
+	formatted :: (Text) -> Text
+	formatted := (format) -> { format.interpolate(components) }
+
+	components := Map([
+		`hour`: this.hour
+		`minutes`: this.minutes
+		`seconds`: this.seconds
+	])
+
+)
+
+TimeOfDay.now :< $TIME_CLOCK
+TimeOfDay.now :: TimeOfDay
+TimeOfDay.now := { Time.now.time-of-day }
+
+Time := import("time") # FIXME: Circular dependency?
+
+TimeOfDay
+
+# ---
+
+
+# Conceptually, a Date consists of a year, month, and day.
+# You can also think of a Date as a Time with less granularity.
+
+Date := Class()
+Date.fields := [
+	# We'd like to have enough range to cover back to the creation of the Universe.
+	days-since-epoch :: Integer
+]
+Date.computed-fields := [
+	# Default to the Gregorian calendar.
+	calendar :: Calendar
+	calendar := { this.calendar || Calendar.Gregorian } # TODO: Better syntax than this?
+	year :: Date.Year
+	year := { calendar.year(this) }
+	month :: Date.Month
+	month := { calendar.month(this) }
+	month-name :: Date.MonthName
+	month-name := { Date.MonthName.nth(this.month) }
+	day-of-month :: Date.DayOfMonth
+	day-of-month := { calendar.day-of-month(this) }
+	day-of-week :: Date.DayOfWeek
+	day-of-week := { calendar.day-of-week(this) }
+	components :: Map[Atom, Any] # TODO: What type should this be?
+	components := Map([
+		`year`: this.year
+		`month`: this.month
+		`month-name`: this.month-name
+		`day`: this.day-of-month
+		`weekday`: this.day-of-week
+	])
+]
+Date.instance-methods := [
+	- :: (Date) -> Date.Duration
+	- := (beginning) -> { this.days-since-epoch - beginning.days-since-epoch }
+	formatted :: (Text) -> Text
+	formatted := (format) -> { format.interpolate(this.components) }
+]
+
+Date.now :< $TIME_CLOCK
+Date.now :: Date
+Date.now := { Time.now.date }
+Date.today := Date.now
+
+# We'll probably use the Julian day epoch (January 1, −4712 (4713 BCE)).
+Date.EPOCH := Date(days-since-epoch: 0)
+
+Date.Year := Integer
+Date.Month := Integer.NonNegative # TODO: Restrict to 1-12?
+Date.MonthName := Enum([
+	`January`
+	`February`
+	`March`
+	`April`
+	`May`
+	`June`
+	`July`
+	`August`
+	`September`
+	`October`
+	`November`
+	`December`
+])
+# TODO: Can we limit the valid values for DayOfMonth based on the value of Month?
+Date.DayOfMonth := Integer # TODO: Restrict to 1-31?
+Date.DayOfWeek := Enum([
+	`Monday`
+	`Tuesday`
+	`Wednesday`
+	`Thursday`
+	`Friday`
+	`Saturday`
+	`Sunday`
+])
+
+# A date duration is the number of days between 2 days.
+Date.Duration := Class(
+	days :: Integer.NonNegative
+)
+
+Date.FORMATS := Map([
+	`iso-8601`: "..."
+	`rfc-822`: "..."
+	`rfc-2822`: "..."
+	`rfc-3339`: "..."
+])
+
+Time := import("time") # FIXME: Circular dependency?
+Calendar := import("time/calendar", `Date`: Date) # FIXME: Circular dependency?
+
+Date
+
+
+# ---
+
+
+Calendar := Interface(
+	year :: (Date) -> Date.Year
+	month :: (Date) -> Date.Month
+	day-of-month :: (Date) -> Date.DayOfMonth
+	day-of-week :: (Date) -> Date.DayOfWeek
+)
+
+# We can model the transitions that countries made from Julian to Gregorian.
+Calendar.transitional :: (Calendar, Calendar, Date) -> { ... }
+Calendar.transitional := (old-calendar, new-calendar, transition-date) -> { ... }
+
+Calendar.Gregorian := Calendar(
+	year := (date) -> { ... }
+	month := (date) -> { ... }
+	day-of-month := (date) -> { ... }
+	day-of-week := (date) -> { ... }
+)
+Calendar.Julian := Calendar(
+
+)
+
+Calendar.US := Calendar.transitional(Calendar.Julian, Calendar.Gregorian,)
+
+Date := import("time/date", `Calendar`: Calendar) # FIXME: Circular dependency?
+
+Calendar

@@ -1,8 +1,8 @@
 # I've mistakenly referred to this as "preamble" and "prologue".
 
 # Allow a custom prelude to decide whether to include the standard prelude or not.
-# Custom prelude should usually start with `this += import(“standard-prelude”)`
-# Preludes can/should be pre-compiled, because every file will get it compiled in.
+# Custom prelude should usually start with `. += import(“standard-prelude”)`
+# Preludes can/should be pre-compiled, because every file will get it linked in.
 
 # Overriding something from the prelude should not generate an error or warning.
 
@@ -19,6 +19,7 @@ FALSE := Boolean.FALSE
 Null := import("https://stone-lang.org/null")
 NULL := Null.NULL
 
+Numeric := import("https://stone-lang.org/numeric")
 Number := import("https://stone-lang.org/number")  # Should this include the "basics"?
 Number.Integer := import("https://stone-lang.org/number/integer")
 Number.Rational := import("https://stone-lang.org/number/rational")
@@ -28,26 +29,30 @@ Number.Complex := import("https://stone-lang.org/number/complex")
 
 Integer := Number.Integer
 Ordinal := Number.Integer.Ordinal  # Use this for the position of anything. Note that this is 1-based.
+Index := Number.Integer.Index  # This is the 0-based equivalent to Ordinal.
 Cardinal := Number.Integer.Cardinal  # Use this for size or length of anything.
 Distributive := Number.Integer.Distributive  # Use this for group size or iteration.
+Nominal := Number.Integer.Nominal  # Use this when the number is just used as an identity for an item.
 Rational := Number.Rational
 Decimal := Number.Decimal
-NaN := Number.NaN
+NaN := Numeric.NaN
 # NOTE: No syntactic sugar for Number.FloatingPoint; it should not be frequently used, so doesn't deserve a shorter name. Same for Number.Complex and others.
 
 
-Number.Infinity := import("https://stone-lang.org/number/infinity")
-Number.Infinitesimal := import("https://stone-lang.org/number/infinitesimal")
+Numeric.Infinity := import("https://stone-lang.org/numeric/infinity")
+Numeric.Infinitesimal := import("https://stone-lang.org/numeric/infinitesimal")
+Infinity = Numeric.Infinity
+Infinitesimal = Numeric.Infinitesimal
 
-
+Measurement := import("https://stone-lang.org/measurement")
 Measurement.Turn := import("https://stone-lang.org/measurement/turn")
-τ := Measurement.Turn(1)
-π := Measurement.Turn(1/2)
-TAU := τ
-PI := π
+Math.TAU := Measurement.Turn(1)
+Math.PI := Measurement.Turn(1/2)
+τ := Math.TAU
+π := Math.PI
 
 IO := import("https://stone-lang.org/io")
 IO.File := import("https://stone-lang.org/io/file")
-STDIN := IO.File.fd(0)
-STDOUT := IO.File.fd(1)
-STDERR := IO.File.fd(2)
+$STDIN := IO.File.fd(0)
+$STDOUT := IO.File.fd(1)
+$STDERR := IO.File.fd(2)

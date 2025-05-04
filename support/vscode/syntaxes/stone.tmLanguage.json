@@ -1,0 +1,22 @@
+{
+    "version": "0.1.0",
+    "name": "Stone",
+    "scopeName": "source.stone",
+    "patterns": [
+        {
+            "include": "#comments"
+        }
+    ],
+    "repository": {
+        "comments": {
+            "patterns": [
+                {
+                    "name": "comment.line.stone",
+                    "begin": "#",
+                    "end": "(?=$)",
+                    "contentName": "comment.line.stone"
+                }
+            ]
+        }
+    }
+}

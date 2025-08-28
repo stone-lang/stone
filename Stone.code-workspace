@@ -1,0 +1,18 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "../Stone2"
+		},
+		{
+			"path": "../Code/grammy"
+		}
+	],
+	"settings": {
+		"cSpell.ignoreWords": [
+			"worktree"
+		]
+	}
+}

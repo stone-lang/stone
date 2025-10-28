@@ -3,3 +3,4 @@
 --require debug
 --require pry
 --no-profile
+--pattern 'specs/**/*.spec.rb'

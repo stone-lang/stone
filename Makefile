@@ -1,45 +1,51 @@
-SHELL := /bin/bash
+SHELL := env PATH=$(PATH) /bin/bash
 BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
+LLVM_PREFIX := $(shell brew --prefix llvm 2>/dev/null || echo "/usr/local/opt/llvm")
+PATH := $(LLVM_PREFIX)/bin:$(PATH)
+DYLD_LIBRARY_PATH := $(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)
+LDFLAGS := "-L$(LLVM_PREFIX)/lib"
+CPPFLAGS := "-I$(LLVM_PREFIX)/include"
+export PATH
+export DYLD_LIBRARY_PATH
 
 all: setup test lint
 
-setup: setup-overcommit
+setup: bun node_modules/.bin/markdownlint-cli2 llvm
 
 test: specs
 
-specs: rspec verify-specs
+specs: rspec
 
 console: bundle
-	bundle exec pry -I src -r stone/cli
+	@bundle exec pry -I lib -r stone -r grammy
 
 lint: markdownlint rubocop
 
-
-verify-specs: bundle
-	STONE_PRELUDE='docs/specs/prelude.stone' bin/stone verify --debug docs/specs/*.md
-
 rspec: bundle
-	bundle exec rspec
-
-setup-overcommit: .git/hooks/overcommit-hook
+	DYLD_LIBRARY_PATH="$(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)" DEBUG=0 bundle exec rspec
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)
-	bundle
+	@echo $(PATH)
+	@bundle
 endif
 
 Gemfile.lock: Gemfile
-	bundle
-
-.git/hooks/overcommit-hook: .overcommit.yml
-	bundle exec overcommit --install
-	bundle exec overcommit --sign
-	bundle exec overcommit --sign pre-commit
+	@bundle
 
 rubocop:
 	bundle exec rubocop .
 
-markdownlint:
-	markdownlint-cli2 *.md **/*.md !Homebrew.md
+markdownlint: node_modules/.bin/markdownlint-cli2
+	@bunx markdownlint-cli2 '**/*.md' '!vendor' '!node_modules'
 
-.PHONY: all setup test specs console lint verify-specs rspec setup-overcommit bundle rubocop markdownlint
+node_modules/.bin/markdownlint-cli2:
+	@bun install markdownlint-cli2
+
+bun:
+	@which bun >/dev/null || mise install bun || curl -fsSL https://bun.sh/install | bash
+
+llvm:
+	@brew install llvm
+
+.PHONY: all setup test specs console lint rspec bundle rubocop markdownlint bun llvm

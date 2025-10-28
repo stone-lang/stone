@@ -1,0 +1,46 @@
+# Backup files
+*~
+\#*#
+
+# Ruby
+*.gem
+*.rbc
+/.config
+/coverage/
+/InstalledFiles
+/pkg/
+/spec/reports/
+/spec/examples.txt
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# Bundler
+/vendor/bundle/
+/.bundle/
+
+# RSpec
+/.rspec_status
+
+# Environment - mise local overrides
+.mise.local.toml
+.mise/
+
+# Dependencies
+/node_modules/
+
+# Editor/IDE
+*.swp
+*.swo
+.DS_Store
+
+# Build artifacts
+*.o
+*.a
+*.so
+*.dylib
+*.ll
+*.bc
+
+# Obsidian (keeping this local, not in repo)
+.obsidian/

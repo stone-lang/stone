@@ -1,0 +1,159 @@
+GIT
+  remote: https://github.com/ruby/reline.git
+  revision: 97bd40a42979e3294c1f67f3d1aeec70ebd14518
+  branch: master
+  specs:
+    reline (0.6.1)
+      io-console (~> 0.5)
+
+PATH
+  remote: ../Code/grammy
+  specs:
+    grammy (0.10)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    amazing_print (1.7.2)
+    ast (2.4.3)
+    binding_of_caller (1.0.1)
+      debug_inspector (>= 1.2.0)
+    childprocess (5.1.0)
+      logger (~> 1.5)
+    coderay (1.1.3)
+    date (3.4.1)
+    debug (1.10.0)
+      irb (~> 1.10)
+      reline (>= 0.3.8)
+    debug_inspector (1.2.0)
+    diff-lcs (1.6.1)
+    dry-cli (1.2.0)
+    ffi (1.17.2)
+    ffi (1.17.2-arm64-darwin)
+    iniparse (1.5.0)
+    io-console (0.8.0)
+    irb (1.15.2)
+      pp (>= 0.6.0)
+      rdoc (>= 4.0.0)
+      reline (>= 0.4.2)
+    json (2.11.3)
+    kramdown (2.5.1)
+      rexml (>= 3.3.9)
+    language_server-protocol (3.17.0.4)
+    lint_roller (1.1.0)
+    logger (1.7.0)
+    method_source (1.1.0)
+    overcommit (0.67.1)
+      childprocess (>= 0.6.3, < 6)
+      iniparse (~> 1.4)
+      rexml (>= 3.3.9)
+    parallel (1.27.0)
+    parser (3.3.8.0)
+      ast (~> 2.4.1)
+      racc
+    pp (0.6.2)
+      prettyprint
+    prettyprint (0.2.0)
+    prism (1.4.0)
+    pry (0.15.2)
+      coderay (~> 1.1)
+      method_source (~> 1.0)
+    psych (5.2.4)
+      date
+      stringio
+    racc (1.8.1)
+    rainbow (3.1.1)
+    rake (13.2.1)
+    rbs (3.9.2)
+      logger
+    rdoc (6.13.1)
+      psych (>= 4.0.0)
+    regexp_parser (2.10.0)
+    rexml (3.4.4)
+    rspec (3.13.0)
+      rspec-core (~> 3.13.0)
+      rspec-expectations (~> 3.13.0)
+      rspec-mocks (~> 3.13.0)
+    rspec-core (3.13.3)
+      rspec-support (~> 3.13.0)
+    rspec-expectations (3.13.4)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-mocks (3.13.3)
+      diff-lcs (>= 1.2.0, < 2.0)
+      rspec-support (~> 3.13.0)
+    rspec-support (3.13.3)
+    rubocop (1.75.4)
+      json (~> 2.3)
+      language_server-protocol (~> 3.17.0.2)
+      lint_roller (~> 1.1.0)
+      parallel (~> 1.10)
+      parser (>= 3.3.0.2)
+      rainbow (>= 2.2.2, < 4.0)
+      regexp_parser (>= 2.9.3, < 3.0)
+      rubocop-ast (>= 1.44.0, < 2.0)
+      ruby-progressbar (~> 1.7)
+      unicode-display_width (>= 2.4.0, < 4.0)
+    rubocop-ast (1.44.1)
+      parser (>= 3.3.7.2)
+      prism (~> 1.4)
+    rubocop-md (2.0.1)
+      lint_roller (~> 1.1)
+      rubocop (>= 1.72.1)
+    rubocop-performance (1.25.0)
+      lint_roller (~> 1.1)
+      rubocop (>= 1.75.0, < 2.0)
+      rubocop-ast (>= 1.38.0, < 2.0)
+    rubocop-rspec (3.6.0)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72, >= 1.72.1)
+    ruby-debug-ide (0.7.5)
+      rake (>= 0.8.1)
+    ruby-llvm (21.1.0)
+      ffi (~> 1.13)
+      rake (>= 12, < 14)
+    ruby-lsp (0.23.16)
+      language_server-protocol (~> 3.17.0)
+      prism (>= 1.2, < 2.0)
+      rbs (>= 3, < 4)
+      sorbet-runtime (>= 0.5.10782)
+    ruby-lsp-rspec (0.1.22)
+      ruby-lsp (~> 0.23.0)
+    ruby-progressbar (1.13.0)
+    sorbet-runtime (0.5.12059)
+    stringio (3.1.7)
+    unicode-display_width (3.1.4)
+      unicode-emoji (~> 4.0, >= 4.0.4)
+    unicode-emoji (4.0.4)
+
+PLATFORMS
+  arm64-darwin-24
+  ruby
+
+DEPENDENCIES
+  amazing_print
+  binding_of_caller
+  debug (>= 1.0.0)
+  dry-cli
+  grammy!
+  irb
+  kramdown
+  overcommit
+  pry
+  rainbow
+  reline!
+  rspec
+  rubocop
+  rubocop-md
+  rubocop-performance
+  rubocop-rspec
+  ruby-debug-ide
+  ruby-llvm (>= 21)
+  ruby-lsp
+  ruby-lsp-rspec
+
+RUBY VERSION
+   ruby 3.4.7p58
+
+BUNDLED WITH
+   2.7.2

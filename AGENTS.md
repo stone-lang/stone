@@ -75,7 +75,6 @@ This is necessary because the repository owner has git configured to use a pager
 - **specs/** - Specifications that serve dual purpose:
   - Test suite (RSpec tests)
   - Language specification (executable documentation)
-  - Located in specs/literals/ hierarchy (e.g., specs/literals/Int/)
 
 ### Parser and Grammar
 
@@ -118,8 +117,36 @@ The `stone` binary (not yet implemented) will support:
 
 - RSpec configuration in .rspec loads lib/ automatically
 - Requires debug and pry for debugging
-- Pattern: `specs/**/*.spec.rb`
+- Pattern: `specs/**/*_spec.rb`
 - Tests also serve as executable language specifications
+
+#### Spec Organization
+
+Specs are organized into unit tests, language specification tests, and CLI tests:
+
+1. **specs/unit/** - Unit tests for individual components
+   - `unit/parser/` - Parser/grammar tests (parse tree structure)
+   - `unit/ast/` - AST node tests (node behavior, LLVM IR generation)
+   - `unit/transform/` - Transformation tests (parse tree → AST)
+   - `unit/api/` - Stone module API tests (Stone.parse, Stone.eval, etc.)
+
+2. **specs/language/** - Language specification tests
+   - Tests complete parse → transform → compile → evaluate flow
+     - But not the CLI code
+   - Documents language semantics with executable examples
+   - Serves as both spec and documentation
+
+3. **specs/cli/** - End-to-end tests that include CLI commands
+
+
+#### Writing Specs
+
+- Use descriptive test names that explain behavior
+- Unit tests should test one component in isolation
+- Integration tests verify components work together
+- Integration tests should read like documentation of the Stone language
+- Include edge cases and boundary conditions
+- Test both success and failure paths where applicable
 
 ### Pre-commit Workflow
 

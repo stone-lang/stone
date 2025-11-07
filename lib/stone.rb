@@ -1,3 +1,6 @@
+# Load extensions
+Dir[File.join(__dir__, "extensions", "*.rb")].each { require_relative _1 }
+
 require "llvm/core"
 require "llvm/execution_engine"
 

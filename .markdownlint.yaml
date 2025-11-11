@@ -1,0 +1,21 @@
+---
+
+# Start with the default set of rules turned on.
+default: true
+
+# Set list indentation to 4 spaces. (MD007)
+ul-indent:
+    indent: 4
+
+# Don't worry about lines longer than 80 characters. (MD013)
+line-length: false
+
+# Allow multiple blank lines. (MD012)
+no-multiple-blanks: false
+
+# Allow multiple headings with the same name. (MD024)
+# For example, CHANGELOG will have "Changed", "Added", and "Fixed" sections for each version.
+no-duplicate-heading: false
+
+# Allow bare URLs. (MD034)
+no-bare-urls: false

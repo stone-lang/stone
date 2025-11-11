@@ -57,34 +57,46 @@ git --no-pager diff
 
 This is necessary because the repository owner has git configured to use a pager (delta) which can cause timeouts when run by AI agents.
 
+## Commit Messages
+
+When creating commits for work done with AI assistance, add a co-author trailer to the commit message, similar to pair programming convention:
+
+```text
+Co-authored-by: Claude (Anthropic) <claude@anthropic.com>
+```
+
+GitHub will recognize the `Co-authored-by:` trailer and show both authors on the commit.
+
 ## Architecture
 
 ### Project Structure
 
 - **lib/extensions/** - Ruby core class extensions (String, Integer, Boolean, Class, Module, etc.)
-  - Provides Scheme-style methods like `first`, `rest`, `tail` on String
-  - Extensions use monkey-patching (TODO: migrate to refinements via `pretty_ruby` gem)
+    - Provides Scheme-style methods like `first`, `rest`, `tail` on String
+    - Extensions use monkey-patching (TODO: migrate to refinements via `pretty_ruby` gem)
 
 - **lib/stone/** - Main Stone language implementation
-  - **lib/stone/ast/** - Abstract Syntax Tree node classes
-    - Each AST node defines `to_llir()` method for LLVM IR generation
-    - Example: `IntegerLiteral` wraps integer values for compilation
+    - **lib/stone/ast/** - Abstract Syntax Tree node classes
+        - Each AST node defines `to_llir()` method for LLVM IR generation
+        - Example: `IntegerLiteral` wraps integer values for compilation
 
 - **lib/literals/** - Support for Stone language literals (currently minimal)
 
 - **specs/** - Specifications that serve dual purpose:
-  - Test suite (RSpec tests)
-  - Language specification (executable documentation)
+    - Test suite (RSpec tests)
+    - Language specification (executable documentation)
 
 ### Parser and Grammar
 
 Stone uses the Grammy parser generator (local dependency at ../Code/grammy). Parser extensions are in lib/extensions/parslet.rb:
+
 - `rule!` - Define grammar rules that output AST nodes
 - `parens()`, `curly_braces()` - Helper methods for bracketed expressions
 
 ### LLVM Integration
 
 Stone compiles to LLVM IR using the ruby-llvm gem (v21+). LLVM is managed via:
+
 - Homebrew (macOS): `brew install llvm@21` or `brew install llvm`
 - apt-get (Linux): `apt-get install llvm-21-dev llvm-21`
 - mise (fallback): Configured in .tool-versions and .mise.toml
@@ -94,6 +106,7 @@ Environment setup in .mise.toml automatically configures LLVM_PREFIX, PATH, and 
 ### Planned Stone CLI Commands
 
 The `stone` binary (not yet implemented) will support:
+
 - `stone parse` - Output parse tree
 - `stone ast` - Output abstract syntax tree
 - `stone eval` - Non-interactive REPL (evaluate and print results)
@@ -151,6 +164,7 @@ Specs are organized into unit tests, language specification tests, and CLI tests
 ### Pre-commit Workflow
 
 When using the `/pre-commit` command:
+
 1. Check for related uncommitted changes
 2. Review staged files for errors, security issues, readability
 3. Verify test coverage
@@ -162,6 +176,7 @@ When using the `/pre-commit` command:
 ### Tool Versions
 
 Managed by mise and .tool-versions:
+
 - Ruby 3.4.7
 - Bun 1.3
 - LLVM 21

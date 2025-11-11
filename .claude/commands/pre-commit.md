@@ -2,6 +2,8 @@
 description: Pre-commit checks: verify tests, coverage, and suggest commit message
 ---
 
+# Pre-commit Command
+
 Before I make a commit:
 
 1. Determine if there are changes to other files (or parts thereof) that should be committed with the files that have already been staged.

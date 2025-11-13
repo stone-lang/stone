@@ -77,8 +77,8 @@
 
 ## Grammar
 
-- [ ] Start on parser and grammar
-    - [ ] Look into various choices for parsing
+- [x] Start on parser and grammar
+    - Took time out to write Grammy
 - [ ] Self-hosting compiler (this one is WAY off)
 
 ## Design Docs

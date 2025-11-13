@@ -1,7 +1,6 @@
 require "stone/transform"
 require "stone/grammar"
 
-# rubocop:disable RSpec/DescribeClass
 RSpec.describe "Integer Literal Transformation" do
 
   let(:transformer) { Stone::Transform.new }

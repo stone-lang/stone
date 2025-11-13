@@ -25,11 +25,13 @@ Style/BlockDelimiters:
   FunctionalMethods:
     - expect
   AllowedMethods:
-    - rule
-    - rule!
     - let
     - let!
     - subject
+    - rule
+    - rule!
+    - terminal
+    - terminal!
 
 # Allow non-ASCII identifiers, and in comments.
 Naming/AsciiIdentifiers:
@@ -50,19 +52,19 @@ Performance/RedundantBlockCall:
 # Also allow `builtin_ClassName` methods.
 Naming/MethodName:
   Exclude:
-  - src/extensions/boolean.rb
-  - src/stone/top.rb
+    - lib/extensions/boolean.rb
+    - lib/stone/top.rb
 
 # I don't believe `module_function` should be outdented like `private`, but there's no way to turn it off for just `module_function`.
 Layout/AccessModifierIndentation:
   EnforcedStyle: outdent
   Exclude:
-    - src/stone/top.rb
+    - lib/stone/top.rb
 
 # Allow `expr = expr + x` in this particular file, to parallel `expr = x + expr` that's right next to it.
 Style/SelfAssignment:
   Exclude:
-    - src/stone/ast/binary_operation.rb
+    - lib/stone/ast/binary_operation.rb
 
 # The `grammar` and `transforms` methods are DSLs; don't worry about their size/complexity.
 Metrics/AbcSize:
@@ -93,7 +95,7 @@ Layout/EmptyLinesAroundBlockBody:
   Enabled: false
 Style/PercentLiteralDelimiters:
   Exclude:
-    - 'src/stone/ast/binary_operation.rb'
+    - "lib/stone/ast/binary_operation.rb"
 
 # This is broken. It assumes that a comment following a `private def` should be indented 2 extra spaces.
 Layout/CommentIndentation:
@@ -107,6 +109,8 @@ RSpec/MultipleExpectations:
 RSpec/ExampleLength:
   Max: 10
 RSpec/DescribedClass:
+  Enabled: false
+RSpec/DescribeClass:
   Enabled: false
 
 # I like to put 2 spaces before inline comments.

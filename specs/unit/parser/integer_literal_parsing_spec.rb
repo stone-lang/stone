@@ -1,6 +1,5 @@
 require "stone/grammar"
 
-# rubocop:disable RSpec/DescribeClass
 RSpec.describe "Integer Literal Parsing" do
 
   describe "decimal integers" do

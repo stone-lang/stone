@@ -1,5 +1,7 @@
 # Load extensions
-Dir[File.join(__dir__, "extensions", "*.rb")].each { require_relative _1 }
+Dir[File.join(__dir__, "extensions", "*.rb")].each do
+  require_relative it
+end
 
 require "llvm/core"
 require "llvm/execution_engine"
@@ -23,10 +25,10 @@ module Stone
     transformer.transform(parse_tree)
   end
 
+  # Returns an AST
   def self.compile(input)
     parse_tree = parse(input)
-    ast = transform(parse_tree)
-    ast
+    transform(parse_tree)
   end
 
   def self.eval(input)

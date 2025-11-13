@@ -64,15 +64,12 @@ module Stone
 
         # Generate IR for all code that's directly in the module.
         mod.functions.add("__top__", top_type) do |func|
-          entry = func.basic_blocks.append("entry")
-          entry.build do |bb|
-            ch = children&.map { |child|
-              child.to_llir(bb)
-            }
-            if ch.nil? || ch.empty?
-              bb.ret(LLVM::Type.void)
+          func.basic_blocks.append("entry").build do |builder|
+            compiled = children&.map { |child| child.to_llir(builder) }
+            if compiled.nil? || compiled.empty?
+              builder.ret(LLVM::Type.void)
             else
-              bb.ret(ch.last)
+              builder.ret(compiled.last)
             end
           end
         end

@@ -5,7 +5,6 @@ require "stone"
 # This spec serves as both executable documentation and verification
 # that the Stone language correctly implements integer literal semantics.
 
-# rubocop:disable RSpec/DescribeClass
 RSpec.describe "Integer Literals" do
 
   describe "basic integer literals" do

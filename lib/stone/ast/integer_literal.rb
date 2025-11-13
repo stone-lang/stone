@@ -12,7 +12,7 @@ module Stone
         @name = :integer_literal
       end
 
-      def to_llir(_b)
+      def to_llir(_builder)
         LLVM::Int64.from_i(@value)
       end
 

@@ -90,9 +90,9 @@
 ## Specifications (verified by tests)
 
 - [ ] automate testing of specifications
-- [ ] literals
+- [x] literals
     - [ ] Boolean
-    - [ ] integer
+    - [x] integer
     - [ ] string
     - [ ] pair
     - [ ] fixed-point

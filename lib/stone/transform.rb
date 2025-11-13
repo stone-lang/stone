@@ -14,19 +14,29 @@ module Stone
       Stone::AST::ProgramUnit.new(name, transformed_children)
     end
 
-    transform(:expression) { |node|
+    transform(:expression) do |node|
       transform(node.children.first)
-    }
+    end
 
-    transform(:literal) { |node|
+    transform(:literal) do |node|
       transform(node.children.first)
-    }
+    end
 
-    transform(:literal_i64) { |node|
-      match = node.children.first
-      value = match.text.to_i
-      Stone::AST::IntegerLiteral.new(value)
-    }
+    transform(:literal_i64) do |node|
+      text = node.children.first.text
+      sign = text.start_with?("-") ? -1 : 1
+      unsigned_text = text.sub(/^[+-]/, "")
+
+      base = case unsigned_text
+             when /^0b/ then 2
+             when /^0o/ then 8
+             when /^0x/ then 16
+             else 10
+             end
+
+      digits = base == 10 ? unsigned_text : unsigned_text[2..]
+      Stone::AST::IntegerLiteral.new(digits.to_i(base) * sign)
+    end
 
   end
 end

@@ -7,6 +7,8 @@ require "llvm/core"
 require "llvm/execution_engine"
 
 require "grammy/scanner"
+require "stone/error"
+require "stone/error/overflow"
 require "stone/grammar"
 require "stone/transform"
 require "stone/ast"

@@ -1,6 +1,7 @@
 require "stone/ast"
 require "stone/ast/integer_literal"
 require "stone/ast/program_unit"
+require "stone/error/overflow"
 require "grammy/tree/transformation"
 
 
@@ -23,7 +24,8 @@ module Stone
     end
 
     transform(:literal_i64) do |node|
-      text = node.children.first.text
+      token = node.children.first
+      text = token.text
       sign = text.start_with?("-") ? -1 : 1
       unsigned_text = text.sub(/^[+-]/, "")
 
@@ -35,7 +37,12 @@ module Stone
              end
 
       digits = base == 10 ? unsigned_text : unsigned_text[2..]
-      Stone::AST::IntegerLiteral.new(digits.to_i(base) * sign)
+      value = digits.to_i(base) * sign
+
+      # Check for overflow
+      fail Stone::Error::Overflow.new(text, token.start_location) unless Stone::AST::IntegerLiteral.in_range?(value)
+
+      Stone::AST::IntegerLiteral.new(value)
     end
 
   end

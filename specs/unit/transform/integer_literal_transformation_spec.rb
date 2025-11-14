@@ -271,5 +271,150 @@ RSpec.describe "Integer Literal Transformation" do
     end
   end
 
+  describe "integer overflow detection" do
+    describe "decimal overflow" do
+      it "raises overflow error when one above maximum positive value" do
+        parse_tree = Stone::Grammar.parse("9223372036854775808")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 9223372036854775808 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for large positive overflow" do
+        parse_tree = Stone::Grammar.parse("99999999999999999999")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 99999999999999999999 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error when one below minimum negative value" do
+        parse_tree = Stone::Grammar.parse("-9223372036854775809")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: -9223372036854775809 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for large negative overflow" do
+        parse_tree = Stone::Grammar.parse("-99999999999999999999")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: -99999999999999999999 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error with explicit plus sign" do
+        parse_tree = Stone::Grammar.parse("+9223372036854775808")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: \+9223372036854775808 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+    end
+
+    describe "binary overflow" do
+      it "raises overflow error for positive overflow" do
+        parse_tree = Stone::Grammar.parse("0b1000000000000000000000000000000000000000000000000000000000000000")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 0b1000000000000000000000000000000000000000000000000000000000000000 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for large positive overflow" do
+        parse_tree = Stone::Grammar.parse("0b11111111111111111111111111111111111111111111111111111111111111111")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 0b11111111111111111111111111111111111111111111111111111111111111111 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for negative overflow" do
+        parse_tree = Stone::Grammar.parse("-0b1000000000000000000000000000000000000000000000000000000000000001")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: -0b1000000000000000000000000000000000000000000000000000000000000001 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+    end
+
+    describe "octal overflow" do
+      it "raises overflow error for positive overflow" do
+        parse_tree = Stone::Grammar.parse("0o1000000000000000000000")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 0o1000000000000000000000 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for large positive overflow" do
+        parse_tree = Stone::Grammar.parse("0o7777777777777777777777")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 0o7777777777777777777777 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for negative overflow" do
+        parse_tree = Stone::Grammar.parse("-0o1000000000000000000001")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: -0o1000000000000000000001 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+    end
+
+    describe "hexadecimal overflow" do
+      it "raises overflow error for positive overflow" do
+        parse_tree = Stone::Grammar.parse("0x8000000000000000")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 0x8000000000000000 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for large positive overflow" do
+        parse_tree = Stone::Grammar.parse("0xffffffffffffffff")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 0xffffffffffffffff falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error for negative overflow" do
+        parse_tree = Stone::Grammar.parse("-0x8000000000000001")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: -0x8000000000000001 falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+
+      it "raises overflow error with mixed case hex digits" do
+        parse_tree = Stone::Grammar.parse("0xFfFfFfFfFfFfFfFfF")
+
+        expect { transformer.transform(parse_tree) }.to raise_error(Stone::Error::Overflow) do |error|
+          expect(error.message).to match(/Overflow Error: 0xFfFfFfFfFfFfFfFfF falls outside 64-bit Int range/)
+          expect(error.message).to match(/line 1/)
+        end
+      end
+    end
+  end
+
 end
 # rubocop:enable RSpec/DescribeClass

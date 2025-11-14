@@ -22,8 +22,8 @@ bundle install  # Install Ruby gems (runs automatically if needed)
 make test       # Run all tests
 make specs      # Alias for make test
 make rspec      # Run RSpec tests directly
-bundle exec rspec                    # Run all specs
-bundle exec rspec specs/path/to/file # Run specific spec file
+mise exec -- bundle exec rspec                    # Run all specs
+mise exec -- bundle exec rspec specs/path/to/file # Run specific spec file
 ```
 
 ### Linting

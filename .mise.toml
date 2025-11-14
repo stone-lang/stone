@@ -4,3 +4,12 @@ LLVM_PREFIX = "{{exec(command='brew --prefix llvm 2>/dev/null || { [ -d /usr/lib
 _.path = ["{{env.LLVM_PREFIX}}/bin"]
 DYLD_LIBRARY_PATH = "{{env.LLVM_PREFIX}}/lib{% if env.DYLD_LIBRARY_PATH %}:{{env.DYLD_LIBRARY_PATH}}{% endif %}"
 LLVM_CONFIG = "{{env.LLVM_PREFIX}}/bin/llvm-config"
+
+[hooks]
+# Ensure LLVM 21.x and lld are installed via Homebrew
+preinstall = '''
+    if ! brew list llvm &>/dev/null || ! brew info llvm | grep -q "21\."; then
+        brew install llvm || brew upgrade llvm
+    fi
+    brew install --quiet lld
+'''

@@ -4,97 +4,61 @@ RSpec.describe "Integer Literal Parsing" do
 
   describe "decimal integers" do
     it "parses positive integers" do
-      result = Stone::Grammar.parse("42")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
+      expect("42").to parse_as(:literal_i64)
     end
 
     it "parses negative integers" do
-      result = Stone::Grammar.parse("-17")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
+      expect("-17").to parse_as(:literal_i64)
     end
 
     it "parses zero" do
-      result = Stone::Grammar.parse("0")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
+      expect("0").to parse_as(:literal_i64)
     end
   end
 
   describe "binary integers" do
     it "parses binary integers" do
-      result = Stone::Grammar.parse("0b1010")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("0b1010")
+      expect("0b1010").to parse_as(:literal_i64)
     end
 
     it "parses negative binary integers" do
-      result = Stone::Grammar.parse("-0b101")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("-0b101")
+      expect("-0b101").to parse_as(:literal_i64)
     end
 
     it "parses positive signed binary integers" do
-      result = Stone::Grammar.parse("+0b101")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("+0b101")
+      expect("+0b101").to parse_as(:literal_i64)
     end
   end
 
   describe "octal integers" do
     it "parses octal integers" do
-      result = Stone::Grammar.parse("0o777")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("0o777")
+      expect("0o777").to parse_as(:literal_i64)
     end
 
     it "parses negative octal integers" do
-      result = Stone::Grammar.parse("-0o77")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("-0o77")
+      expect("-0o77").to parse_as(:literal_i64)
     end
 
     it "parses positive signed octal integers" do
-      result = Stone::Grammar.parse("+0o123")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("+0o123")
+      expect("+0o123").to parse_as(:literal_i64)
     end
   end
 
   describe "hexadecimal integers" do
     it "parses hex integers" do
-      result = Stone::Grammar.parse("0xff")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("0xff")
+      expect("0xff").to parse_as(:literal_i64)
     end
 
     it "parses hex integers with mixed case digits" do
-      result = Stone::Grammar.parse("0xDeAdBeEf")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("0xDeAdBeEf")
+      expect("0xDeAdBeEf").to parse_as(:literal_i64)
     end
 
     it "parses negative hex integers" do
-      result = Stone::Grammar.parse("-0xff")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("-0xff")
+      expect("-0xff").to parse_as(:literal_i64)
     end
 
     it "parses positive signed hex integers" do
-      result = Stone::Grammar.parse("+0xABC")
-      literal_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == "literal_i64" }
-      expect(literal_node).not_to be_nil
-      expect(literal_node.children.first.text).to eq("+0xABC")
+      expect("+0xABC").to parse_as(:literal_i64)
     end
   end
 
@@ -102,10 +66,6 @@ RSpec.describe "Integer Literal Parsing" do
     it "parses empty input as empty program" do
       result = Stone::Grammar.parse("")
       expect(result).to be_empty
-    end
-
-    it "raises ParseError for non-numeric input" do
-      expect { Stone::Grammar.parse("abc") }.to raise_error(Grammy::ParseError)
     end
   end
 

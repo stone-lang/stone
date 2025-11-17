@@ -23,7 +23,7 @@ make test       # Run all tests
 make specs      # Alias for make test
 make rspec      # Run RSpec tests directly
 mise exec -- bundle exec rspec                    # Run all specs
-mise exec -- bundle exec rspec specs/path/to/file # Run specific spec file
+mise exec -- bundle exec rspec spec/path/to/file # Run specific spec file
 ```
 
 ### Linting
@@ -130,26 +130,26 @@ The `stone` binary (not yet implemented) will support:
 
 - RSpec configuration in .rspec loads lib/ automatically
 - Requires debug and pry for debugging
-- Pattern: `specs/**/*_spec.rb`
+- Pattern: `spec/**/*_spec.rb`
 - Tests also serve as executable language specifications
 
 #### Spec Organization
 
 Specs are organized into unit tests, language specification tests, and CLI tests:
 
-1. **specs/unit/** - Unit tests for individual components
+1. **spec/unit/** - Unit tests for individual components
    - `unit/parser/` - Parser/grammar tests (parse tree structure)
    - `unit/ast/` - AST node tests (node behavior, LLVM IR generation)
    - `unit/transform/` - Transformation tests (parse tree → AST)
    - `unit/api/` - Stone module API tests (Stone.parse, Stone.eval, etc.)
 
-2. **specs/language/** - Language specification tests
+2. **spec/language/** - Language specification tests
    - Tests complete parse → transform → compile → evaluate flow
      - But not the CLI code
    - Documents language semantics with executable examples
    - Serves as both spec and documentation
 
-3. **specs/cli/** - End-to-end tests that include CLI commands
+3. **spec/cli/** - End-to-end tests that include CLI commands
 
 
 #### Writing Specs

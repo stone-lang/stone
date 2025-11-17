@@ -1,5 +1,5 @@
 -I lib
---require ./specs/spec_helper.rb
+--require ./spec/spec_helper.rb
 --require debug
 --require pry
 --no-profile

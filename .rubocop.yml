@@ -113,6 +113,11 @@ RSpec/DescribedClass:
 RSpec/DescribeClass:
   Enabled: false
 
+# RuboCop doesn't like the way we use the `parse_as` custom matcher.
+RSpec/ExpectActual:
+  Exclude:
+    - "spec/unit/parser/**/**.rb"
+
 # I like to put 2 spaces before inline comments.
 Layout/ExtraSpacing:
   Enabled: false

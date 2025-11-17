@@ -9,10 +9,12 @@ require "llvm/execution_engine"
 require "grammy/scanner"
 require "stone/error"
 require "stone/error/overflow"
+require "stone/error/reference_error"
 require "stone/grammar"
 require "stone/transform"
 require "stone/ast"
 require "stone/ast/integer_literal"
+require "stone/ast/reference"
 require "stone/ast/program_unit"
 
 

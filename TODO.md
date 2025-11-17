@@ -97,9 +97,13 @@
     - [ ] pair
     - [ ] fixed-point
     - [ ] rational
+- [ ] constants
+    - [x] top-level references
+    - [ ] references to scoped constants
 - [ ] functions
     - [ ] function call
     - [ ] function definition
+    - [ ] references to argument variables
     - [ ] variable args
 - [ ] operators
     - [ ] Boolean

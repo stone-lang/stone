@@ -1,5 +1,6 @@
 require "stone/ast"
 require "stone/ast/integer_literal"
+require "stone/ast/reference"
 require "stone/ast/program_unit"
 require "stone/error/overflow"
 require "grammy/tree/transformation"
@@ -26,6 +27,11 @@ module Stone
     transform(:literal_i64) do |node|
       token = node.children.first
       Stone::AST::IntegerLiteral.parse(token.text, token.start_location)
+    end
+
+    transform(:reference) do |node|
+      token = node.children.first
+      Stone::AST::Reference.new(token.text)
     end
 
   end

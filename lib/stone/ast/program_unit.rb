@@ -48,6 +48,7 @@ module Stone
 
       private def create_module
         LLVM::Module.new("__program_unit__").tap do |mod|
+          setup_predefined_constants(mod)
           generate_top_function(mod)
         end
       end
@@ -56,7 +57,20 @@ module Stone
         @top_type ||= LLVM::Type.function([], LLVM::Type.i(64), varargs: false)
       end
 
-      private def generate_top_function(mod = module_ref)
+      private def setup_predefined_constants(mod)
+        define_constant(mod, "ZERO", 0)
+        define_constant(mod, "ONE", 1)
+      end
+
+      private def define_constant(mod, name, value)
+        mod.globals.add(LLVM::Int64, name).tap do |global|
+          global.initializer = LLVM::Int64.from_i(value)
+          global.linkage = :internal
+          global.global_constant = true
+        end
+      end
+
+      private def generate_top_function(mod)
         # TODO: Maybe pass in `ARGV` and `ENV`.
         # ... for `ARGV`, we'll probably need to implement `main(argc, argv, envp)`.
         # ... for `ENV`, we can probably call `getenv`, maybe `environ`.
@@ -65,7 +79,7 @@ module Stone
         # Generate IR for all code that's directly in the module.
         mod.functions.add("__top__", top_type) do |func|
           func.basic_blocks.append("entry").build do |builder|
-            compiled = children&.map { |child| child.to_llir(builder) }
+            compiled = children&.map { |child| child.to_llir(builder, mod) }
             if compiled.nil? || compiled.empty?
               builder.ret(LLVM::Type.void)
             else

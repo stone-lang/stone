@@ -5,9 +5,25 @@ module Stone
   class AST
     class IntegerLiteral < Stone::AST
 
-      # i64 range: -9,223,372,036,854,775,808 to 9,223,372,036,854,775,807
-      MIN = -(2**63)
-      MAX = 2**63 - 1
+      MIN = -(2**63)   # -9_223_372_036_854_775_808
+      MAX = 2**63 - 1  # +9_223_372_036_854_775_807
+
+      BASES = {
+        "0b" => 2,
+        "0o" => 8,
+        "0x" => 16
+      }.freeze
+
+      # TODO: This looks like a good place to set a good example: refactor into a Method Object.
+      def self.parse(text, location)
+        sign = text.start_with?("-") ? -1 : 1
+        unsigned_text = text.sub(/^[+-]/, "")
+        base = BASES.fetch(unsigned_text[0..1], 10)
+        digits = base == 10 ? unsigned_text : unsigned_text[2..]
+        value = sign * Integer(digits, base)
+        fail Stone::Error::Overflow.new(text, location) unless in_range?(value)
+        new(value)
+      end
 
       def self.in_range?(value)
         value >= MIN && value <= MAX

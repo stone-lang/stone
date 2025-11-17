@@ -25,24 +25,7 @@ module Stone
 
     transform(:literal_i64) do |node|
       token = node.children.first
-      text = token.text
-      sign = text.start_with?("-") ? -1 : 1
-      unsigned_text = text.sub(/^[+-]/, "")
-
-      base = case unsigned_text
-             when /^0b/ then 2
-             when /^0o/ then 8
-             when /^0x/ then 16
-             else 10
-             end
-
-      digits = base == 10 ? unsigned_text : unsigned_text[2..]
-      value = digits.to_i(base) * sign
-
-      # Check for overflow
-      fail Stone::Error::Overflow.new(text, token.start_location) unless Stone::AST::IntegerLiteral.in_range?(value)
-
-      Stone::AST::IntegerLiteral.new(value)
+      Stone::AST::IntegerLiteral.parse(token.text, token.start_location)
     end
 
   end

@@ -13,11 +13,15 @@ module Stone
       end
 
       def to_llir(builder, mod)
+        # Check globals first (constants, variables)
         global = mod.globals[identifier]
+        return builder.load(global, identifier) if global
 
-        fail Stone::ReferenceError, "undefined constant or variable: #{identifier}" unless global
+        # Check functions (function names are also references)
+        function = mod.functions[identifier]
+        return function if function
 
-        builder.load(global, identifier)
+        fail Stone::ReferenceError, "undefined constant, variable, or function: #{identifier}"
       end
 
       def to_s

@@ -9,7 +9,7 @@
 RSpec::Matchers.define :parse_as do |expected_rule|
   match do |input|
     result = Stone::Grammar.parse(input)
-    @actual_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == expected_rule.to_s }
+    @actual_node = result.find { |node| node.is_a?(Grammy::ParseTree) && node.name == expected_rule.to_sym }
     !@actual_node.nil?
   rescue Grammy::ParseError => e
     @parse_error = e

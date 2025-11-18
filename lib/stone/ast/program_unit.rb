@@ -49,6 +49,7 @@ module Stone
       private def create_module
         LLVM::Module.new("__program_unit__").tap do |mod|
           setup_predefined_constants(mod)
+          setup_builtin_functions(mod)
           generate_top_function(mod)
         end
       end
@@ -68,6 +69,36 @@ module Stone
           global.linkage = :internal
           global.global_constant = true
         end
+      end
+
+      private def setup_builtin_functions(mod)
+        define_sum_function(mod)
+      end
+
+      private def define_sum_function(mod)
+        i64 = LLVM::Int64.type
+        function_type = LLVM::Type.function([i64, i64], i64)
+        mod.functions.add("sum", function_type).tap { |func| build_sum_body(func, mod) }
+      end
+
+      private def build_sum_body(func, mod)
+        func.basic_blocks.append("entry").build do |builder|
+          intrinsic = sadd_with_overflow_intrinsic(mod)
+          result = builder.call(intrinsic, func.params[0], func.params[1], "sadd_result")
+          sum_value = builder.extract_value(result, 0, "sum")
+          builder.ret(sum_value)
+        end
+      end
+
+      private def sadd_with_overflow_intrinsic(mod)
+        intrinsic_name = "llvm.sadd.with.overflow.i64"
+        return mod.functions[intrinsic_name] if mod.functions[intrinsic_name]
+
+        i64 = LLVM::Int64.type
+        i1 = LLVM::Int1.type
+        result_type = LLVM::Type.struct([i64, i1], false)
+        function_type = LLVM::Type.function([i64, i64], result_type)
+        mod.functions.add(intrinsic_name, function_type)
       end
 
       private def generate_top_function(mod)

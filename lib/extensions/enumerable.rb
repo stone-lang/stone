@@ -27,12 +27,12 @@ module Enumerable
 
   # Allow Rails-style `second`.
   def second
-    self[1]
+    drop(1).first
   end
 
   # Prefer 1-based indexing to get the `nth` element.
   def nth(n) # rubocop:disable Naming/MethodParameterName
-    self[n - 1]
+    drop(n - 1).first
   end
 
   def map_dig(*)

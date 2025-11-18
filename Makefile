@@ -3,14 +3,23 @@ BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
 LLVM_PREFIX := $(shell brew --prefix llvm 2>/dev/null || { [ -d /usr/lib/llvm-21 ] && echo /usr/lib/llvm-21; } || mise where llvm 2>/dev/null || echo)
 PATH := $(LLVM_PREFIX)/bin:$(PATH)
 DYLD_LIBRARY_PATH := $(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)
+LD_LIBRARY_PATH := $(LLVM_PREFIX)/lib:$(LD_LIBRARY_PATH)
 LDFLAGS := "-L$(LLVM_PREFIX)/lib"
 CPPFLAGS := "-I$(LLVM_PREFIX)/include"
 export PATH
 export DYLD_LIBRARY_PATH
+export LD_LIBRARY_PATH
 
 all: setup deps test lint
 
-setup: bun node_modules/.bin/markdownlint-cli2 llvm
+ci: specs lint
+
+setup: bun node_modules/.bin/markdownlint-cli2 llvm bundle_config
+
+bundle_config:
+ifndef CI
+	@bundle config local.grammy ~/Work/Code/grammy
+endif
 
 deps: bundle
 
@@ -21,10 +30,10 @@ specs: rspec
 console: bundle
 	@bundle exec pry -I lib -r stone -r grammy
 
-lint: markdownlint rubocop
+lint: rubocop markdownlint
 
 rspec: bundle
-	DYLD_LIBRARY_PATH="$(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)" DEBUG=0 bundle exec rspec
+	DEBUG=0 bundle exec rspec
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)
@@ -62,4 +71,4 @@ llvm:
 		mise install llvm; \
 	fi
 
-.PHONY: all setup deps test specs console lint rspec bundle rubocop markdownlint bun llvm
+.PHONY: all ci setup deps test specs console lint rspec bundle bundle_config rubocop markdownlint bun llvm

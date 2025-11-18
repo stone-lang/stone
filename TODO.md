@@ -59,7 +59,7 @@
         - [ ] Ruby
         - [ ] gems
         - [ ] RuboCop (see if any rules need updated config)
-- [ ] CI/CD setup (GitHub Actions)
+- [x] CI/CD setup (GitHub Actions)
 - [x] linting
     - [x] RuboCop
     - [x] markdownlint

@@ -1,4 +1,5 @@
 -I lib
+--require ./spec/suppress_gem_warnings.rb
 --require ./spec/spec_helper.rb
 --require debug
 --require pry

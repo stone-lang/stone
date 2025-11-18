@@ -6,9 +6,11 @@ DYLD_LIBRARY_PATH := $(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)
 LD_LIBRARY_PATH := $(LLVM_PREFIX)/lib:$(LD_LIBRARY_PATH)
 LDFLAGS := "-L$(LLVM_PREFIX)/lib"
 CPPFLAGS := "-I$(LLVM_PREFIX)/include"
+RUBYOPT := --enable=frozen-string-literal
 export PATH
 export DYLD_LIBRARY_PATH
 export LD_LIBRARY_PATH
+export RUBYOPT
 
 all: setup deps test lint
 

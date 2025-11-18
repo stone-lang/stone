@@ -17,18 +17,6 @@ module Stone
       Stone::AST::ProgramUnit.new(name, transformed_children)
     end
 
-    transform(:expression) do |node|
-      transform(node.children.first)
-    end
-
-    transform(:primary) do |node|
-      transform(node.children.first)
-    end
-
-    transform(:literal) do |node|
-      transform(node.children.first)
-    end
-
     transform(:literal_i64) do |node|
       token = node.children.first
       Stone::AST::IntegerLiteral.parse(token.text, token.start_location)

@@ -21,7 +21,7 @@ module Stone
         base = BASES.fetch(unsigned_text[0..1], 10)
         digits = base == 10 ? unsigned_text : unsigned_text[2..]
         value = sign * Integer(digits, base)
-        fail Stone::Error::Overflow.new(text, location) unless in_range?(value)
+        fail Stone::Error::Overflow.new(location:, literal: text) unless in_range?(value)
         new(value)
       end
 

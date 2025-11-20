@@ -5,16 +5,12 @@ module Stone
   class Error
     class Overflow < Stone::Error
 
-      attr_reader :literal, :location
+      attr_reader :literal
 
-      def initialize(literal, location)
+      def initialize(message = nil, location:, literal:)
         @literal = literal
-        @location = location
-        super(message)
-      end
-
-      def message
-        "Overflow Error: #{literal} falls outside 64-bit Int range at line #{location.line}, column #{location.column}"
+        message ||= "Overflow Error: #{literal} falls outside 64-bit Int range at line #{location.line}, column #{location.column}"
+        super(message, location: location)
       end
 
     end

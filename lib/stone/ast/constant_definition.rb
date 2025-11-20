@@ -14,22 +14,37 @@ module Stone
       end
 
       def to_llir(builder, mod)
-        # Create a global with a dummy constant initializer
         # For now, assume i64 type - we'll need proper type inference later
         global = mod.globals.add(LLVM::Int64, identifier)
-        global.initializer = LLVM::Int64.from_i(0)
         global.linkage = :internal
-        # NOTE: NOT setting global_constant = true to allow runtime initialization
-        # TODO: Add compile-time constant folding to use true constants when possible
 
-        # Evaluate the expression (can be any expression: literal, function call, reference, etc.)
         llvm_value = value_expression.to_llir(builder, mod)
 
-        # Store the computed value to the global
-        builder.store(llvm_value, global)
+        if literal_constant?
+          initialize_as_constant(global, llvm_value)
+        else
+          initialize_at_runtime(global, builder, llvm_value)
+        end
 
-        # Constant definitions don't produce a value themselves
         nil
+      end
+
+      private def initialize_as_constant(global, llvm_value)
+        # OPTIMIZE: Use true LLVM constant for literals
+        global.initializer = llvm_value
+        global.global_constant = true
+      end
+
+      private def initialize_at_runtime(global, builder, llvm_value)
+        # Runtime initialization for non-constant expressions
+        global.initializer = LLVM::Int64.from_i(0)
+        # NOTE: NOT setting global_constant = true to allow runtime initialization
+
+        builder.store(llvm_value, global)
+      end
+
+      private def literal_constant?
+        value_expression.is_a?(Stone::AST::IntegerLiteral)
       end
 
     end

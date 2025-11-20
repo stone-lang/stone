@@ -3,6 +3,7 @@ require "stone/ast/integer_literal"
 require "stone/ast/reference"
 require "stone/ast/function_call"
 require "stone/ast/program_unit"
+require "stone/ast/constant_definition"
 require "stone/error/overflow"
 require "grammy/tree/transformation"
 
@@ -15,6 +16,22 @@ module Stone
       transformed_children = node.children.map { |child| transform(child) }
       name = :program_unit
       Stone::AST::ProgramUnit.new(name, transformed_children)
+    end
+
+    transform(:statement) do |node|
+      # Find the definition or expression within the statement.
+      meaningful_child = node.children.find { |child|
+        child.respond_to?(:name) && %i[definition expression].include?(child.name)
+      }
+      transform(meaningful_child) if meaningful_child
+    end
+
+    transform(:definition) do |node|
+      identifier = node.children.first.text
+      expression_node = node.children.find { |child| child.respond_to?(:name) && child.name == :expression }
+      value_expression = transform(expression_node)
+
+      Stone::AST::ConstantDefinition.new(identifier, value_expression)
     end
 
     transform(:literal_i64) do |node|

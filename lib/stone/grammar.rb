@@ -6,7 +6,10 @@ module Stone
 
     start :program_unit
 
-    rule(:program_unit) { ws[0..] + expression + ws[0..] }
+    rule(:program_unit) { statement[1..] }
+    rule(:statement) { ws[0..] + (definition | expression) + ws_no_nl[0..] + statement_separator }
+    rule(:statement_separator) { semi | newline | eof }
+    rule(:definition) { identifier + ws[1..] + define_op + ws[1..] + expression }
     rule(:expression) { function_call | primary }
     rule(:function_call) { primary + argument_list }
     rule(:primary) { literal | reference }
@@ -25,6 +28,10 @@ module Stone
     terminal(:rparen) { ")" }
     terminal(:comma) { "," }
     terminal(:ws) { /[ \t\n\r]+/ }
+    terminal(:ws_no_nl) { /[ \t]+/ }
+    terminal(:newline) { /(\n|\r\n)/ }
+    terminal(:semi) { ";" }
+    terminal(:define_op) { ":=" }
 
   end
 end

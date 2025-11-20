@@ -16,6 +16,7 @@ require "stone/ast"
 require "stone/ast/integer_literal"
 require "stone/ast/reference"
 require "stone/ast/function_call"
+require "stone/ast/constant_definition"
 require "stone/ast/program_unit"
 
 

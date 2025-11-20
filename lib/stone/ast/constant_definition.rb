@@ -14,11 +14,10 @@ module Stone
       end
 
       def to_llir(builder, mod)
-        # For now, assume i64 type - we'll need proper type inference later
-        global = mod.globals.add(LLVM::Int64, identifier)
-        global.linkage = :internal
-
         llvm_value = value_expression.to_llir(builder, mod)
+
+        global = mod.globals.add(llvm_value.type, identifier)
+        global.linkage = :internal
 
         if literal_constant?
           initialize_as_constant(global, llvm_value)
@@ -29,17 +28,16 @@ module Stone
         nil
       end
 
+      # Use true LLVM constants, when we can
       private def initialize_as_constant(global, llvm_value)
-        # OPTIMIZE: Use true LLVM constant for literals
-        global.initializer = llvm_value
         global.global_constant = true
+        global.initializer = llvm_value
       end
 
+      # Runtime initialization for non-constant expressions
       private def initialize_at_runtime(global, builder, llvm_value)
-        # Runtime initialization for non-constant expressions
+        global.global_constant = false # Allow runtime update
         global.initializer = LLVM::Int64.from_i(0)
-        # NOTE: NOT setting global_constant = true to allow runtime initialization
-
         builder.store(llvm_value, global)
       end
 

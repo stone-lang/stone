@@ -88,6 +88,29 @@ RSpec.describe Stone::AST::ConstantDefinition do
         expect(global.global_constant?).to be false
       end
     end
+
+    context "when using type inference" do
+      let(:literal) { Stone::AST::IntegerLiteral.new(123) }
+      let(:const_def) { described_class.new("TYPED", literal) }
+
+      it "infers the type from the LLVM value" do
+        const_def.to_llir(builder, mod)
+
+        global = mod.globals["TYPED"]
+        # The initializer should have the same type as the value (i64 for IntegerLiteral)
+        expect(global.initializer.type.to_s).to eq("i64")
+      end
+
+      it "does not hardcode the type to i64" do
+        const_def.to_llir(builder, mod)
+
+        global = mod.globals["TYPED"]
+        # Verify the type came from the value, not from a hardcoded LLVM::Int64
+        # If we add other numeric types later (i32, float, etc), this should work
+        llvm_value = literal.to_llir(builder, mod)
+        expect(global.initializer.type).to eq(llvm_value.type)
+      end
+    end
   end
 
 end

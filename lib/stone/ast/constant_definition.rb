@@ -14,17 +14,19 @@ module Stone
       end
 
       def to_llir(builder, mod)
-        # Evaluate the expression to get the LLVM constant value
-        # For now, we only support constant expressions (literals)
-        # TODO: Add support for constant expressions (e.g., 1 + 2)
-        llvm_value = value_expression.to_llir(builder, mod)
-
-        # Create a global constant in the module
+        # Create a global with a dummy constant initializer
         # For now, assume i64 type - we'll need proper type inference later
         global = mod.globals.add(LLVM::Int64, identifier)
+        global.initializer = LLVM::Int64.from_i(0)
         global.linkage = :internal
-        global.global_constant = true
-        global.initializer = llvm_value
+        # NOTE: NOT setting global_constant = true to allow runtime initialization
+        # TODO: Add compile-time constant folding to use true constants when possible
+
+        # Evaluate the expression (can be any expression: literal, function call, reference, etc.)
+        llvm_value = value_expression.to_llir(builder, mod)
+
+        # Store the computed value to the global
+        builder.store(llvm_value, global)
 
         # Constant definitions don't produce a value themselves
         nil

@@ -110,14 +110,18 @@ module Stone
         # Generate IR for all code that's directly in the module.
         mod.functions.add("__top__", top_type) do |func|
           func.basic_blocks.append("entry").build do |builder|
-            compiled = children&.map { |child| child.to_llir(builder, mod) }
-            if compiled.nil? || compiled.empty?
+            compiled_children = compiled_children(builder, mod)
+            if compiled_children.nil? || compiled_children.empty?
               builder.ret(LLVM::Type.void)
             else
-              builder.ret(compiled.last)
+              builder.ret(compiled_children.last)
             end
           end
         end
+      end
+
+      private def compiled_children(builder, mod)
+        @compiled_children ||= children&.compact&.map { |child| child.to_llir(builder, mod) }
       end
     end
   end

@@ -14,7 +14,8 @@ module Stone
       end
 
       def to_llir(builder, mod)
-        func = mod.functions[function_name]
+        func = mod.lookup_function(function_name)
+
         fail Stone::ReferenceError, "undefined function: #{function_name}" unless func
 
         validate_argument_count(func.function_type.argument_types.size)

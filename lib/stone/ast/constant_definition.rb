@@ -16,6 +16,8 @@ module Stone
       def to_llir(builder, mod)
         llvm_value = value_expression.to_llir(builder, mod)
 
+        return register_function_alias(mod, llvm_value) if llvm_value.is_a?(LLVM::Function)
+
         global = mod.globals.add(llvm_value.type, identifier)
         global.linkage = :internal
 
@@ -25,6 +27,12 @@ module Stone
           initialize_at_runtime(global, builder, llvm_value)
         end
 
+        nil
+      end
+
+      # Register a function (lambda) as an alias so it can be called by the constant name
+      private def register_function_alias(mod, function)
+        mod.register_function_alias(identifier, function)
         nil
       end
 

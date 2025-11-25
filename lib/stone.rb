@@ -6,6 +6,7 @@ end
 require "llvm/core"
 require "llvm/execution_engine"
 
+require "extensions/llvm_module"
 require "grammy/scanner"
 require "stone/error"
 require "stone/error/overflow"

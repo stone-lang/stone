@@ -12,8 +12,13 @@ module Stone
         @name = :reference
       end
 
+      # rubocop:disable Metrics/AbcSize
       def to_llir(builder, mod)
-        # Check globals first (constants, variables)
+        # Check lambda parameters first (if we're inside a lambda)
+        param_storage = mod.lambda_param_storage
+        return builder.load(param_storage[identifier], identifier) if param_storage && param_storage[identifier]
+
+        # Check globals (constants, variables)
         global = mod.globals[identifier]
         return builder.load(global, identifier) if global
 
@@ -23,6 +28,7 @@ module Stone
 
         fail Stone::ReferenceError, "undefined constant, variable, or function: #{identifier}"
       end
+      # rubocop:enable Metrics/AbcSize
 
       def to_s
         identifier

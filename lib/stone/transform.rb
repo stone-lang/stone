@@ -13,7 +13,8 @@ module Stone
     include Grammy::Tree::Transformation
 
     transform(:program_unit) do |node|
-      transformed_children = node.children.map { |child| transform(child) }
+      statement_list = node.find_child(:statement_list)
+      transformed_children = statement_list ? extract_all_statements(statement_list) : []
       name = :program_unit
       Stone::AST::ProgramUnit.new(name, transformed_children)
     end
@@ -28,7 +29,7 @@ module Stone
 
     transform(:definition) do |node|
       identifier = node.children.first.text
-      expression_node = node.children.find { |child| child.respond_to?(:name) && child.name == :expression }
+      expression_node = node.find_child(:expression)
       value_expression = transform(expression_node)
 
       Stone::AST::ConstantDefinition.new(identifier, value_expression)
@@ -53,6 +54,19 @@ module Stone
 
       Stone::AST::FunctionCall.new(function_name, arguments)
     end
+
+    transform(:statement) do |node|
+      # statement can be comment, definition, expression, or empty - delegate to meaningful child
+      child = node.find_child(:definition) || node.find_child(:expression)
+      transform(child) if child
+    end
+
+    private def extract_all_statements(statement_list_node)
+      statements = []
+      collect_statements(statement_list_node, statements)
+      statements
+    end
+
 
     private def extract_expressions_from(node)
       return [] unless node

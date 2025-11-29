@@ -12,23 +12,34 @@ module Stone
         @name = :reference
       end
 
-      # rubocop:disable Metrics/AbcSize
       def to_llir(builder, mod)
-        # Check lambda parameters first (if we're inside a lambda)
+        lookup_parameter(builder, mod) ||
+          lookup_global(builder, mod) ||
+          lookup_function(mod) ||
+          fail_with_reference_error
+      end
+
+      private def lookup_parameter(builder, mod)
         param_storage = mod.lambda_param_storage
-        return builder.load(param_storage[identifier], identifier) if param_storage && param_storage[identifier]
+        return nil unless param_storage && param_storage[identifier]
 
-        # Check globals (constants, variables)
+        builder.load(param_storage[identifier], identifier)
+      end
+
+      private def lookup_global(builder, mod)
         global = mod.globals[identifier]
-        return builder.load(global, identifier) if global
+        return nil unless global
 
-        # Check functions (function names are also references)
-        function = mod.functions[identifier]
-        return function if function
+        builder.load(global, identifier)
+      end
 
+      private def lookup_function(mod)
+        mod.functions[identifier]
+      end
+
+      private def fail_with_reference_error
         fail Stone::ReferenceError, "undefined constant, variable, or function: #{identifier}"
       end
-      # rubocop:enable Metrics/AbcSize
 
       def to_s
         identifier

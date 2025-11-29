@@ -70,4 +70,3 @@ RSpec.describe "Integer Literal Parsing" do
   end
 
 end
-# rubocop:enable RSpec/DescribeClass

@@ -1,4 +1,5 @@
 require "stone/ast"
+require "stone/types"
 
 
 module Stone
@@ -21,16 +22,8 @@ module Stone
       end
 
       def to_llir(_builder, mod)
-        # For now, we assume all parameters and return type are i64
-        i64 = LLVM::Int64.type
-        param_types = [i64] * parameters.size
-        function_type = LLVM::Type.function(param_types, i64)
-
-        # Check if function already exists (happens if to_llir called multiple times on same lambda)
-        func = mod.functions[function_name]
-        func ||= create_lambda_function(mod, function_name, function_type)
-
-        func
+        # Check if function already exists (happens if to_llir called multiple times on same lambda).
+        mod.functions[function_name] || create_lambda_function(mod, function_name, function_type)
       end
 
       def to_s
@@ -40,6 +33,16 @@ module Stone
       private def next_lambda_id
         self.class.lambda_count += 1
         self.class.lambda_count
+      end
+
+      private def function_type
+        # For now, we assume all functions return an i64.
+        LLVM::Type.function(param_types, I64)
+      end
+
+      private def param_types
+        # For now, we assume all parameters are i64.
+        [I64] * parameters.size
       end
 
       private def function_name

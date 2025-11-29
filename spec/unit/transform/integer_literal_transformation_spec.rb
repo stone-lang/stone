@@ -417,4 +417,3 @@ RSpec.describe "Integer Literal Transformation" do
   end
 
 end
-# rubocop:enable RSpec/DescribeClass

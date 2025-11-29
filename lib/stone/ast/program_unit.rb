@@ -7,8 +7,8 @@ module Stone
   class AST
     class ProgramUnit < Stone::AST
 
-      def initialize(name, children)
-        super
+      def initialize(children)
+        super(:program_unit, children)
         LLVM.init_jit
       end
 

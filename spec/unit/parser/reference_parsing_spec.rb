@@ -49,4 +49,3 @@ RSpec.describe "Reference Parsing" do
   end
 
 end
-# rubocop:enable RSpec/DescribeClass

@@ -1,12 +1,13 @@
 require "stone/ast"
+require "stone/type/int"
 
 
 module Stone
   class AST
     class IntegerLiteral < Stone::AST
 
-      MIN = -(2**63)   # -9_223_372_036_854_775_808
-      MAX = 2**63 - 1  # +9_223_372_036_854_775_807
+      MIN = Stone::Type::Int::MIN
+      MAX = Stone::Type::Int::MAX
 
       BASES = {
         "0b" => 2,

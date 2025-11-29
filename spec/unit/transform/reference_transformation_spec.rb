@@ -45,4 +45,3 @@ RSpec.describe "Reference Transformation" do
   end
 
 end
-# rubocop:enable RSpec/DescribeClass

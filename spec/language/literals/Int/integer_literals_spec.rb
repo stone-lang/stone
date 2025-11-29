@@ -96,4 +96,3 @@ RSpec.describe "Integer Literals" do
   end
 
 end
-# rubocop:enable RSpec/DescribeClass

@@ -16,8 +16,7 @@ module Stone
     transform(:program_unit) do |node|
       statement_list = node.find_child(:statement_list)
       transformed_children = statement_list ? extract_all_statements(statement_list) : []
-      name = :program_unit
-      Stone::AST::ProgramUnit.new(name, transformed_children)
+      Stone::AST::ProgramUnit.new(transformed_children)
     end
 
     transform(:statement) do |node|

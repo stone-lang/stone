@@ -48,6 +48,10 @@ Metrics/ClassLength:
 Performance/RedundantBlockCall:
   Enabled: false
 
+Naming/FileName:
+  Exclude:
+    - lib/stone/type/*
+
 # Not sure why `∧` and `∨` are problematic, even after allowing non-ASCII identifiers.
 # Also allow `builtin_ClassName` methods.
 Naming/MethodName:

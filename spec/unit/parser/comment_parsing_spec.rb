@@ -60,7 +60,7 @@ RSpec.describe "Comment Parsing" do
       result = Stone::Grammar.parse("x#y := 42")
       # The comment should contain "y := 42"
       comment_nodes = []
-      result.each do |node| comment_nodes << node if node.to_s.start_with?("#") end
+      result.each do |node| comment_nodes << node if node&.to_s&.start_with?("#") end
       expect(comment_nodes).not_to be_empty
       expect(comment_nodes.first.to_s).to eq("#y := 42")
     end
@@ -80,11 +80,10 @@ RSpec.describe "Comment Parsing" do
       result = Stone::Grammar.parse("42 # this is important!\n")
       # The parse tree should contain the comment text including the newline
       comment_nodes = []
-      result.each do |node| comment_nodes << node if node.to_s.start_with?("#") end
+      result.each do |node| comment_nodes << node if node&.to_s&.start_with?("#") end
       expect(comment_nodes).not_to be_empty
       expect(comment_nodes.first.to_s).to eq("# this is important!\n")
     end
   end
 
 end
-# rubocop:enable RSpec/DescribeClass

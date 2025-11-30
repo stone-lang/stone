@@ -65,7 +65,8 @@ RSpec.describe "Integer Literal Parsing" do
   describe "edge cases" do
     it "parses empty input as empty program" do
       result = Stone::Grammar.parse("")
-      expect(result).to be_empty
+      statement_list = result.find_child(:statement_list)
+      expect(statement_list).to be_empty
     end
   end
 

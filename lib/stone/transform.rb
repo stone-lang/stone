@@ -58,7 +58,7 @@ module Stone
     transform(:lambda) do |node|
       parameter_list_node = node.find_child(:parameter_list)
       block_node = node.find_child(:block)
-      block_body_node = block_node ? block_node.find_child(:block_body) : nil
+      block_body_node = block_node ? block_node.find_child(:statement_list) : nil
 
       parameters = extract_parameters_from(parameter_list_node)
       body_statements = block_body_node ? extract_all_statements(block_body_node) : []

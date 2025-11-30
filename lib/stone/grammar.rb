@@ -6,46 +6,80 @@ module Stone
 
     start :program_unit
 
-    rule(:program_unit) { statement_list }
-    rule(:statement_list) { (ws[0..] + statement + (ws_no_nl[0..] + statement_separator)[0..1])[1..] }
-    rule(:statement_separator) { comment | semi | newline | eof }
-    rule(:statement) { comment | definition | expression | empty }
-    rule(:definition) { identifier + ws[1..] + define_op + ws[1..] + expression }
-    rule(:expression) { function_call | primary }
-    rule(:function_call) { primary + argument_list }
-    rule(:primary) { lambda | literal | reference }
-    rule(:lambda) { lambda_symbol + parameter_list + ws[0..] + block }
-    rule(:block) { lbrace + ws[0..] + block_body + ws[0..] + rbrace }
-    rule(:block_body) { (ws[0..] + statement + (ws_no_nl[0..] + statement_separator)[0..1])[0..] }
-    rule(:parameter_list) { lparen + ws[0..] + parameter_list_content + rparen }
-    rule(:parameter_list_content) { (parameter + (comma + ws[0..] + parameter)[0..])[0..1] }
-    rule(:parameter) { ws[0..] + identifier + ws[0..] }
-    rule(:argument_list) { lparen + ws[0..] + argument_list_content + rparen }
-    rule(:argument_list_content) { (argument + (comma + ws[0..] + argument)[0..])[0..1] }
-    rule(:argument) { ws[0..] + expression + ws[0..] }
-    rule(:reference) { identifier }
-    rule(:literal) { literal_i64 }
-    # NOTE: decimal has to come last, or else it'll read the `0` before a `b`, `o`, or `x`.
-    rule(:literal_i64) { literal_i64_binary | literal_i64_octal | literal_i64_hex | literal_i64_decimal }
+    # Program structure
+    rule(:program_unit) { statement_list + eof }
+    rule(:statement_list) { list(statement, separated_by: statement_separator, allow_repeated_separator: true) }
+    rule(:statement_separator) { newline | semi | comment }
+    rule(:statement) { definition | expression | comment }
+    rule(:definition) { identifier + ws! + define_op + ws! + expression }
 
-    terminal(:comment) { /#[^\n\r]*(?:\r\n|\n|\r)?/ } # NOTE: includes trailing EOL.
+    # Expressions
+    # WARNING: primary must come after function_call, because a function_call starts with a primary.
+    rule(:expression) { function_call | primary }
+    rule(:primary) { literal | reference | lambda }
+    rule(:function_call) { primary + argument_list }
+    rule(:argument_list) { parens(comma_separated(argument)) }
+    rule(:argument) { expression }
+    rule(:literal) { literal_i64 }
+    rule(:reference) { identifier }
+    rule(:lambda) { lambda_op + parameter_list + ws? + block }
+    rule(:parameter_list) { parens(comma_separated(parameter, allow_trailing: false)) }
+    rule(:parameter) { identifier }
+    rule(:block) { braces(statement_list) }
+
+    # Custom Matchers/Combinators
+    # Match the passed-in matchers/combinators within parentheses, with whitespace allowed.
+    def parens(submatchers)
+      str("(") + ws? + submatchers + ws? + str(")")
+    end
+
+    # Match the passed-in matchers/combinators within curly braces, with whitespace allowed.
+    def braces(submatchers)
+      str("{") + ws? + submatchers + ws? + str("}")
+    end
+
+    # Match a comma-separated list, optionally allowing a trailing comma.
+    def comma_separated(submatchers, allow_trailing: true)
+      list(submatchers, separated_by: str(","), allow_trailing: allow_trailing)
+    end
+
+    # Match a list of matchers/combinators, separated by a specified separator.
+    # - Supports allowing trailing separator (default: true)
+    # - Supports allowing repeated consecutive separators (default: false)
+    # - Supports minimum item count (default: 0)
+    def list(items, separated_by:, allow_trailing: true, allow_repeated_separator: false, min: 0)
+      list_repetition = min.zero? ? [0..] : [min..]
+      items_with_separators = ws? + items + (separated_by + ws? + items)[0..]
+      if allow_trailing
+        trailing_repetition = allow_repeated_separator ? [0..] : [0..1]
+        (items_with_separators + (separated_by + ws?)[*trailing_repetition])[*list_repetition]
+      else
+        items_with_separators[*list_repetition]
+      end
+    end
+
+    # Identifiers
+    terminal(:identifier) { /[a-zA-Z_][a-zA-Z0-9_]*/ }
+
+    # Operators
+    terminal(:lambda_op) { "λ" }
+    terminal(:define_op) { ":=" }
+
+    # Literals
+    # NOTE: Decimal must be last to avoid consuming `0` from the prefixes.
+    rule(:literal_i64) { literal_i64_binary | literal_i64_octal | literal_i64_hex | literal_i64_decimal }
     terminal(:literal_i64_decimal) { /[+-]?\d+/ }
     terminal(:literal_i64_binary) { /[+-]?0b[01]+/ }
     terminal(:literal_i64_octal) { /[+-]?0o[0-7]+/ }
     terminal(:literal_i64_hex) { /[+-]?0x[0-9a-fA-F]+/ }
-    terminal(:identifier) { /[a-zA-Z_][a-zA-Z0-9_]*/ }
-    terminal(:lambda_symbol) { "λ" }
-    terminal(:lparen) { "(" }
-    terminal(:rparen) { ")" }
-    terminal(:lbrace) { "{" }
-    terminal(:rbrace) { "}" }
-    terminal(:comma) { "," }
-    terminal(:ws) { /[ \t\n\r]+/ }
-    terminal(:ws_no_nl) { /[ \t]+/ }
+
+    # Whitespace and separators
+    terminal(:comment) { /#[^\n\r]*(?:\r\n|\n|\r)?/ } # Includes trailing EOL
     terminal(:newline) { /(\n|\r\n)/ }
     terminal(:semi) { ";" }
-    terminal(:define_op) { ":=" }
-    terminal(:empty) { "" }
+    terminal(:ws) { /[ \t\n\r]+/ }
+    rule(:ws?) { ws[0..] } # White space is **allowed**.
+    rule(:ws!) { ws[1..] } # White space is **required**.
 
   end
 end

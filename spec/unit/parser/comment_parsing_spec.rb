@@ -78,11 +78,11 @@ RSpec.describe "Comment Parsing" do
 
     it "preserves comment text exactly including newline" do
       result = Stone::Grammar.parse("42 # this is important!\n")
-      # The parse tree should contain the comment text including the newline
+      # The parse tree should contain the comment text, **not** including the newline.
       comment_nodes = []
       result.each do |node| comment_nodes << node if node&.to_s&.start_with?("#") end
       expect(comment_nodes).not_to be_empty
-      expect(comment_nodes.first.to_s).to eq("# this is important!\n")
+      expect(comment_nodes.first.to_s).to eq("# this is important!")
     end
   end
 

@@ -9,8 +9,8 @@ module Stone
     # Program structure
     rule(:program_unit) { statement_list + eof }
     rule(:statement_list) { list(statement, separated_by: statement_separator, allow_repeated_separator: true) }
-    rule(:statement_separator) { newline | semi | comment }
-    rule(:statement) { definition | expression | comment }
+    rule(:statement_separator) { newline | semi }
+    rule(:statement) { (definition | expression | comment) + (ws_no_nl? + comment)[0..1] }
     rule(:definition) { identifier + ws! + define_op + ws! + expression }
 
     # Expressions
@@ -74,12 +74,14 @@ module Stone
     terminal(:literal_i64_hex) { /[+-]?0x[0-9a-fA-F]+/ }
 
     # Whitespace and separators
-    terminal(:comment) { /#[^\n\r]*(?:\r\n|\n|\r)?/ } # Includes trailing EOL
+    terminal(:comment) { /#[^\n\r]*/ } # Does **NOT** include trailing EOL.
     terminal(:newline) { /(\n|\r\n)/ }
     terminal(:semi) { ";" }
     terminal(:ws) { /[ \t\n\r]+/ }
+    terminal(:ws_no_nl) { /[ \t]+/ }
     rule(:ws?) { ws[0..] } # White space is **allowed**.
     rule(:ws!) { ws[1..] } # White space is **required**.
+    rule(:ws_no_nl?) { ws_no_nl[0..] }
 
   end
 end

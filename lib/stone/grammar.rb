@@ -20,7 +20,7 @@ module Stone
     rule(:function_call) { primary + argument_list }
     rule(:argument_list) { parens(comma_separated(argument)) }
     rule(:argument) { expression }
-    rule(:literal) { literal_i64 }
+    rule(:literal) { literal_boolean | literal_i64 }
     rule(:reference) { identifier }
     rule(:lambda) { lambda_op + parameter_list + ws? + block }
     rule(:parameter_list) { parens(comma_separated(parameter, allow_trailing: false)) }
@@ -66,6 +66,7 @@ module Stone
     terminal(:define_op) { ":=" }
 
     # Literals
+    rule(:literal_boolean) { reg(/(TRUE|FALSE)/) }
     # NOTE: Decimal must be last to avoid consuming `0` from the prefixes.
     rule(:literal_i64) { literal_i64_binary | literal_i64_octal | literal_i64_hex | literal_i64_decimal }
     terminal(:literal_i64_decimal) { /[+-]?\d+/ }

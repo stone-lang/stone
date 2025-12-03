@@ -35,11 +35,27 @@ module Stone
       private def convert_llvm_result_to_ruby(result, result_type)
         case result_type.to_s
         when "i64"
-          # Convert LLVM GenericValue to signed Ruby integer
-          result.to_i
+          convert_i64_result(result)
+        when "i1"
+          convert_i1_result(result)
         else
           fail "Don't know how to convert this LLVM type yet: #{result_type}."
         end
+      end
+
+      private def convert_i64_result(result)
+        # i64 might be an extended Boolean or a true integer
+        return result.to_i != 0 if last_child_is_boolean?
+
+        result.to_i
+      end
+
+      private def convert_i1_result(result)
+        result.to_i != 0
+      end
+
+      private def last_child_is_boolean?
+        children&.last&.is_a?(Stone::AST::BooleanLiteral)
       end
 
       private def module_ref
@@ -85,6 +101,8 @@ module Stone
         func.basic_blocks.append("entry").build do |builder|
           intrinsic = sadd_with_overflow_intrinsic(mod)
           result = builder.call(intrinsic, func.params[0], func.params[1], "sadd_result")
+          # TODO: Check for overflow (something like `builder.extract_value(result, 0) == 1`) and branch to return a Stone::Type::Error if true.
+          # overflowed = builder.extract_value(result, 1)
           sum_value = builder.extract_value(result, 0, "sum")
           builder.ret(sum_value)
         end
@@ -114,9 +132,23 @@ module Stone
             if compiled_children.nil? || compiled_children.empty?
               builder.ret(LLVM::Type.void)
             else
-              builder.ret(compiled_children.last)
+              build_return_statement(builder, compiled_children.last)
             end
           end
+        end
+      end
+
+      private def build_return_statement(builder, last_value)
+        # Extend i1 (Boolean) to i64 for return compatibility
+        return_value = convert_to_return_type(builder, last_value)
+        builder.ret(return_value)
+      end
+
+      private def convert_to_return_type(builder, value)
+        if value.type.to_s == "i1"
+          builder.zext(value, LLVM::Int64.type, "bool_to_i64")
+        else
+          value
         end
       end
 

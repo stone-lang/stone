@@ -1,4 +1,5 @@
 require "stone/ast"
+require "stone/ast/boolean_literal"
 require "stone/ast/integer_literal"
 require "stone/ast/reference"
 require "stone/ast/function_call"
@@ -33,6 +34,11 @@ module Stone
       value_expression = transform(expression_node)
 
       Stone::AST::ConstantDefinition.new(identifier, value_expression)
+    end
+
+    transform(:literal_boolean) do |node|
+      token = node.children.first
+      Stone::AST::BooleanLiteral.parse(token.text, token.start_location)
     end
 
     transform(:literal_i64) do |node|

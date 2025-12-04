@@ -30,7 +30,7 @@ module Stone
       end
 
       def to_llir(_builder, _mod)
-        LLVM::Int1.from_i(@value)
+        @value == Stone::Type::Bool::TRUE ? LLVM::TRUE : LLVM::FALSE
       end
 
     end

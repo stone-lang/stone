@@ -34,7 +34,7 @@ module Stone
       end
 
       private def lookup_function(mod)
-        mod.functions[identifier]
+        mod.lookup_function(identifier)
       end
 
       private def fail_with_reference_error

@@ -105,6 +105,7 @@ module Stone
       private def setup_builtin_functions(mod)
         define_sum_function(mod)
         define_comparison_operators(mod)
+        define_if_function(mod)
       end
 
       private def define_comparison_operators(mod)
@@ -183,6 +184,58 @@ module Stone
           sum_value = builder.extract_value(result, 0, "sum")
           builder.ret(sum_value)
         end
+      end
+
+      private def define_if_function(mod)
+        i1 = LLVM::Int1.type
+        i64 = LLVM::Int64.type
+        # Block type: () -> i64
+        block_type = LLVM::Type.function([], i64)
+        block_ptr = LLVM::Type.pointer(block_type)
+        # if takes: (i1 condition, block* then_block, block* else_block) -> i64
+        function_type = LLVM::Type.function([i1, block_ptr, block_ptr], i64)
+        mod.functions.add("if", function_type).tap { |func| build_if_body(func) }
+      end
+
+      private def build_if_body(func)
+        blocks = create_if_basic_blocks(func)
+        build_if_entry(blocks, func.params[0])
+        then_result = build_if_branch(blocks[:then_bb], blocks[:merge_bb], func.params[1], "then_result")
+        else_result = build_if_branch(blocks[:else_bb], blocks[:merge_bb], func.params[2], "else_result")
+        build_if_merge(blocks, then_result, else_result)
+      end
+
+      private def create_if_basic_blocks(func)
+        {
+          entry_bb: func.basic_blocks.append("entry"),
+          then_bb: func.basic_blocks.append("then"),
+          else_bb: func.basic_blocks.append("else"),
+          merge_bb: func.basic_blocks.append("merge")
+        }
+      end
+
+      private def build_if_entry(blocks, condition)
+        blocks[:entry_bb].build { |builder| builder.cond(condition, blocks[:then_bb], blocks[:else_bb]) }
+      end
+
+      private def build_if_branch(branch_bb, merge_bb, block_ptr, result_name)
+        result = nil
+        branch_bb.build do |builder|
+          result = builder.call2(block_func_type, block_ptr, result_name)
+          builder.br(merge_bb)
+        end
+        result
+      end
+
+      private def build_if_merge(blocks, then_result, else_result)
+        blocks[:merge_bb].build do |builder|
+          phi = builder.phi(LLVM::Int64.type, {blocks[:then_bb] => then_result, blocks[:else_bb] => else_result}, "if_result")
+          builder.ret(phi)
+        end
+      end
+
+      private def block_func_type
+        @block_func_type ||= LLVM::Type.function([], LLVM::Int64.type)
       end
 
       private def sadd_with_overflow_intrinsic(mod)

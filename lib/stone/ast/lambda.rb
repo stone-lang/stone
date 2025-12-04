@@ -1,4 +1,5 @@
 require "stone/ast"
+require "stone/ast/block"
 require "stone/types"
 
 
@@ -6,7 +7,7 @@ module Stone
   class AST
     class Lambda < Stone::AST
 
-      attr_reader :parameters, :statements
+      attr_reader :parameters, :block
 
       class << self
         attr_accessor :lambda_count
@@ -17,17 +18,17 @@ module Stone
       def initialize(parameters, statements)
         @name = :lambda
         @parameters = parameters
-        @statements = statements
+        @block = Block.new(statements)
         @lambda_id = next_lambda_id
       end
 
       def to_llir(_builder, mod)
         # Check if function already exists (happens if to_llir called multiple times on same lambda).
-        mod.functions[function_name] || create_lambda_function(mod, function_name, function_type)
+        mod.functions[function_name] || create_function(mod, function_name, function_type)
       end
 
       def to_s
-        "λ(#{parameters.join(', ')}) { #{statements.join("\n")} }"
+        "λ(#{parameters.join(', ')}) { #{block.statements.join("\n")} }"
       end
 
       private def next_lambda_id
@@ -46,10 +47,14 @@ module Stone
       end
 
       private def function_name
-        "__lambda_#{@lambda_id}__"
+        "__#{function_prefix}_#{@lambda_id}__"
       end
 
-      private def create_lambda_function(mod, function_name, function_type)
+      private def function_prefix
+        "lambda"
+      end
+
+      private def create_function(mod, function_name, function_type)
         mod.functions.add(function_name, function_type).tap do |func|
           name_parameters(func)
           build_function_body(func, mod)
@@ -94,9 +99,7 @@ module Stone
 
       # Evaluate all statements in block and return value of last statement.
       private def evaluate_body_and_return(builder, mod)
-        results = Array(statements).compact.map { |stmt| stmt.to_llir(builder, mod) }
-        last_result = results.compact.last || LLVM::Int64.from_i(0)
-        builder.ret(last_result)
+        @block.evaluate_body_and_return(builder, mod)
       end
 
     end

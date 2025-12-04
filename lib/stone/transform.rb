@@ -6,6 +6,7 @@ require "stone/ast/function_call"
 require "stone/ast/program_unit"
 require "stone/ast/constant_definition"
 require "stone/ast/lambda"
+require "stone/ast/block"
 require "stone/error/overflow"
 require "grammy/tree/transformation"
 
@@ -82,6 +83,13 @@ module Stone
       body_statements = block_body_node ? extract_all_statements(block_body_node) : []
 
       Stone::AST::Lambda.new(parameters, body_statements)
+    end
+
+    transform(:block) do |node|
+      statement_list_node = node.find_child(:statement_list)
+      body_statements = statement_list_node ? extract_all_statements(statement_list_node) : []
+
+      Stone::AST::Block.new(body_statements)
     end
 
     transform(:statement) do |node|

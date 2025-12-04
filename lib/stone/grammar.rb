@@ -23,7 +23,7 @@ module Stone
     # they must come first, or primary would greedily match and stop.
     rule(:expression) { comparison_operation | function_call | primary }
     rule(:comparison_operation) { primary + ws! + comparison_operator + ws! + primary }
-    rule(:primary) { literal | reference | lambda }
+    rule(:primary) { literal | reference | lambda | block }
     rule(:function_call) { primary + argument_list }
     rule(:argument_list) { parens(comma_separated(argument)) }
     rule(:argument) { expression }

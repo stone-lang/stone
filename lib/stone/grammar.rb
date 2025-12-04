@@ -18,8 +18,11 @@ module Stone
     rule(:definition) { identifier + ws! + define_op + ws! + expression }
 
     # Expressions
-    # WARNING: primary must come after function_call, because a function_call starts with a primary.
-    rule(:expression) { function_call | primary }
+    # WARNING: Order matters! More specific patterns must come before more general ones.
+    # Since comparison_operation and function_call both start with primary,
+    # they must come first, or primary would greedily match and stop.
+    rule(:expression) { comparison_operation | function_call | primary }
+    rule(:comparison_operation) { primary + ws! + comparison_operator + ws! + primary }
     rule(:primary) { literal | reference | lambda }
     rule(:function_call) { primary + argument_list }
     rule(:argument_list) { parens(comma_separated(argument)) }
@@ -66,6 +69,7 @@ module Stone
     terminal(:identifier) { Regexp.union(ALPHA_IDENTIFIER, COMPARISON_OPERATOR) }
 
     # Operators
+    terminal(:comparison_operator) { COMPARISON_OPERATOR }
     terminal(:lambda_op) { "λ" }
     terminal(:define_op) { ":=" }
 

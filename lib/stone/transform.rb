@@ -29,11 +29,11 @@ module Stone
     end
 
     transform(:definition) do |node|
-      identifier = node.children.first.text
+      identifier_token = node.children.first
       expression_node = node.find_child(:expression)
       value_expression = transform(expression_node)
 
-      Stone::AST::ConstantDefinition.new(identifier, value_expression)
+      Stone::AST::ConstantDefinition.new(identifier_token.text, value_expression)
     end
 
     transform(:literal_boolean) do |node|
@@ -47,8 +47,8 @@ module Stone
     end
 
     transform(:reference) do |node|
-      token = node.children.first
-      Stone::AST::Reference.new(token.text)
+      identifier_token = node.children.first
+      Stone::AST::Reference.new(identifier_token.text)
     end
 
     transform(:function_call) do |node|
@@ -59,6 +59,18 @@ module Stone
       arguments = extract_expressions_from(argument_list)
 
       Stone::AST::FunctionCall.new(function_name, arguments)
+    end
+
+    transform(:comparison_operation) do |node|
+      # Desugar infix comparison (e.g., `5 < 3`) to function call (e.g., `<(5, 3)`)
+      primaries = node.children.select { |c| c.respond_to?(:name) && c.name == :primary }
+      operator_match = node.children.find { |c| c.is_a?(Grammy::Match) && c.text !~ /\s/ }
+
+      left_operand = transform(primaries[0])
+      right_operand = transform(primaries[1])
+      operator_name = operator_match.text
+
+      Stone::AST::FunctionCall.new(operator_name, [left_operand, right_operand])
     end
 
     transform(:lambda) do |node|

@@ -30,6 +30,19 @@ module Stone
       @lambda_param_storage = storage
     end
 
+    # Track which constants are strings (for type checking during returns)
+    def string_constants
+      @string_constants ||= {}
+    end
+
+    def register_string_constant(name, string_literal)
+      string_constants[name] = string_literal
+    end
+
+    def string_constant?(name)
+      string_constants.key?(name)
+    end
+
   end
 end
 

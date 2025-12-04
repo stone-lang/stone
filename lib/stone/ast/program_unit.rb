@@ -17,11 +17,42 @@ module Stone
       end
 
       def eval(function_name = "__top__")
-        fn = global_function(function_name)
-        result = jit_engine.run_function(fn)
-        convert_llvm_result_to_ruby(result, fn.return_type)
+        result, result_type = run_function(global_function(function_name))
+        convert_to_ruby(result, result_type)
       ensure
         jit_engine&.dispose
+      end
+
+      private def run_function(func)
+        if returns_string?
+          out_ptr = FFI::MemoryPointer.new(:int64)
+          out_len = FFI::MemoryPointer.new(:int64)
+          jit_engine.run_function(func, LLVM::GenericValue.from_ptr(out_ptr), LLVM::GenericValue.from_ptr(out_len))
+          [[out_ptr, out_len], :string]
+        else
+          [jit_engine.run_function(func), func.function_type.return_type]
+        end
+      end
+
+      private def convert_to_ruby(result, result_type)
+        case result_type.to_s
+        when "string"
+          read_string_result(*result)
+        when "i64"
+          last_child_is_boolean? ? (result.to_i != 0) : result.to_i
+        when "i1"
+          result.to_i != 0
+        else
+          fail "Don't know how to convert LLVM type to Ruby: #{result_type}"
+        end
+      end
+
+      private def read_string_result(out_ptr, out_len)
+        ptr_addr = out_ptr.read_int64
+        length = out_len.read_int64
+        return "" if length.zero? || ptr_addr.zero?
+
+        FFI::Pointer.new(ptr_addr).read_bytes(length).force_encoding(Encoding::UTF_8)
       end
 
       private def jit_engine
@@ -32,45 +63,15 @@ module Stone
         module_ref.functions[function_name]
       end
 
-      private def convert_llvm_result_to_ruby(result, result_type)
-        case result_type.to_s
-        when "i64"
-          convert_i64_result(result)
-        when "i1"
-          convert_i1_result(result)
-        else
-          fail "Don't know how to convert this LLVM type yet: #{result_type}."
-        end
-      end
-
-      private def convert_i64_result(result)
-        # i64 might be an extended Boolean or a true integer
-        return result.to_i != 0 if last_child_is_boolean?
-
-        result.to_i
-      end
-
-      private def convert_i1_result(result)
-        result.to_i != 0
-      end
-
       private def last_child_is_boolean?
-        return false unless children&.last
-
-        last_child = children.last
-        return true if last_child.is_a?(Stone::AST::BooleanLiteral)
-        return true if boolean_function_call?(last_child)
-
-        false
+        last_child = children&.last
+        last_child && last_child.is_a?(Stone::AST::BooleanLiteral) || boolean_function_call?(last_child)
       end
 
       private def boolean_function_call?(node)
         return false unless node.is_a?(Stone::AST::FunctionCall)
-
         func = module_ref.functions[node.function_name]
-        return false unless func
-
-        func.function_type.return_type.to_s == "i1"
+        func&.function_type&.return_type&.to_s == "i1"
       end
 
       private def module_ref
@@ -109,57 +110,23 @@ module Stone
       end
 
       private def define_comparison_operators(mod)
-        define_eq_function(mod)
-        define_ne_function(mod)
-        define_lt_function(mod)
-        define_le_function(mod)
-        define_gt_function(mod)
-        define_ge_function(mod)
+        define_comparison(mod, "==", :eq)
+        define_comparison(mod, "!=", :ne)
+        define_comparison(mod, "≠", :ne)
+        define_comparison(mod, "<", :slt)
+        define_comparison(mod, "<=", :sle)
+        define_comparison(mod, "≤", :sle)
+        define_comparison(mod, ">", :sgt)
+        define_comparison(mod, ">=", :sge)
+        define_comparison(mod, "≥", :sge)
       end
 
-      private def define_eq_function(mod)
-        i64 = LLVM::Int64.type
-        i1 = LLVM::Int1.type
-        function_type = LLVM::Type.function([i64, i64], i1)
-        mod.functions.add("==", function_type).tap { |func| build_icmp_body(func, :eq) }
+      private def define_comparison(mod, name, predicate)
+        mod.functions.add(name, comparison_function_type).tap { |func| build_icmp_body(func, predicate) }
       end
 
-      private def define_ne_function(mod)
-        i64 = LLVM::Int64.type
-        i1 = LLVM::Int1.type
-        function_type = LLVM::Type.function([i64, i64], i1)
-        mod.functions.add("!=", function_type).tap do |func| build_icmp_body(func, :ne) end
-        mod.functions.add("≠", function_type).tap { |func| build_icmp_body(func, :ne) }
-      end
-
-      private def define_lt_function(mod)
-        i64 = LLVM::Int64.type
-        i1 = LLVM::Int1.type
-        function_type = LLVM::Type.function([i64, i64], i1)
-        mod.functions.add("<", function_type).tap { |func| build_icmp_body(func, :slt) }
-      end
-
-      private def define_le_function(mod)
-        i64 = LLVM::Int64.type
-        i1 = LLVM::Int1.type
-        function_type = LLVM::Type.function([i64, i64], i1)
-        mod.functions.add("<=", function_type).tap do |func| build_icmp_body(func, :sle) end
-        mod.functions.add("≤", function_type).tap { |func| build_icmp_body(func, :sle) }
-      end
-
-      private def define_gt_function(mod)
-        i64 = LLVM::Int64.type
-        i1 = LLVM::Int1.type
-        function_type = LLVM::Type.function([i64, i64], i1)
-        mod.functions.add(">", function_type).tap { |func| build_icmp_body(func, :sgt) }
-      end
-
-      private def define_ge_function(mod)
-        i64 = LLVM::Int64.type
-        i1 = LLVM::Int1.type
-        function_type = LLVM::Type.function([i64, i64], i1)
-        mod.functions.add(">=", function_type).tap do |func| build_icmp_body(func, :sge) end
-        mod.functions.add("≥", function_type).tap { |func| build_icmp_body(func, :sge) }
+      private def comparison_function_type
+        @comparison_function_type ||= LLVM::Type.function([LLVM::Int64.type, LLVM::Int64.type], LLVM::Int1.type)
       end
 
       private def build_icmp_body(func, predicate)
@@ -249,41 +216,73 @@ module Stone
         mod.functions.add(intrinsic_name, function_type)
       end
 
+      # Generate IR for all code that's directly in the module.
+      # TODO: Maybe pass in `ARGV` and `ENV`.
+      # ... for `ARGV`, we'll probably need to implement `main(argc, argv, envp)`.
+      # ... for `ENV`, we can probably call `getenv`, maybe `environ`.
+      # Look into run_function_as_main(engine, fn, argc, argv, envp)
       private def generate_top_function(mod)
-        # TODO: Maybe pass in `ARGV` and `ENV`.
-        # ... for `ARGV`, we'll probably need to implement `main(argc, argv, envp)`.
-        # ... for `ENV`, we can probably call `getenv`, maybe `environ`.
-        # Look into run_function_as_main(engine, fn, argc, argv, envp)
-
-        # Generate IR for all code that's directly in the module.
-        mod.functions.add("__top__", top_type) do |func|
+        mod.functions.add("__top__", top_function_type) do |func|
           func.basic_blocks.append("entry").build do |builder|
-            compiled_children = compiled_children(builder, mod)
-            if compiled_children.nil? || compiled_children.empty?
-              builder.ret(LLVM::Type.void)
-            else
-              build_return_statement(builder, compiled_children.last)
-            end
+            compiled = compiled_children(builder, mod)
+            build_return(builder, func, compiled&.last)
           end
         end
       end
 
-      private def build_return_statement(builder, last_value)
-        # Extend i1 (Boolean) to i64 for return compatibility
-        return_value = convert_to_return_type(builder, last_value)
-        builder.ret(return_value)
-      end
-
-      private def convert_to_return_type(builder, value)
-        if value.type.to_s == "i1"
-          builder.zext(value, LLVM::Int64.type, "bool_to_i64")
+      private def top_function_type
+        if returns_string?
+          # For strings, use output parameters since FFI can't handle struct returns
+          LLVM::Type.function(
+            [LLVM::Type.pointer(LLVM::Int64), LLVM::Type.pointer(LLVM::Int64)],
+            LLVM::Type.void
+          )
         else
-          value
+          top_type
         end
       end
 
+      private def build_return(builder, func, last_value)
+        if returns_string?
+          builder.store(last_value, func.params[0])
+          builder.store(LLVM::Int64.from_i(string_literal_node.bytesize), func.params[1])
+          builder.ret_void
+        else
+          builder.ret(return_value_for(builder, last_value))
+        end
+      end
+
+      private def string_literal_node
+        last_child = children.last
+        return last_child if last_child.is_a?(Stone::AST::StringLiteral)
+        return last_child.value_expression if string_constant_definition?(last_child)
+        find_string_constant_value(last_child.identifier) if last_child.is_a?(Stone::AST::Reference)
+      end
+
+      private def find_string_constant_value(name)
+        children&.find { |c| string_constant_definition?(c) && c.identifier == name }&.value_expression
+      end
+
+      private def return_value_for(builder, value)
+        return LLVM::Int64.from_i(0) if value.nil?
+        return builder.zext(value, LLVM::Int64.type, "bool_to_i64") if value.type.to_s == "i1"
+        value
+      end
+
+      private def returns_string?
+        last_child = children&.last
+        return false unless last_child
+        return true if last_child.is_a?(Stone::AST::StringLiteral)
+        return true if string_constant_definition?(last_child)
+        !find_string_constant_value(last_child.identifier).nil? if last_child.is_a?(Stone::AST::Reference)
+      end
+
+      private def string_constant_definition?(node)
+        node.is_a?(Stone::AST::ConstantDefinition) && node.value_expression.is_a?(Stone::AST::StringLiteral)
+      end
+
       private def compiled_children(builder, mod)
-        @compiled_children ||= children&.compact&.map { |child| child.to_llir(builder, mod) }
+        @compiled_children ||= children&.compact&.select { |child| child.respond_to?(:to_llir) }&.map { |child| child.to_llir(builder, mod) }
       end
     end
   end

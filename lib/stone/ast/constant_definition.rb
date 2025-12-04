@@ -18,6 +18,11 @@ module Stone
 
         return register_function_alias(mod, llvm_value) if llvm_value.is_a?(LLVM::Function)
 
+        mod.register_string_constant(identifier, value_expression) if value_expression.is_a?(Stone::AST::StringLiteral)
+        create_global(mod, builder, llvm_value)
+      end
+
+      private def create_global(mod, builder, llvm_value)
         global = mod.globals.add(llvm_value.type, identifier)
         global.linkage = :internal
 

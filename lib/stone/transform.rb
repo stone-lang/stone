@@ -1,6 +1,7 @@
 require "stone/ast"
 require "stone/ast/boolean_literal"
 require "stone/ast/integer_literal"
+require "stone/ast/string_literal"
 require "stone/ast/reference"
 require "stone/ast/function_call"
 require "stone/ast/program_unit"
@@ -40,6 +41,11 @@ module Stone
     transform(:literal_boolean) do |node|
       token = node.children.first
       Stone::AST::BooleanLiteral.parse(token.text, token.start_location)
+    end
+
+    transform(:literal_string) do |node|
+      token = node.children.first
+      Stone::AST::StringLiteral.parse(token.text, token.start_location)
     end
 
     transform(:literal_i64) do |node|
@@ -90,12 +96,6 @@ module Stone
       body_statements = statement_list_node ? extract_all_statements(statement_list_node) : []
 
       Stone::AST::Block.new(body_statements)
-    end
-
-    transform(:statement) do |node|
-      # statement can be comment, definition, expression, or empty - delegate to meaningful child
-      child = node.find_child(:definition) || node.find_child(:expression)
-      transform(child) if child
     end
 
     private def extract_all_statements(statement_list_node)

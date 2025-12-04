@@ -4,6 +4,10 @@ require "grammy/grammar"
 module Stone
   class Grammar < Grammy::Grammar
 
+    # Identifier and operator patterns
+    ALPHA_IDENTIFIER = /[a-zA-Z_][a-zA-Z0-9_]*/
+    COMPARISON_OPERATOR = /(==|!=|<=|>=|≠|≤|≥|<|>)/
+
     start :program_unit
 
     # Program structure
@@ -59,7 +63,7 @@ module Stone
     end
 
     # Identifiers
-    terminal(:identifier) { /[a-zA-Z_][a-zA-Z0-9_]*/ }
+    terminal(:identifier) { Regexp.union(ALPHA_IDENTIFIER, COMPARISON_OPERATOR) }
 
     # Operators
     terminal(:lambda_op) { "λ" }

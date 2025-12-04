@@ -55,7 +55,22 @@ module Stone
       end
 
       private def last_child_is_boolean?
-        children&.last&.is_a?(Stone::AST::BooleanLiteral)
+        return false unless children&.last
+
+        last_child = children.last
+        return true if last_child.is_a?(Stone::AST::BooleanLiteral)
+        return true if boolean_function_call?(last_child)
+
+        false
+      end
+
+      private def boolean_function_call?(node)
+        return false unless node.is_a?(Stone::AST::FunctionCall)
+
+        func = module_ref.functions[node.function_name]
+        return false unless func
+
+        func.function_type.return_type.to_s == "i1"
       end
 
       private def module_ref
@@ -89,6 +104,68 @@ module Stone
 
       private def setup_builtin_functions(mod)
         define_sum_function(mod)
+        define_comparison_operators(mod)
+      end
+
+      private def define_comparison_operators(mod)
+        define_eq_function(mod)
+        define_ne_function(mod)
+        define_lt_function(mod)
+        define_le_function(mod)
+        define_gt_function(mod)
+        define_ge_function(mod)
+      end
+
+      private def define_eq_function(mod)
+        i64 = LLVM::Int64.type
+        i1 = LLVM::Int1.type
+        function_type = LLVM::Type.function([i64, i64], i1)
+        mod.functions.add("==", function_type).tap { |func| build_icmp_body(func, :eq) }
+      end
+
+      private def define_ne_function(mod)
+        i64 = LLVM::Int64.type
+        i1 = LLVM::Int1.type
+        function_type = LLVM::Type.function([i64, i64], i1)
+        mod.functions.add("!=", function_type).tap do |func| build_icmp_body(func, :ne) end
+        mod.functions.add("≠", function_type).tap { |func| build_icmp_body(func, :ne) }
+      end
+
+      private def define_lt_function(mod)
+        i64 = LLVM::Int64.type
+        i1 = LLVM::Int1.type
+        function_type = LLVM::Type.function([i64, i64], i1)
+        mod.functions.add("<", function_type).tap { |func| build_icmp_body(func, :slt) }
+      end
+
+      private def define_le_function(mod)
+        i64 = LLVM::Int64.type
+        i1 = LLVM::Int1.type
+        function_type = LLVM::Type.function([i64, i64], i1)
+        mod.functions.add("<=", function_type).tap do |func| build_icmp_body(func, :sle) end
+        mod.functions.add("≤", function_type).tap { |func| build_icmp_body(func, :sle) }
+      end
+
+      private def define_gt_function(mod)
+        i64 = LLVM::Int64.type
+        i1 = LLVM::Int1.type
+        function_type = LLVM::Type.function([i64, i64], i1)
+        mod.functions.add(">", function_type).tap { |func| build_icmp_body(func, :sgt) }
+      end
+
+      private def define_ge_function(mod)
+        i64 = LLVM::Int64.type
+        i1 = LLVM::Int1.type
+        function_type = LLVM::Type.function([i64, i64], i1)
+        mod.functions.add(">=", function_type).tap do |func| build_icmp_body(func, :sge) end
+        mod.functions.add("≥", function_type).tap { |func| build_icmp_body(func, :sge) }
+      end
+
+      private def build_icmp_body(func, predicate)
+        func.basic_blocks.append("entry").build do |builder|
+          result = builder.icmp(predicate, func.params[0], func.params[1], "cmp_result")
+          builder.ret(result)
+        end
       end
 
       private def define_sum_function(mod)

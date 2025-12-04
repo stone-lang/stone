@@ -1,5 +1,4 @@
 ---
-
 plugins:
   - rubocop-rspec
   - rubocop-performance
@@ -10,8 +9,8 @@ inherit_from:
 # Ignore some files. NOTE: Exclude does not add to any existing Exclude directives.
 AllCops:
   Exclude:
-    - 'church*.rb'
-    - 'vendor/**/*'
+    - "church*.rb"
+    - "vendor/**/*"
   NewCops: disable
 
 # Allow longer lines.
@@ -38,7 +37,6 @@ Naming/AsciiIdentifiers:
   Enabled: false
 Style/AsciiComments:
   Enabled: false
-
 
 # Some of our classes are going to be long.
 Metrics/ClassLength:
@@ -124,4 +122,9 @@ RSpec/ExpectActual:
 
 # I like to put 2 spaces before inline comments.
 Layout/ExtraSpacing:
+  Enabled: false
+
+# Allow use of a single `module_function` instead of prepending it to every method.
+# Unfortunately, we can't turn this off only for `module_function`.
+Style/AccessModifierDeclarations:
   Enabled: false

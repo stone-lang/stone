@@ -50,7 +50,7 @@ module Stone
       # Runtime initialization for non-constant expressions
       private def initialize_at_runtime(global, builder, llvm_value)
         global.global_constant = false # Allow runtime update
-        global.initializer = LLVM::Int64.from_i(0)
+        global.initializer = llvm_value.type.null
         builder.store(llvm_value, global)
       end
 

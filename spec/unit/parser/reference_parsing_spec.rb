@@ -40,6 +40,14 @@ RSpec.describe "Reference Parsing" do
     it "allows single letter identifiers" do
       expect("x").to parse_as(:reference)
     end
+
+    it "allows identifiers ending with ?" do
+      expect("zero?").to parse_as(:reference)
+    end
+
+    it "allows identifiers ending with !" do
+      expect("reset!").to parse_as(:reference)
+    end
   end
 
   describe "distinguishing from literals" do

@@ -5,7 +5,7 @@ module Stone
   class Grammar < Grammy::Grammar
 
     # Identifier and operator patterns
-    ALPHA_IDENTIFIER = /[a-zA-Z_][a-zA-Z0-9_]*/
+    ALPHA_IDENTIFIER = /[a-zA-Z_][a-zA-Z0-9_]*[!?]?/
     COMPARISON_OPERATOR = /(==|!=|<=|>=|≠|≤|≥|<|>)/
 
     start :program_unit

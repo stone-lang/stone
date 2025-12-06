@@ -1,10 +1,6 @@
 ---
 plugins:
-  - rubocop-rspec
-  - rubocop-performance
-
-inherit_from:
-  - https://raw.githubusercontent.com/booch/config_files/master/ruby/rubocop.yml
+  - rubocop-boochtek
 
 # Ignore some files. NOTE: Exclude does not add to any existing Exclude directives.
 AllCops:
@@ -35,8 +31,6 @@ Style/BlockDelimiters:
 # Allow non-ASCII identifiers, and in comments.
 Naming/AsciiIdentifiers:
   Enabled: false
-Style/AsciiComments:
-  Enabled: false
 
 # Some of our classes are going to be long.
 Metrics/ClassLength:
@@ -56,6 +50,11 @@ Naming/MethodName:
   Exclude:
     - lib/extensions/boolean.rb
     - lib/stone/top.rb
+
+# Allow numbered variables in record field comparisons (field1_0, field2_0).
+Naming/VariableNumber:
+  Exclude:
+    - lib/stone/ast/function_call.rb
 
 # I don't believe `module_function` should be outdented like `private`, but there's no way to turn it off for just `module_function`.
 Layout/AccessModifierIndentation:
@@ -86,30 +85,13 @@ Metrics/CyclomaticComplexity:
     - grammar
     - transforms
 
-# These seem to be broken; I *have* empty lines around all my class/module/method/block bodies.
-Layout/EmptyLinesAroundClassBody:
-  Enabled: false
-Layout/EmptyLinesAroundModuleBody:
-  Enabled: false
-Layout/EmptyLineBetweenDefs:
-  Enabled: false
-Layout/EmptyLinesAroundBlockBody:
-  Enabled: false
 Style/PercentLiteralDelimiters:
   Exclude:
     - "lib/stone/ast/binary_operation.rb"
 
-# This is broken. It assumes that a comment following a `private def` should be indented 2 extra spaces.
-Layout/CommentIndentation:
-  Enabled: false
-
 # Be a bit more lenient with RSpec: don't require filename to match class; allow more than 1 expectation per example.
 RSpec/SpecFilePathFormat:
   Enabled: false
-RSpec/MultipleExpectations:
-  Max: 10
-RSpec/ExampleLength:
-  Max: 10
 RSpec/DescribedClass:
   Enabled: false
 RSpec/DescribeClass:

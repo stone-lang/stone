@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gem "dry-cli"
 
 # Parsing
-gem "grammy"
+gem "grammy", path: "/Users/craigbuchek/Work/Code/grammy"
 
 # LLVM
 gem "ruby-llvm", ">= 21"
@@ -30,8 +30,6 @@ gem "binding_of_caller", require: false
 # Building
 gem "overcommit"
 gem "rubocop", require: false
-gem "rubocop-rspec", require: false
-gem "rubocop-md", require: false
-gem "rubocop-performance", require: false
+gem "rubocop-boochtek", "~> 0.2", require: false
 gem "ruby-lsp", require: false
 gem "ruby-lsp-rspec", require: false

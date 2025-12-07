@@ -4,6 +4,7 @@ require "stone/ast/integer_literal"
 require "stone/ast/string_literal"
 require "stone/ast/reference"
 require "stone/ast/function_call"
+require "stone/ast/property_access"
 require "stone/ast/program_unit"
 require "stone/ast/constant_definition"
 require "stone/ast/lambda"
@@ -58,23 +59,63 @@ module Stone
       Stone::AST::Reference.new(identifier_token.text)
     end
 
-    transform(:function_call) do |node|
-      node.children => [function, argument_list]
+    transform(:primary) do |node|
+      # primary can be: literal | reference | lambda | block | parens(expression)
+      # For parenthesized expressions, find and transform the inner expression
+      expression_node = node.find_child(:expression)
+      if expression_node
+        transform(expression_node)
+      else
+        # For other primary nodes (literal, reference, etc.), let default recursion handle them
+        result = nil
+        node.children.each do |child|
+          if child.respond_to?(:name)
+            result = transform(child)
+            break if result
+          end
+        end
+        result
+      end
+    end
 
-      function_reference = transform(function)
-      function_name = function_reference.identifier
-      arguments = extract_expressions_from(argument_list)
+    transform(:postfix_expression) do |node|
+      # Grammar: primary + (argument_list | property_accessor)[0..]
+      # Build up expression from left to right: primary -> func_call -> property_access -> ...
+      primary_node = node.find_child(:primary)
+      base = transform(primary_node)
 
-      Stone::AST::FunctionCall.new(function_name, arguments)
+      # Get all postfix operations (argument_list and property_accessor nodes)
+      postfix_ops = node.children.select { |child|
+        child.respond_to?(:name) && %i[argument_list property_accessor].include?(child.name)
+      }
+
+      # Process each postfix operation
+      postfix_ops.reduce(base) do |receiver, op_node|
+        if op_node.respond_to?(:name) && op_node.name == :argument_list
+          # Function call: receiver(args)
+          arguments = extract_expressions_from(op_node)
+          # If receiver is a Reference, use its identifier as function name
+          fail "Function calls on non-reference receivers not yet supported" unless receiver.is_a?(Stone::AST::Reference)
+          Stone::AST::FunctionCall.new(receiver.identifier, arguments)
+        elsif op_node.respond_to?(:name) && op_node.name == :property_accessor
+          # Property access: receiver.property
+          # The property_accessor node contains: str(".") + identifier
+          # Find the identifier (it's the last Match that's not a dot)
+          identifier_match = op_node.children.reverse.find { |c| c.is_a?(Grammy::Match) && c.text != "." }
+          Stone::AST::PropertyAccess.new(receiver, identifier_match.text)
+        else
+          receiver
+        end
+      end
     end
 
     transform(:comparison_operation) do |node|
       # Desugar infix comparison (e.g., `5 < 3`) to function call (e.g., `<(5, 3)`)
-      primaries = node.children.select { |c| c.respond_to?(:name) && c.name == :primary }
+      postfix_expressions = node.children.select { |c| c.respond_to?(:name) && c.name == :postfix_expression }
       operator_match = node.children.find { |c| c.is_a?(Grammy::Match) && c.text !~ /\s/ }
 
-      left_operand = transform(primaries[0])
-      right_operand = transform(primaries[1])
+      left_operand = transform(postfix_expressions[0])
+      right_operand = transform(postfix_expressions[1])
       operator_name = operator_match.text
 
       Stone::AST::FunctionCall.new(operator_name, [left_operand, right_operand])

@@ -18,13 +18,18 @@ module Stone
     rule(:definition) { identifier + ws! + define_op + ws! + expression }
 
     # Expressions
-    # WARNING: Order matters! More specific patterns must come before more general ones.
-    # Since comparison_operation and function_call both start with primary,
-    # they must come first, or primary would greedily match and stop.
-    rule(:expression) { comparison_operation | function_call | primary }
-    rule(:comparison_operation) { primary + ws! + comparison_operator + ws! + primary }
-    rule(:primary) { literal | reference | lambda | block }
-    rule(:function_call) { primary + argument_list }
+    # Expression hierarchy (from lowest to highest precedence):
+    # 1. comparison_operation (lowest - binary operators)
+    # 2. postfix (function_call, property_access)
+    # 3. primary (highest - atoms)
+    #
+    # Postfix expressions (function calls and property access) have higher precedence
+    # than comparisons but can chain: obj.prop(args).other_prop
+    rule(:expression) { comparison_operation | postfix_expression }
+    rule(:comparison_operation) { postfix_expression + ws! + comparison_operator + ws! + postfix_expression }
+    rule(:postfix_expression) { primary + (argument_list | property_accessor)[0..] }
+    rule(:property_accessor) { str(".") + identifier }
+    rule(:primary) { parens(expression) | literal | reference | lambda | block }
     rule(:argument_list) { parens(comma_separated(argument)) }
     rule(:argument) { expression }
     rule(:literal) { literal_boolean | literal_string | literal_i64 }

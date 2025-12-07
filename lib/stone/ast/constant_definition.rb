@@ -55,7 +55,9 @@ module Stone
       end
 
       private def literal_constant?
-        value_expression.is_a?(Stone::AST::IntegerLiteral)
+        value_expression.is_a?(Stone::AST::IntegerLiteral) ||
+          value_expression.is_a?(Stone::AST::BooleanLiteral) ||
+          value_expression.is_a?(Stone::AST::StringLiteral)
       end
 
     end

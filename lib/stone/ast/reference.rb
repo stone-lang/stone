@@ -17,30 +17,7 @@ module Stone
         return @type if @type
         return nil unless mod
 
-        # Check if it's a parameter (in current lambda context)
-        if mod.lambda_param_storage&.key?(identifier)
-          return llvm_type_to_stone_type(mod.lambda_param_storage[identifier].allocated_type)
-        end
-
-        # Check if it's a global constant
-        if (global = mod.globals[identifier])
-          return llvm_type_to_stone_type(global.value_type)
-        end
-
-        nil
-      end
-
-      private
-
-      def llvm_type_to_stone_type(llvm_type)
-        case llvm_type.kind
-        when :integer
-          llvm_type.width == 1 ? "Bool" : "Int"
-        when :pointer
-          "String" # String type is pointer to i8 (in struct, but we return pointer)
-        else
-          nil
-        end
+        type_from_parameter(mod) || type_from_string_constant(mod) || type_from_global(mod)
       end
 
       def to_llir(builder, mod)
@@ -48,6 +25,47 @@ module Stone
           lookup_global(builder, mod) ||
           lookup_function(mod) ||
           fail_with_reference_error
+      end
+
+      def to_s
+        identifier
+      end
+
+      private def type_from_parameter(mod)
+        return unless mod.lambda_param_storage&.key?(identifier)
+
+        llvm_type_to_stone_type(mod.lambda_param_storage[identifier].allocated_type)
+      end
+
+      private def type_from_string_constant(mod)
+        "String" if mod.string_constant?(identifier)
+      end
+
+      private def type_from_global(mod)
+        global = mod.globals[identifier]
+        return unless global
+
+        # In LLVM 21+, globals use opaque pointers, so check the initializer's type
+        llvm_type = global.initializer&.type
+        llvm_type_to_stone_type(llvm_type) if llvm_type
+      end
+
+      private def llvm_type_to_stone_type(llvm_type)
+        return nil unless llvm_type
+
+        actual_type = unwrap_pointer_type(llvm_type)
+        stone_type_from_llvm_kind(actual_type)
+      end
+
+      private def unwrap_pointer_type(llvm_type)
+        llvm_type.kind == :pointer ? llvm_type.element_type : llvm_type
+      end
+
+      private def stone_type_from_llvm_kind(llvm_type)
+        case llvm_type.kind
+        when :integer then llvm_type.width == 1 ? "Bool" : "Int"
+        when :pointer, :struct then "String"
+        end
       end
 
       private def lookup_parameter(builder, mod)
@@ -70,10 +88,6 @@ module Stone
 
       private def fail_with_reference_error
         fail Stone::ReferenceError, "undefined constant, variable, or function: #{identifier}"
-      end
-
-      def to_s
-        identifier
       end
 
     end

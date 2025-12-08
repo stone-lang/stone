@@ -26,7 +26,9 @@ module Stone
     # Postfix expressions (function calls and property access) have higher precedence
     # than comparisons but can chain: obj.prop(args).other_prop
     # Comparisons can chain: 1 < 2 < 3 desugars to <(1, 2, 3)
-    rule(:expression) { comparison_operation | postfix_expression }
+    rule(:expression) { type_declaration | comparison_operation | postfix_expression }
+    rule(:type_declaration) { identifier + ws! + str("::") + ws! + type_annotation }
+    rule(:type_annotation) { identifier }
     rule(:comparison_operation) { postfix_expression + (ws! + comparison_operator + ws! + postfix_expression)[1..] }
     rule(:postfix_expression) { primary + (argument_list | property_accessor)[0..] }
     rule(:property_accessor) { str(".") + identifier }

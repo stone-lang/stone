@@ -46,6 +46,9 @@ module Stone
     end
 
     private def define_comparison(name, predicate)
+      # Define binary comparison function
+      # <(a, b) checks a < b
+      # Chained comparisons like <(a, b, c) are handled inline in FunctionCall#to_llir
       @mod.functions.add(name, comparison_function_type).tap { |func| build_icmp_body(func, predicate) }
     end
 

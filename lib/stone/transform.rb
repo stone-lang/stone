@@ -110,15 +110,21 @@ module Stone
     end
 
     transform(:comparison_operation) do |node|
-      # Desugar infix comparison (e.g., `5 < 3`) to function call (e.g., `<(5, 3)`)
+      # Desugar comparison operations to function calls:
+      # - Binary: `5 < 3` → `<(5, 3)`
+      # - Chained: `1 < 2 < 3` → `<(1, 2, 3)`
       postfix_expressions = node.children.select { |c| c.respond_to?(:name) && c.name == :postfix_expression }
-      operator_match = node.children.find { |c| c.is_a?(Grammy::Match) && c.text !~ /\s/ }
 
-      left_operand = transform(postfix_expressions[0])
-      right_operand = transform(postfix_expressions[1])
-      operator_name = operator_match.text
+      # All operators in a chain must be the same (e.g., all `<` or all `==`)
+      operators = node.children.select { |c| c.is_a?(Grammy::Match) && c.text !~ /\s/ }
+      operator_name = operators.first.text
 
-      Stone::AST::FunctionCall.new(operator_name, [left_operand, right_operand])
+      # Verify all operators are the same
+      fail "Mixed comparison operators not allowed: use parentheses to clarify precedence" unless operators.all? { |op| op.text == operator_name }
+
+      # Collect all operands and create varargs function call
+      operands = postfix_expressions.map { |expr| transform(expr) }
+      Stone::AST::FunctionCall.new(operator_name, operands)
     end
 
     transform(:lambda) do |node|

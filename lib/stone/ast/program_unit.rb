@@ -68,13 +68,45 @@ module Stone
 
       private def last_child_is_boolean?
         last_child = children&.last
-        last_child && last_child.is_a?(Stone::AST::BooleanLiteral) || boolean_function_call?(last_child)
+        return false unless last_child
+
+        last_child.is_a?(Stone::AST::BooleanLiteral) || boolean_function_call?(last_child) || boolean_property_access?(last_child)
       end
 
       private def boolean_function_call?(node)
         return false unless node.is_a?(Stone::AST::FunctionCall)
         func = module_ref.functions[node.function_name]
         func&.function_type&.return_type&.to_s == "i1"
+      end
+
+      private def boolean_property_access?(node)
+        return false unless node.is_a?(Stone::AST::PropertyAccess)
+        # Property access returns i1 if the property itself returns a boolean
+        infer_property_return_type(node) == "Bool"
+      end
+
+      private def infer_receiver_type(node)
+        case node
+        when Stone::AST::IntegerLiteral then "Int"
+        when Stone::AST::BooleanLiteral then "Bool"
+        when Stone::AST::StringLiteral then "String"
+        when Stone::AST::PropertyAccess then infer_property_return_type(node)
+        when Stone::AST::Reference then node.type(module_ref)
+        end
+      end
+
+      private def infer_property_return_type(property_access_node)
+        receiver_type = infer_receiver_type(property_access_node.receiver)
+        return nil unless receiver_type
+
+        # Check what type this property returns
+        property_return_types = {
+          "Bool" => {"not" => "Bool"},
+          "Int" => {"positive?" => "Bool", "negative?" => "Bool", "zero?" => "Bool"},
+          "String" => {"byte_count" => "Int"}
+        }
+
+        property_return_types.dig(receiver_type, property_access_node.property)
       end
 
       private def module_ref

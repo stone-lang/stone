@@ -19,14 +19,15 @@ module Stone
 
     # Expressions
     # Expression hierarchy (from lowest to highest precedence):
-    # 1. comparison_operation (lowest - binary operators)
+    # 1. comparison_operation (lowest - binary/variadic operators)
     # 2. postfix (function_call, property_access)
     # 3. primary (highest - atoms)
     #
     # Postfix expressions (function calls and property access) have higher precedence
     # than comparisons but can chain: obj.prop(args).other_prop
+    # Comparisons can chain: 1 < 2 < 3 desugars to <(1, 2, 3)
     rule(:expression) { comparison_operation | postfix_expression }
-    rule(:comparison_operation) { postfix_expression + ws! + comparison_operator + ws! + postfix_expression }
+    rule(:comparison_operation) { postfix_expression + (ws! + comparison_operator + ws! + postfix_expression)[1..] }
     rule(:postfix_expression) { primary + (argument_list | property_accessor)[0..] }
     rule(:property_accessor) { str(".") + identifier }
     rule(:primary) { parens(expression) | literal | reference | lambda | block }

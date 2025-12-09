@@ -10,50 +10,23 @@ module Stone
           @children = children
         end
 
-        def returns_string?
-          last_child = @children&.last
-          return false unless last_child
-          return true if last_child.is_a?(Stone::AST::StringLiteral)
-          return true if string_constant_definition?(last_child)
-          !find_string_constant_value(last_child.identifier).nil? if last_child.is_a?(Stone::AST::Reference)
-        end
-
-        def string_literal_node
-          last_child = @children.last
-          return last_child if last_child.is_a?(Stone::AST::StringLiteral)
-          return last_child.value_expression if string_constant_definition?(last_child)
-          find_string_constant_value(last_child.identifier) if last_child.is_a?(Stone::AST::Reference)
-        end
-
         def generate(mod)
           mod.functions.add("__top__", function_type) do |func|
             func.basic_blocks.append("entry").build do |builder|
               compiled = compile_children(builder, mod)
-              build_return(builder, func, compiled&.last)
+              build_return(builder, compiled&.last)
             end
           end
         end
 
         private def function_type
-          if returns_string?
-            # For strings, use output parameters since FFI can't handle struct returns
-            LLVM::Type.function(
-              [LLVM::Type.pointer(LLVM::Int64), LLVM::Type.pointer(LLVM::Int64)],
-              LLVM::Type.void
-            )
-          else
-            LLVM::Type.function([], LLVM::Type.i(64), varargs: false)
-          end
+          # All values (ints, bools, strings) are returned as i64
+          # Strings are null-terminated, so length doesn't need to be returned
+          LLVM::Type.function([], LLVM::Type.i(64), varargs: false)
         end
 
-        private def build_return(builder, func, last_value)
-          if returns_string?
-            builder.store(last_value, func.params[0])
-            builder.store(LLVM::Int64.from_i(string_literal_node.bytesize), func.params[1])
-            builder.ret_void
-          else
-            builder.ret(return_value_for(builder, last_value))
-          end
+        private def build_return(builder, last_value)
+          builder.ret(return_value_for(builder, last_value))
         end
 
         private def return_value_for(builder, value)

@@ -27,35 +27,39 @@ module Stone
       end
 
       private def run_function(func)
-        if @top_function.returns_string?
-          out_ptr = FFI::MemoryPointer.new(:int64)
-          out_len = FFI::MemoryPointer.new(:int64)
-          jit_engine.run_function(func, LLVM::GenericValue.from_ptr(out_ptr), LLVM::GenericValue.from_ptr(out_len))
-          [[out_ptr, out_len], :string]
+        result = jit_engine.run_function(func)
+        result_type = result_type(func.function_type.return_type)
+        [result, result_type]
+      end
+
+      private def result_type(llvm_type)
+        case llvm_type.to_s
+        when "i64"
+          last_child_is_string? ? :string : (last_child_is_boolean? ? :boolean : :i64)
+        when "i1"
+          :boolean
         else
-          [jit_engine.run_function(func), func.function_type.return_type]
+          llvm_type
         end
       end
 
       private def convert_to_ruby(result, result_type)
         case result_type.to_s
         when "string"
-          read_string_result(*result)
-        when "i64"
-          last_child_is_boolean? ? (result.to_i != 0) : result.to_i
-        when "i1"
+          read_string_from_pointer(result.to_i)
+        when "boolean"
           result.to_i != 0
+        when "i64"
+          result.to_i
         else
           fail "Don't know how to convert LLVM type to Ruby: #{result_type}"
         end
       end
 
-      private def read_string_result(out_ptr, out_len)
-        ptr_addr = out_ptr.read_int64
-        length = out_len.read_int64
-        return "" if length.zero? || ptr_addr.zero?
+      private def read_string_from_pointer(ptr_addr)
+        return "" if ptr_addr.zero?
 
-        FFI::Pointer.new(ptr_addr).read_bytes(length).force_encoding(Encoding::UTF_8)
+        FFI::Pointer.new(ptr_addr).read_string.force_encoding(Encoding::UTF_8)
       end
 
       private def jit_engine
@@ -64,6 +68,13 @@ module Stone
 
       private def global_function(function_name)
         module_ref.functions[function_name]
+      end
+
+      private def last_child_is_string?
+        last_child = children&.last
+        return false unless last_child
+
+        last_child.is_a?(Stone::AST::StringLiteral) || string_constant_reference?(last_child)
       end
 
       private def last_child_is_boolean?
@@ -83,6 +94,11 @@ module Stone
         return false unless node.is_a?(Stone::AST::PropertyAccess)
         # Property access returns i1 if the property itself returns a boolean
         infer_property_return_type(node) == "Bool"
+      end
+
+      private def string_constant_reference?(node)
+        return false unless node.is_a?(Stone::AST::Reference)
+        node.type(module_ref) == "String"
       end
 
       private def infer_receiver_type(node)

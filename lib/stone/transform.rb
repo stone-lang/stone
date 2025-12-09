@@ -9,6 +9,8 @@ require "stone/ast/program_unit"
 require "stone/ast/constant_definition"
 require "stone/ast/lambda"
 require "stone/ast/block"
+require "stone/ast/record_definition"
+require "stone/ast/record_instantiation"
 require "stone/error/overflow"
 require "grammy/tree/transformation"
 
@@ -145,6 +147,16 @@ module Stone
       Stone::AST::Block.new(body_statements)
     end
 
+    transform(:record_definition) do |node|
+      type_declarations = node.children.select { |c| c.respond_to?(:name) && c.name == :type_declaration }
+
+      fields = type_declarations.map { |type_decl|
+        extract_field_info(type_decl)
+      }
+
+      Stone::AST::RecordDefinition.new(fields)
+    end
+
     private def extract_all_statements(statement_list_node)
       statements = []
       collect_statements(statement_list_node, statements)
@@ -226,6 +238,29 @@ module Stone
       elsif node.respond_to?(:children)
         node.children.each { |child| collect_statements(child, statements) }
       end
+    end
+
+    private def extract_field_info(type_decl)
+      # type_declaration: identifier + ws! + str("::") + ws! + type_annotation
+      {name: extract_field_name(type_decl), type: extract_type_name(type_decl)}
+    end
+
+    private def extract_field_name(type_decl)
+      # Find the field name - it's the first Match with text (not whitespace or ::)
+      type_decl.children.each do |child|
+        return child.text if child.is_a?(Grammy::Match) && child.text && !child.text.strip.empty? && child.text != "::"
+      end
+      nil
+    end
+
+    private def extract_type_name(type_decl)
+      # Find the type_annotation node - it contains the type as a Match
+      type_annotation_node = type_decl.find_child(:type_annotation)
+      return nil unless type_annotation_node
+
+      # The type_annotation has a Match child with the type name
+      type_match = type_annotation_node.children.find { |c| c.is_a?(Grammy::Match) }
+      type_match&.text
     end
 
   end

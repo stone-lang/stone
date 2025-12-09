@@ -14,6 +14,8 @@ module Stone
       end
 
       def to_llir(builder, mod)
+        return register_record_type(mod) if value_expression.is_a?(Stone::AST::RecordDefinition)
+
         llvm_value = value_expression.to_llir(builder, mod)
 
         return register_function_alias(mod, llvm_value) if llvm_value.is_a?(LLVM::Function)
@@ -32,6 +34,11 @@ module Stone
           initialize_at_runtime(global, builder, llvm_value)
         end
 
+        nil
+      end
+
+      private def register_record_type(mod)
+        mod.register_record_type(identifier, value_expression)
         nil
       end
 

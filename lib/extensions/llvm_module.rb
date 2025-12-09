@@ -43,6 +43,28 @@ module Stone
       string_constants.key?(name)
     end
 
+    # TODO: Type system refactor needed.
+    # This ad-hoc tracking of record types and instances should be replaced
+    # with a proper Type class hierarchy where:
+    # - All types (Bool, Int, String, Records) are Type instances
+    # - Types are global constants accessible at runtime
+    # - Types have vtables for properties and polymorphic operations
+    # - typeof() can get the type of any value
+    # - User-defined types work the same as built-in types
+
+    # Track record type definitions
+    def record_types
+      @record_types ||= {}
+    end
+
+    def register_record_type(name, record_definition)
+      record_types[name] = record_definition
+    end
+
+    def record_type?(name)
+      record_types.key?(name)
+    end
+
   end
 end
 

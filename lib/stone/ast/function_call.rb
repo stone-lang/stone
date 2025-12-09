@@ -18,16 +18,20 @@ module Stone
         return generate_chained_comparison(builder, mod) if chained_comparison?
 
         # Regular function call
+        generate_regular_function_call(builder, mod)
+      end
+
+      def to_s
+        "#{function_name}(#{arguments.join(', ')})"
+      end
+
+      private def generate_regular_function_call(builder, mod)
         func = mod.lookup_function(function_name)
         fail Stone::ReferenceError, "undefined function: #{function_name}" unless func
 
         validate_argument_count(func.function_type.argument_types.size)
         args = evaluate_arguments(builder, mod)
         builder.call(func, *args, "#{function_name}_result")
-      end
-
-      def to_s
-        "#{function_name}(#{arguments.join(', ')})"
       end
 
       private def chained_comparison?

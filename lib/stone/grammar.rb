@@ -32,7 +32,7 @@ module Stone
     rule(:comparison_operation) { postfix_expression + (ws! + comparison_operator + ws! + postfix_expression)[1..] }
     rule(:postfix_expression) { primary + (argument_list | property_accessor)[0..] }
     rule(:property_accessor) { str(".") + identifier }
-    rule(:primary) { parens(expression) | literal | reference | lambda | block }
+    rule(:primary) { parens(expression) | record_definition | literal | reference | lambda | block }
     rule(:argument_list) { parens(comma_separated(argument)) }
     rule(:argument) { expression }
     rule(:literal) { literal_boolean | literal_string | literal_i64 }
@@ -41,6 +41,7 @@ module Stone
     rule(:parameter_list) { parens(comma_separated(parameter, allow_trailing: false)) }
     rule(:parameter) { identifier }
     rule(:block) { braces(statement_list) }
+    rule(:record_definition) { str("Record") + parens(comma_separated(type_declaration, allow_trailing: false)) }
 
     # Custom Matchers/Combinators
     # Match the passed-in matchers/combinators within parentheses, with whitespace allowed.

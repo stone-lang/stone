@@ -34,13 +34,17 @@ module Stone
 
       private def result_type(llvm_type)
         case llvm_type.to_s
-        when "i64"
-          last_child_is_string? ? :string : (last_child_is_boolean? ? :boolean : :i64)
-        when "i1"
-          :boolean
-        else
-          llvm_type
+        when "i64" then resolve_i64_type
+        when "i1" then :boolean
+        else llvm_type
         end
+      end
+
+      private def resolve_i64_type
+        return :string if last_child_is_string?
+        return :boolean if last_child_is_boolean?
+
+        :i64
       end
 
       private def convert_to_ruby(result, result_type)

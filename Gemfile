@@ -6,7 +6,7 @@ source "https://rubygems.org"
 gem "dry-cli"
 
 # Parsing
-gem "grammy", path: "/Users/craigbuchek/Work/Code/grammy"
+gem "grammy"
 
 # LLVM
 gem "ruby-llvm", ">= 21"

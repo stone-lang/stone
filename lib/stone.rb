@@ -11,15 +11,16 @@ require "grammy/scanner"
 require "stone/error"
 require "stone/error/overflow"
 require "stone/error/reference_error"
+require "stone/error/argument_error"
 require "stone/grammar"
 require "stone/transform"
-require "stone/properties"
 require "stone/ast"
 require "stone/ast/integer_literal"
 require "stone/ast/string_literal"
 require "stone/ast/reference"
 require "stone/ast/function_call"
 require "stone/ast/constant_definition"
+require "stone/ast/computed_property_definition"
 require "stone/ast/program_unit"
 
 
@@ -36,8 +37,21 @@ module Stone
 
   # Returns an AST
   def self.compile(input)
-    parse_tree = parse(input)
+    input_with_prelude = prepend_prelude(input)
+    parse_tree = parse(input_with_prelude)
     transform(parse_tree)
+  end
+
+  def self.prepend_prelude(input)
+    "#{prelude_code}\n#{input}"
+  end
+
+  def self.prelude_code
+    @prelude_code ||= File.read(prelude_path)
+  end
+
+  def self.prelude_path
+    File.expand_path("stone/prelude.stone", __dir__)
   end
 
   def self.eval(input)

@@ -6,6 +6,7 @@ module Stone
 
     # Identifier and operator patterns
     ALPHA_IDENTIFIER = /[a-zA-Z_][a-zA-Z0-9_]*[!?]?/
+    COMPUTED_PROPERTY_ID = /[A-Z][a-zA-Z0-9_]*@[a-zA-Z_][a-zA-Z0-9_]*[!?]?/
     COMPARISON_OPERATOR = /(==|!=|<=|>=|≠|≤|≥|<|>)/
 
     start :program_unit
@@ -15,7 +16,7 @@ module Stone
     rule(:statement_list) { list(statement, separated_by: statement_separator, allow_repeated_separator: true) }
     rule(:statement_separator) { newline | semi }
     rule(:statement) { (definition | expression | comment) + (ws_no_nl? + comment)[0..1] }
-    rule(:definition) { identifier + ws! + define_op + ws! + expression }
+    rule(:definition) { (computed_property_id | identifier) + ws! + define_op + ws! + expression }
 
     # Expressions
     # Expression hierarchy (from lowest to highest precedence):
@@ -77,6 +78,7 @@ module Stone
     end
 
     # Identifiers
+    terminal(:computed_property_id) { COMPUTED_PROPERTY_ID }
     terminal(:identifier) { Regexp.union(ALPHA_IDENTIFIER, COMPARISON_OPERATOR) }
 
     # Operators

@@ -9,6 +9,7 @@ require "stone/ast/function_call"
 require "stone/ast/property_access"
 require "stone/ast/program_unit"
 require "stone/ast/constant_definition"
+require "stone/ast/computed_property_definition"
 require "stone/ast/lambda"
 require "stone/ast/block"
 require "stone/ast/record_definition"
@@ -39,7 +40,15 @@ module Stone
       expression_node = node.find_child(:expression)
       value_expression = transform(expression_node)
 
-      Stone::AST::ConstantDefinition.new(identifier_token.text, value_expression)
+      identifier_text = identifier_token.text
+
+      if identifier_text.include?("@")
+        # Computed property definition: Type@property
+        type_name, property_name = identifier_text.split("@", 2)
+        Stone::AST::ComputedPropertyDefinition.new(type_name, property_name, value_expression)
+      else
+        Stone::AST::ConstantDefinition.new(identifier_text, value_expression)
+      end
     end
 
     transform(:literal_boolean) do |node|

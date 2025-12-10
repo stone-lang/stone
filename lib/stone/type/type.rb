@@ -1,25 +1,20 @@
 require "llvm/core"
 require "stone/type/base"
 
+
 module Stone
   module Type
-    class Bool < Base
-
-      FALSE = 0
-      TRUE = 1
+    class Type < Base
 
       PROPERTY_TYPES = {}
 
       def self.name
-        "Bool"
+        "Type"
       end
 
       def self.llvm_type
-        LLVM::Int1.type # i1
-      end
-
-      def llvm_type
-        self.class.llvm_type
+        # Types are represented as i64 for now (simple encoding)
+        LLVM::Int64.type
       end
 
     end

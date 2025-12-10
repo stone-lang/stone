@@ -8,5 +8,9 @@ module Stone
       @children = children
     end
 
+    def type(_context = nil)
+      fail NotImplementedError, "#{self.class} must implement #type"
+    end
+
   end
 end

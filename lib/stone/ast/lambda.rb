@@ -31,6 +31,12 @@ module Stone
         "λ(#{parameters.join(', ')}) { #{block.statements.join("\n")} }"
       end
 
+      def type(_context = nil)
+        # Lambdas currently return Int64
+        # TODO: Implement proper function types
+        Stone::Type::Int
+      end
+
       private def next_lambda_id
         self.class.lambda_count += 1
         self.class.lambda_count

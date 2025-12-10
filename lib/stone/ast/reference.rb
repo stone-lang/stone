@@ -1,4 +1,5 @@
 require "stone/ast"
+require "stone/error/type_error"
 
 
 module Stone
@@ -13,12 +14,20 @@ module Stone
         @name = :reference
       end
 
-      def type(mod = nil)
+      def type(context = nil)
         return @type if @type
-        return nil unless mod
+        return nil unless context
 
-        # Check record instances before other checks since they have explicit type info
-        type_from_record_instance(mod) || type_from_parameter(mod) || type_from_string_constant(mod) || type_from_global(mod)
+        # Look up in TypeContext first
+        if context.is_a?(Stone::TypeContext)
+          result = context.lookup(@identifier)
+          fail Stone::TypeError, "Unknown identifier: #{@identifier}" unless result
+
+          return result
+        end
+
+        # Fallback to old module-based lookup for backwards compatibility during migration
+        type_from_record_instance(context) || type_from_parameter(context) || type_from_string_constant(context) || type_from_global(context)
       end
 
       def record_instance?(mod)

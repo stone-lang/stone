@@ -26,6 +26,11 @@ module Stone
         jit_engine&.dispose
       end
 
+      def type(_context = nil)
+        # ProgramUnit doesn't have a meaningful type
+        nil
+      end
+
       private def run_function(func)
         result = jit_engine.run_function(func)
         result_type = result_type(func.function_type.return_type)
@@ -109,6 +114,7 @@ module Stone
 
       private def string_property_access?(node)
         return false unless node.is_a?(Stone::AST::PropertyAccess)
+        return true if node.property == "as_String" # as_String always returns a string
         node.returns_string_field?(module_ref)
       end
 
@@ -117,6 +123,8 @@ module Stone
         when Stone::AST::IntegerLiteral then "Int"
         when Stone::AST::BooleanLiteral then "Bool"
         when Stone::AST::StringLiteral then "String"
+        when Stone::AST::TypeOfExpression then "Type"
+        when Stone::AST::TypeReference then "Type"
         when Stone::AST::PropertyAccess then infer_property_return_type(node)
         when Stone::AST::Reference then node.type(module_ref)
         end
@@ -128,9 +136,10 @@ module Stone
 
         # Check what type this property returns
         property_return_types = {
-          "Bool" => {"not" => "Bool"},
-          "Int" => {"positive?" => "Bool", "negative?" => "Bool", "zero?" => "Bool"},
-          "String" => {"byte_count" => "Int"}
+          "Bool" => {"not" => "Bool", "as_String" => "String"},
+          "Int" => {"positive?" => "Bool", "negative?" => "Bool", "zero?" => "Bool", "as_String" => "String"},
+          "String" => {"byte_count" => "Int", "empty?" => "Bool", "as_String" => "String"},
+          "Type" => {"as_String" => "String"}
         }
 
         property_return_types.dig(receiver_type, property_access_node.property)

@@ -41,6 +41,10 @@ module Stone
         LLVM::Int64.from_i(@value)
       end
 
+      def type(_context = nil)
+        Stone::Type::Int
+      end
+
     end
   end
 end

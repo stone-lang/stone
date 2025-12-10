@@ -74,6 +74,10 @@ module Stone
         end
       end
 
+      def type(_context = nil)
+        Stone::Type::String
+      end
+
     end
   end
 end

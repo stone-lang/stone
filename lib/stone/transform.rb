@@ -3,6 +3,8 @@ require "stone/ast/boolean_literal"
 require "stone/ast/integer_literal"
 require "stone/ast/string_literal"
 require "stone/ast/reference"
+require "stone/ast/type_reference"
+require "stone/ast/type_of_expression"
 require "stone/ast/function_call"
 require "stone/ast/property_access"
 require "stone/ast/program_unit"
@@ -10,7 +12,6 @@ require "stone/ast/constant_definition"
 require "stone/ast/lambda"
 require "stone/ast/block"
 require "stone/ast/record_definition"
-require "stone/ast/record_instantiation"
 require "stone/error/overflow"
 require "grammy/tree/transformation"
 
@@ -59,6 +60,16 @@ module Stone
     transform(:reference) do |node|
       identifier_token = node.children.first
       Stone::AST::Reference.new(identifier_token.text)
+    end
+
+    transform(:type_reference) do |_node|
+      Stone::AST::TypeReference.new
+    end
+
+    transform(:type_of_expression) do |node|
+      expression_node = node.find_child(:expression)
+      inner_expression = transform(expression_node)
+      Stone::AST::TypeOfExpression.new(inner_expression)
     end
 
     transform(:primary) do |node|

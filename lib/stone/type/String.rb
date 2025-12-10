@@ -1,9 +1,16 @@
 require "llvm/core"
+require "stone/type/base"
 
 
 module Stone
   module Type
-    class String
+    class String < Base
+
+      PROPERTY_TYPES = {}
+
+      def self.name
+        "String"
+      end
 
       def self.llvm_type
         # String is represented as a struct { ptr, i64 } (pointer to data, length)

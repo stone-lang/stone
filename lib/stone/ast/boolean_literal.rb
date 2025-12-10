@@ -33,6 +33,10 @@ module Stone
         @value == Stone::Type::Bool::TRUE ? LLVM::TRUE : LLVM::FALSE
       end
 
+      def type(_context = nil)
+        Stone::Type::Bool
+      end
+
     end
   end
 end

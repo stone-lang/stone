@@ -1,0 +1,101 @@
+require "stone/ast"
+require "stone/ast/integer_literal"
+require "stone/ast/boolean_literal"
+require "stone/ast/string_literal"
+require "stone/ast/reference"
+require "stone/ast/property_access"
+require "stone/type_context"
+require "stone/types"
+
+RSpec.describe "AST node type() method" do
+
+  let(:context) { Stone::TypeContext.new }
+
+  describe "IntegerLiteral#type" do
+    it "returns Stone::Type::Int" do
+      node = Stone::AST::IntegerLiteral.new(42)
+      expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "works without context" do
+      node = Stone::AST::IntegerLiteral.new(42)
+      expect(node.type).to eq(Stone::Type::Int)
+    end
+  end
+
+  describe "BooleanLiteral#type" do
+    it "returns Stone::Type::Bool" do
+      node = Stone::AST::BooleanLiteral.new("TRUE")
+      expect(node.type(context)).to eq(Stone::Type::Bool)
+    end
+
+    it "works without context" do
+      node = Stone::AST::BooleanLiteral.new("FALSE")
+      expect(node.type).to eq(Stone::Type::Bool)
+    end
+  end
+
+  describe "StringLiteral#type" do
+    it "returns Stone::Type::String" do
+      node = Stone::AST::StringLiteral.new("hello")
+      expect(node.type(context)).to eq(Stone::Type::String)
+    end
+
+    it "works without context" do
+      node = Stone::AST::StringLiteral.new("world")
+      expect(node.type).to eq(Stone::Type::String)
+    end
+  end
+
+  describe "Reference#type" do
+    it "returns the bound type for known variable" do
+      context.bind("x", Stone::Type::Int)
+      node = Stone::AST::Reference.new("x")
+      expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "raises TypeError for unknown variable" do
+      node = Stone::AST::Reference.new("unknown")
+      expect { node.type(context) }.to raise_error(Stone::TypeError, /Unknown identifier: unknown/)
+    end
+
+    it "returns nil when no context is provided" do
+      node = Stone::AST::Reference.new("x")
+      expect(node.type).to be_nil
+    end
+  end
+
+  describe "PropertyAccess#type" do
+    it "returns the property return type for Int.positive?" do
+      receiver = Stone::AST::IntegerLiteral.new(42)
+      node = Stone::AST::PropertyAccess.new(receiver, "positive?")
+      expect(node.type(context)).to eq(Stone::Type::Bool)
+    end
+
+    it "returns the property return type for Bool.not" do
+      receiver = Stone::AST::BooleanLiteral.new("TRUE")
+      node = Stone::AST::PropertyAccess.new(receiver, "not")
+      expect(node.type(context)).to eq(Stone::Type::Bool)
+    end
+
+    it "returns the property return type for String.byte_count" do
+      receiver = Stone::AST::StringLiteral.new("hello")
+      node = Stone::AST::PropertyAccess.new(receiver, "byte_count")
+      expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "raises PropertyError for unknown property" do
+      receiver = Stone::AST::IntegerLiteral.new(42)
+      node = Stone::AST::PropertyAccess.new(receiver, "unknown")
+      expect { node.type(context) }.to raise_error(Stone::PropertyError, /Property 'unknown' not found/)
+    end
+
+    it "handles chained property access" do
+      inner_receiver = Stone::AST::IntegerLiteral.new(42)
+      inner_access = Stone::AST::PropertyAccess.new(inner_receiver, "positive?")
+      outer_access = Stone::AST::PropertyAccess.new(inner_access, "not")
+      expect(outer_access.type(context)).to eq(Stone::Type::Bool)
+    end
+  end
+
+end

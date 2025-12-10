@@ -32,7 +32,9 @@ module Stone
     rule(:comparison_operation) { postfix_expression + (ws! + comparison_operator + ws! + postfix_expression)[1..] }
     rule(:postfix_expression) { primary + (argument_list | property_accessor)[0..] }
     rule(:property_accessor) { str(".") + identifier }
-    rule(:primary) { parens(expression) | record_definition | literal | reference | lambda | block }
+    rule(:primary) { parens(expression) | type_of_expression | record_definition | literal | type_reference | reference | lambda | block }
+    rule(:type_of_expression) { str("Type.of") + parens(expression) }
+    rule(:type_reference) { str("Type") }
     rule(:argument_list) { parens(comma_separated(argument)) }
     rule(:argument) { expression }
     rule(:literal) { literal_boolean | literal_string | literal_i64 }

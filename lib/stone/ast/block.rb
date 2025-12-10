@@ -29,6 +29,12 @@ module Stone
         "{ #{statements.join("\n")} }"
       end
 
+      def type(_context = nil)
+        # Blocks currently return Int64
+        # TODO: Infer type from last statement
+        Stone::Type::Int
+      end
+
       private def next_block_id
         self.class.block_count += 1
         self.class.block_count

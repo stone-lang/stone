@@ -71,8 +71,8 @@ RSpec.describe "sum built-in function" do
 
   describe "error handling" do
     it "requires exactly 2 arguments" do
-      expect { Stone.eval("sum(1)") }.to raise_error(/requires exactly 2 arguments/)
-      expect { Stone.eval("sum(1, 2, 3)") }.to raise_error(/requires exactly 2 arguments/)
+      expect { Stone.eval("sum(1)") }.to raise_error(/wrong number of arguments/)
+      expect { Stone.eval("sum(1, 2, 3)") }.to raise_error(/wrong number of arguments/)
     end
   end
 

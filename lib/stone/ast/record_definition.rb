@@ -19,11 +19,9 @@ module Stone
         @fields = fields
       end
 
-      def to_llir(_builder, _mod)
-        # Record definitions don't generate LLVM IR directly.
-        # They are metadata that gets stored in the module for later use.
-        # Return a dummy value for now (records are used via constants).
-        LLVM::Int64.from_i(0)
+      def to_llir(_builder, mod)
+        # Generate and return a constructor function that creates instances of this record
+        generate_constructor_function(mod)
       end
 
       def field_names
@@ -49,6 +47,13 @@ module Stone
         "Record(#{field_strs.join(', ')})"
       end
 
+      def type(_context = nil)
+        # RecordDefinition evaluates to a constructor function
+        # For now, return nil as we don't have function types yet
+        # TODO: Return a proper function type when implemented
+        nil
+      end
+
       private def llvm_type_for(type_name)
         case type_name
         when "Int" then LLVM::Int64
@@ -59,6 +64,35 @@ module Stone
           LLVM::Int64
         else
           fail "Unknown type: #{type_name}"
+        end
+      end
+
+      private def generate_constructor_function(mod)
+        func_name = "__record_constructor_#{object_id}__"
+        func_type = constructor_function_type
+
+        mod.functions.add(func_name, func_type).tap do |func|
+          build_constructor_body(func)
+        end
+      end
+
+      private def constructor_function_type
+        # Constructor function signature: (field_types...) -> struct_type
+        field_llvm_types = @fields.map { |field| llvm_type_for(field[:type]) }
+        LLVM::Type.function(field_llvm_types, llvm_type)
+      end
+
+      private def build_constructor_body(func)
+        func.basic_blocks.append("entry").build do |builder|
+          # Start with null/undef struct value
+          struct_value = llvm_type.null
+
+          # Insert each field value from function parameters
+          @fields.each_with_index do |_field, index|
+            struct_value = builder.insert_value(struct_value, func.params[index], index)
+          end
+
+          builder.ret(struct_value)
         end
       end
 

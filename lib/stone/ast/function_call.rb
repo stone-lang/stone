@@ -1,5 +1,6 @@
 require "stone/ast"
 require "stone/libc"
+require "stone/error/argument_error"
 
 
 module Stone
@@ -15,11 +16,6 @@ module Stone
       end
 
       def to_llir(builder, mod)
-        # TODO: Record instantiation should not be special-cased here.
-        # When the type system is refactored, record constructors should be
-        # regular functions, and this check should be removed.
-        return instantiate_record(builder, mod) if mod.record_type?(function_name)
-
         # TODO: Record equality should be delegated to the type system.
         # When the type system is refactored, equality should be polymorphic:
         # - Global `==` checks that both args are the same type
@@ -36,6 +32,20 @@ module Stone
 
       def to_s
         "#{function_name}(#{arguments.join(', ')})"
+      end
+
+      def type(context = nil)
+        # For now, assume most functions return Int
+        # TODO: Track function return types in TypeContext
+        if comparison_operator?
+          Stone::Type::Bool
+        elsif context&.record_type?(function_name)
+          # Record constructor - would need to create record type instances
+          # For now, return nil to indicate we can't determine the type yet
+          nil
+        else
+          Stone::Type::Int
+        end
       end
 
       private def generate_regular_function_call(builder, mod)
@@ -84,16 +94,11 @@ module Stone
       private def validate_argument_count(expected)
         return if arguments.length == expected
 
-        fail "#{function_name}() requires exactly #{expected} arguments, got #{arguments.length}"
+        fail Stone::ArgumentError, "wrong number of arguments for #{function_name} (given #{arguments.length}, expected #{expected})"
       end
 
       private def evaluate_arguments(builder, mod)
         arguments.map { |arg| arg.to_llir(builder, mod) }
-      end
-
-      private def instantiate_record(builder, mod)
-        record_instantiation = Stone::AST::RecordInstantiation.new(function_name, arguments)
-        record_instantiation.to_llir(builder, mod)
       end
 
       private def record_equality_comparison?(mod)

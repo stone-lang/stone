@@ -65,12 +65,9 @@ module Stone
         end
 
         private def register_record_instance_if_needed(child, mod)
-          if child.value_expression.is_a?(Stone::AST::RecordInstantiation)
-            record_type_name = child.value_expression.record_type_name
-            mod.register_record_instance(child.identifier, record_type_name)
-          elsif child.value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(child.value_expression.function_name)
-            mod.register_record_instance(child.identifier, child.value_expression.function_name)
-          end
+          return unless child.value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(child.value_expression.function_name)
+
+          mod.register_record_instance(child.identifier, child.value_expression.function_name)
         end
 
       end

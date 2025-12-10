@@ -1,6 +1,6 @@
 SHELL := env PATH=$(PATH) /bin/bash
 BUNDLE_CHECK := $(shell bundle check >/dev/null ; echo $$?)
-LLVM_PREFIX := $(shell brew --prefix llvm 2>/dev/null || { [ -d /usr/lib/llvm-21 ] && echo /usr/lib/llvm-21; } || mise where llvm 2>/dev/null || echo)
+LLVM_PREFIX := $(shell brew --prefix llvm 2>/dev/null || mise where llvm 2>/dev/null || echo)
 PATH := $(LLVM_PREFIX)/bin:$(PATH)
 DYLD_LIBRARY_PATH := $(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)
 LD_LIBRARY_PATH := $(LLVM_PREFIX)/lib:$(LD_LIBRARY_PATH)
@@ -47,7 +47,7 @@ Gemfile.lock: Gemfile
 	@bundle
 
 rubocop:
-	bundle exec rubocop .
+	@bundle exec rubocop lib spec
 
 markdownlint: node_modules/.bin/markdownlint-cli2
 	@bunx markdownlint-cli2 '**/*.md' '!vendor' '!node_modules'

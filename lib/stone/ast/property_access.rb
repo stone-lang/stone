@@ -90,7 +90,7 @@ module Stone
 
       private def record_field_access?(mod)
         # Check if receiver is a Reference to a record instance
-        return Stone::AST::RecordHelpers.record_instance_node?(@receiver, mod) if @receiver.is_a?(Reference)
+        return @receiver.record_instance?(mod) if @receiver.is_a?(Reference)
 
         # Check if receiver is a FunctionCall that returns a record
         return mod.record_type?(@receiver.function_name) if @receiver.is_a?(FunctionCall)

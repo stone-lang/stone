@@ -21,6 +21,10 @@ module Stone
         type_from_record_instance(mod) || type_from_parameter(mod) || type_from_string_constant(mod) || type_from_global(mod)
       end
 
+      def record_instance?(mod)
+        mod.record_instance?(identifier)
+      end
+
       def to_llir(builder, mod)
         lookup_parameter(builder, mod) ||
           lookup_global(builder, mod) ||

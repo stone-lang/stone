@@ -20,7 +20,7 @@ setup: bun node_modules/.bin/markdownlint-cli2 llvm bundle_config
 
 bundle_config:
 ifndef CI
-	@bundle config local.grammy ~/Work/Code/grammy
+	@mise exec -- bundle config local.grammy ~/Work/Code/grammy
 endif
 
 deps: bundle
@@ -30,30 +30,30 @@ test: specs
 specs: rspec
 
 console: bundle
-	@bundle exec pry -I lib -r stone -r grammy
+	@mise exec -- bundle exec pry -I lib -r stone -r grammy
 
 lint: rubocop markdownlint
 
 rspec: bundle
-	DEBUG=0 bundle exec rspec
+	DEBUG=0 mise exec -- bundle exec rspec
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)
 	@echo $(PATH)
-	@bundle install
+	@mise exec -- bundle install
 endif
 
 Gemfile.lock: Gemfile
-	@bundle
+	@mise exec -- bundle
 
 rubocop:
-	@bundle exec rubocop lib spec
+	@mise exec -- bundle exec rubocop lib spec
 
 markdownlint: node_modules/.bin/markdownlint-cli2
-	@bunx markdownlint-cli2 '**/*.md' '!vendor' '!node_modules'
+	@mise exec -- bunx markdownlint-cli2 '**/*.md' '!vendor' '!node_modules'
 
 node_modules/.bin/markdownlint-cli2:
-	@bun install markdownlint-cli2
+	@mise exec -- bun install markdownlint-cli2
 
 bun:
 	@which bun >/dev/null || mise install bun || curl -fsSL https://bun.sh/install | bash

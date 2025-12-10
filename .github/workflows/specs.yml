@@ -20,7 +20,6 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, ubuntu-24.04-arm]
-        ruby: ["3.4"]
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -30,18 +29,38 @@ jobs:
           fetch-depth: 0
 
       - name: Install LLVM
-        run: make llvm
+        run: |
+          LLVM_VERSION=21
+          if command -v brew >/dev/null 2>&1; then
+            echo "Installing LLVM via Homebrew..."
+            brew install llvm@${LLVM_VERSION} 2>/dev/null || brew install llvm
+          elif command -v apt-get >/dev/null 2>&1; then
+            echo "Installing LLVM ${LLVM_VERSION} via apt-get..."
+            sudo apt-get update
+            sudo apt-get install -y llvm-${LLVM_VERSION}-dev llvm-${LLVM_VERSION} 2>/dev/null || \
+            sudo apt-get install -y llvm-dev llvm
+          fi
 
-      - name: Install Ruby ${{ matrix.ruby }}
-        uses: ruby/setup-ruby@v1
-        with:
-          ruby-version: ${{ matrix.ruby }}
-          bundler-cache: true
+      - name: Set LLVM environment variables
+        run: |
+          if command -v brew >/dev/null 2>&1; then
+            LLVM_PREFIX=$(brew --prefix llvm)
+          elif [ -d /usr/lib/llvm-21 ]; then
+            LLVM_PREFIX=/usr/lib/llvm-21
+          elif command -v llvm-config-21 >/dev/null 2>&1; then
+            LLVM_PREFIX=$(llvm-config-21 --prefix)
+          elif command -v llvm-config >/dev/null 2>&1; then
+            LLVM_PREFIX=$(llvm-config --prefix)
+          else
+            echo "ERROR: Could not find LLVM installation"
+            exit 1
+          fi
+          echo "$LLVM_PREFIX/bin" >> $GITHUB_PATH
+          echo "LLVM_PREFIX=$LLVM_PREFIX" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$LLVM_PREFIX/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$LLVM_PREFIX/include" >> $GITHUB_ENV
 
-      - name: Install bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Install mise
+      - name: Install mise and the tools from its config
         uses: jdx/mise-action@v3
 
       - name: Setup and run specs

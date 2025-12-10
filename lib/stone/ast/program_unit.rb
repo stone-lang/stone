@@ -78,7 +78,9 @@ module Stone
         last_child = children&.last
         return false unless last_child
 
-        last_child.is_a?(Stone::AST::StringLiteral) || string_constant_reference?(last_child)
+        last_child.is_a?(Stone::AST::StringLiteral) ||
+          string_constant_reference?(last_child) ||
+          string_property_access?(last_child)
       end
 
       private def last_child_is_boolean?
@@ -103,6 +105,11 @@ module Stone
       private def string_constant_reference?(node)
         return false unless node.is_a?(Stone::AST::Reference)
         node.type(module_ref) == "String"
+      end
+
+      private def string_property_access?(node)
+        return false unless node.is_a?(Stone::AST::PropertyAccess)
+        node.returns_string_field?(module_ref)
       end
 
       private def infer_receiver_type(node)

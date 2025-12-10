@@ -17,13 +17,15 @@ module Stone
         return @type if @type
         return nil unless mod
 
-        type_from_parameter(mod) || type_from_string_constant(mod) || type_from_global(mod)
+        # Check record instances before other checks since they have explicit type info
+        type_from_record_instance(mod) || type_from_parameter(mod) || type_from_string_constant(mod) || type_from_global(mod)
       end
 
       def to_llir(builder, mod)
         lookup_parameter(builder, mod) ||
           lookup_global(builder, mod) ||
           lookup_function(mod) ||
+          lookup_record_type(mod) ||
           fail_with_reference_error
       end
 
@@ -39,6 +41,10 @@ module Stone
 
       private def type_from_string_constant(mod)
         "String" if mod.string_constant?(identifier)
+      end
+
+      private def type_from_record_instance(mod)
+        mod.record_instance_type(identifier) if mod.record_instance?(identifier)
       end
 
       private def type_from_global(mod)
@@ -84,6 +90,14 @@ module Stone
 
       private def lookup_function(mod)
         mod.lookup_function(identifier)
+      end
+
+      private def lookup_record_type(mod)
+        # Record types aren't really values, but if referenced, return a dummy value
+        # This allows code like "Person := Record(...)\nPerson" to not fail
+        return LLVM::Int64.from_i(0) if mod.record_type?(identifier)
+
+        nil
       end
 
       private def fail_with_reference_error

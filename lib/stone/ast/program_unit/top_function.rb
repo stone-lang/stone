@@ -11,6 +11,8 @@ module Stone
         end
 
         def generate(mod)
+          # Pre-register record types for type checking
+          register_record_types(mod)
           mod.functions.add("__top__", function_type) do |func|
             func.basic_blocks.append("entry").build do |builder|
               compiled = compile_children(builder, mod)
@@ -45,6 +47,30 @@ module Stone
 
         private def string_constant_definition?(node)
           node.is_a?(Stone::AST::ConstantDefinition) && node.value_expression.is_a?(Stone::AST::StringLiteral)
+        end
+
+        private def register_record_types(mod)
+          @children&.each do |child|
+            next unless child.is_a?(Stone::AST::ConstantDefinition)
+
+            register_record_type_definition(child, mod)
+            register_record_instance_if_needed(child, mod)
+          end
+        end
+
+        private def register_record_type_definition(child, mod)
+          return unless child.value_expression.is_a?(Stone::AST::RecordDefinition)
+
+          mod.register_record_type(child.identifier, child.value_expression)
+        end
+
+        private def register_record_instance_if_needed(child, mod)
+          if child.value_expression.is_a?(Stone::AST::RecordInstantiation)
+            record_type_name = child.value_expression.record_type_name
+            mod.register_record_instance(child.identifier, record_type_name)
+          elsif child.value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(child.value_expression.function_name)
+            mod.register_record_instance(child.identifier, child.value_expression.function_name)
+          end
         end
 
       end

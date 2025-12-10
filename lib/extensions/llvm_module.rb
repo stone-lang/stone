@@ -65,6 +65,23 @@ module Stone
       record_types.key?(name)
     end
 
+    # Track which variables hold record instances (maps variable name -> record type name)
+    def record_instances
+      @record_instances ||= {}
+    end
+
+    def register_record_instance(variable_name, record_type_name)
+      record_instances[variable_name] = record_type_name
+    end
+
+    def record_instance?(variable_name)
+      record_instances.key?(variable_name)
+    end
+
+    def record_instance_type(variable_name)
+      record_instances[variable_name]
+    end
+
   end
 end
 

@@ -14,6 +14,11 @@ module Stone
       end
 
       def to_llir(builder, mod)
+        # TODO: Record instantiation should not be special-cased here.
+        # When the type system is refactored, record constructors should be
+        # regular functions, and this check should be removed.
+        return instantiate_record(builder, mod) if mod.record_type?(function_name)
+
         # For chained comparisons, generate inline comparison logic
         return generate_chained_comparison(builder, mod) if chained_comparison?
 
@@ -76,6 +81,11 @@ module Stone
 
       private def evaluate_arguments(builder, mod)
         arguments.map { |arg| arg.to_llir(builder, mod) }
+      end
+
+      private def instantiate_record(builder, mod)
+        record_instantiation = Stone::AST::RecordInstantiation.new(function_name, arguments)
+        record_instantiation.to_llir(builder, mod)
       end
 
     end

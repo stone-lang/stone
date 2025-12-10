@@ -49,12 +49,8 @@ module Stone
           return builder.call(computed_func, receiver_value, "#{@property}_result")
         end
 
-        # 5. Fall back to built-in property registry
-        receiver_value = @receiver.to_llir(builder, mod)
-        implementation = Stone::PropertyRegistry.lookup(receiver_type, @property)
-        fail Stone::PropertyError, "Property '#{@property}' not found for type '#{receiver_type}'" unless implementation
-
-        implementation.call(builder, receiver_value)
+        # 5. Property not found
+        fail Stone::PropertyError, "Property '#{@property}' not found for type '#{receiver_type}'"
       end
 
       private def generate_type_name_string(builder, mod)

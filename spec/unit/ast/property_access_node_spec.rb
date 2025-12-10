@@ -23,7 +23,35 @@ RSpec.describe Stone::AST::PropertyAccess do
 
     before do
       builder.position_at_end(block)
+      # Set up built-ins that computed properties depend on
+      Stone::BuiltIns.new(mod).setup
+      # Load prelude to set up computed properties
+      setup_prelude_properties(mod)
     end
+
+    # Helper to set up prelude-defined computed properties
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    def setup_prelude_properties(mod)
+      prelude_code = <<~STONE
+        Bool@not := λ(this) { if(this, { FALSE }, { TRUE }) }
+        Int@positive? := λ(this) { this > 0 }
+        Int@negative? := λ(this) { this < 0 }
+        Int@zero? := λ(this) { this == 0 }
+      STONE
+      # Parse and transform without using Stone.compile (which would add prelude again)
+      parse_tree = Stone::Grammar.parse(prelude_code)
+      transformer = Stone::Transform.new
+      ast = transformer.transform(parse_tree)
+
+      # Generate LLVM IR for all property definitions to register them
+      builder_temp = LLVM::Builder.new
+      func_temp = mod.functions.add("__prelude_setup__", LLVM::Type.function([], LLVM::Int64.type))
+      block_temp = func_temp.basic_blocks.append("entry")
+      builder_temp.position_at_end(block_temp)
+
+      ast.children.each { |child| child.to_llir(builder_temp, mod) if child.respond_to?(:to_llir) }
+    end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     describe "Int properties" do
       it "generates LLVM IR for Int.positive?" do
@@ -33,7 +61,8 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        expect(result.type).to eq(LLVM::Int1.type)
+        # Computed properties return i64 (function call result), not i1 directly
+        expect(result.type.to_s).to eq("i64")
       end
 
       it "generates LLVM IR for Int.negative?" do
@@ -43,7 +72,8 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        expect(result.type).to eq(LLVM::Int1.type)
+        # Computed properties return i64 (function call result), not i1 directly
+        expect(result.type.to_s).to eq("i64")
       end
 
       it "generates LLVM IR for Int.zero?" do
@@ -53,7 +83,8 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        expect(result.type).to eq(LLVM::Int1.type)
+        # Computed properties return i64 (function call result), not i1 directly
+        expect(result.type.to_s).to eq("i64")
       end
     end
 
@@ -65,7 +96,8 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        expect(result.type).to eq(LLVM::Int1.type)
+        # Computed properties return i64 (function call result), not i1 directly
+        expect(result.type.to_s).to eq("i64")
       end
     end
 
@@ -106,7 +138,35 @@ RSpec.describe Stone::AST::PropertyAccess do
 
     before do
       builder.position_at_end(block)
+      # Set up built-ins that computed properties depend on
+      Stone::BuiltIns.new(mod).setup
+      # Load prelude to set up computed properties
+      setup_prelude_properties(mod)
     end
+
+    # Helper to set up prelude-defined computed properties
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    def setup_prelude_properties(mod)
+      prelude_code = <<~STONE
+        Bool@not := λ(this) { if(this, { FALSE }, { TRUE }) }
+        Int@positive? := λ(this) { this > 0 }
+        Int@negative? := λ(this) { this < 0 }
+        Int@zero? := λ(this) { this == 0 }
+      STONE
+      # Parse and transform without using Stone.compile (which would add prelude again)
+      parse_tree = Stone::Grammar.parse(prelude_code)
+      transformer = Stone::Transform.new
+      ast = transformer.transform(parse_tree)
+
+      # Generate LLVM IR for all property definitions to register them
+      builder_temp = LLVM::Builder.new
+      func_temp = mod.functions.add("__prelude_setup__", LLVM::Type.function([], LLVM::Int64.type))
+      block_temp = func_temp.basic_blocks.append("entry")
+      builder_temp.position_at_end(block_temp)
+
+      ast.children.each { |child| child.to_llir(builder_temp, mod) if child.respond_to?(:to_llir) }
+    end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
     it "handles chained properties correctly" do
       # TRUE.not.not
@@ -117,7 +177,8 @@ RSpec.describe Stone::AST::PropertyAccess do
       result = outer.to_llir(builder, mod)
 
       expect(result).to be_a(LLVM::Value)
-      expect(result.type).to eq(LLVM::Int1.type)
+      # Computed properties return i64 (function call result), not i1 directly
+      expect(result.type.to_s).to eq("i64")
     end
   end
 

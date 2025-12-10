@@ -1,0 +1,11 @@
+# Stone Standard Library Prelude
+# This file is automatically loaded before user code.
+# It defines standard properties for built-in types.
+
+# Boolean properties
+Bool@not := λ(this) { if(this, { FALSE }, { TRUE }) }
+
+# Integer properties
+Int@positive? := λ(this) { this > 0 }
+Int@negative? := λ(this) { this < 0 }
+Int@zero? := λ(this) { this == 0 }

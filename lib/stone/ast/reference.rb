@@ -18,14 +18,19 @@ module Stone
         return @type if @type
         return nil unless context
 
-        # Look up in TypeContext first
-        if context.is_a?(Stone::TypeContext)
-          result = context.lookup(@identifier)
-          fail Stone::TypeError, "Unknown identifier: #{@identifier}" unless result
+        type_from_context(context) || type_from_module(context)
+      end
 
-          return result
-        end
+      private def type_from_context(context)
+        return nil unless context.is_a?(Stone::TypeContext)
 
+        result = context.lookup(@identifier)
+        fail Stone::TypeError, "Unknown identifier: #{@identifier}" unless result
+
+        result
+      end
+
+      private def type_from_module(context)
         # Fallback to old module-based lookup for backwards compatibility during migration
         type_from_record_instance(context) || type_from_parameter(context) || type_from_string_constant(context) || type_from_global(context)
       end

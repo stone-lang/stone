@@ -38,7 +38,7 @@ RSpec.describe Stone::TypeContext do
 
   describe "#with_llvm_module" do
     it "creates a new context with module reference" do
-      mod = double("llvm_module")
+      mod = instance_double(LLVM::Module)
       new_context = context.with_llvm_module(mod)
       expect(new_context).to be_a(Stone::TypeContext)
       expect(new_context.llvm_module).to eq(mod)
@@ -51,7 +51,7 @@ RSpec.describe Stone::TypeContext do
     end
 
     it "delegates to module when module is set" do
-      mod = double("llvm_module", record_type?: true)
+      mod = instance_double(LLVM::Module, record_type?: true)
       context_with_mod = described_class.new(mod)
       expect(context_with_mod.record_type?("Point")).to be true
     end
@@ -63,8 +63,8 @@ RSpec.describe Stone::TypeContext do
     end
 
     it "delegates to module when module is set" do
-      record_def = double("record_definition")
-      mod = double("llvm_module", record_types: {"Point" => record_def})
+      record_def = instance_double(Stone::AST::RecordDefinition)
+      mod = instance_double(LLVM::Module, record_types: {"Point" => record_def})
       context_with_mod = described_class.new(mod)
       expect(context_with_mod.record_definition("Point")).to eq(record_def)
     end

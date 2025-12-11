@@ -70,22 +70,20 @@ RSpec.describe Stone::AST::ComputedPropertyDefinition do
     end
 
     it "can register multiple computed properties" do
-      lambda_node1 = Stone::AST::Lambda.new(["this"], [Stone::AST::IntegerLiteral.new(42)])
-      lambda_node2 = Stone::AST::Lambda.new(["this"], [Stone::AST::IntegerLiteral.new(99)])
-
-      definition1 = described_class.new("Int", "abs", lambda_node1)
-      definition2 = described_class.new("String", "empty?", lambda_node2)
+      definition1 = create_property_definition("Int", "abs", 42)
+      definition2 = create_property_definition("String", "empty?", 99)
 
       definition1.to_llir(builder, mod)
       definition2.to_llir(builder, mod)
 
-      func1 = mod.lookup_function("Int@abs")
-      func2 = mod.lookup_function("String@empty?")
-
-      expect(func1).not_to be_nil
-      expect(func2).not_to be_nil
-      # Both properties are registered as function aliases
+      expect(mod.lookup_function("Int@abs")).not_to be_nil
+      expect(mod.lookup_function("String@empty?")).not_to be_nil
       expect(mod.function_aliases.keys).to include("Int@abs", "String@empty?")
+    end
+
+    def create_property_definition(type_name, property_name, value)
+      lambda_node = Stone::AST::Lambda.new(["this"], [Stone::AST::IntegerLiteral.new(value)])
+      described_class.new(type_name, property_name, lambda_node)
     end
 
     it "allows overriding a computed property" do

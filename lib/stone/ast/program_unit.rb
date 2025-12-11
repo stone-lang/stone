@@ -119,15 +119,25 @@ module Stone
       end
 
       private def infer_receiver_type(node)
+        literal_type(node) || reference_type(node) || property_access_type(node)
+      end
+
+      private def literal_type(node)
         case node
         when Stone::AST::IntegerLiteral then "Int"
         when Stone::AST::BooleanLiteral then "Bool"
         when Stone::AST::StringLiteral then "String"
         when Stone::AST::TypeOfExpression then "Type"
         when Stone::AST::TypeReference then "Type"
-        when Stone::AST::PropertyAccess then infer_property_return_type(node)
-        when Stone::AST::Reference then node.type(module_ref)
         end
+      end
+
+      private def reference_type(node)
+        node.type(module_ref) if node.is_a?(Stone::AST::Reference)
+      end
+
+      private def property_access_type(node)
+        infer_property_return_type(node) if node.is_a?(Stone::AST::PropertyAccess)
       end
 
       private def infer_property_return_type(property_access_node)

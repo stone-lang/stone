@@ -29,27 +29,36 @@ module Stone
         # Infer the receiver type for subsequent checks
         receiver_type = infer_type(@receiver, mod)
 
-        # 2. Special handling for Type.as_String
-        # Convert type ID to string at compile time
-        return generate_type_name_string(builder, mod) if @property == "as_String" && receiver_type == "Type"
+        # Try different property access strategies
+        handle_type_as_string(builder, mod, receiver_type) ||
+          handle_byte_count(mod) ||
+          handle_computed_property(builder, mod, receiver_type) ||
+          fail_property_not_found(receiver_type)
+      end
 
-        # 3. Special handling for String.byte_count
-        # We need access to the AST node to get byte count at compile time
-        if @property == "byte_count"
-          string_literal = get_string_literal(mod)
-          return LLVM::Int64.from_i(string_literal.bytesize) if string_literal
-        end
+      private def handle_type_as_string(builder, mod, receiver_type)
+        return nil unless @property == "as_String" && receiver_type == "Type"
 
-        # 4. Check for computed properties (defined with Type@property := lambda)
-        # Look up the function by name "Type@property"
+        generate_type_name_string(builder, mod)
+      end
+
+      private def handle_byte_count(mod)
+        return nil unless @property == "byte_count"
+
+        string_literal = get_string_literal(mod)
+        LLVM::Int64.from_i(string_literal.bytesize) if string_literal
+      end
+
+      private def handle_computed_property(builder, mod, receiver_type)
         function_name = "#{receiver_type}@#{@property}"
         computed_func = mod.lookup_function(function_name)
-        if computed_func
-          receiver_value = @receiver.to_llir(builder, mod)
-          return builder.call(computed_func, receiver_value, "#{@property}_result")
-        end
+        return nil unless computed_func
 
-        # 5. Property not found
+        receiver_value = @receiver.to_llir(builder, mod)
+        builder.call(computed_func, receiver_value, "#{@property}_result")
+      end
+
+      private def fail_property_not_found(receiver_type)
         fail Stone::PropertyError, "Property '#{@property}' not found for type '#{receiver_type}'"
       end
 
@@ -77,31 +86,45 @@ module Stone
       private def determine_type_of_expression_result(type_of_expr, mod)
         inner = type_of_expr.inner_expression
 
-        # For simple cases, directly check the node type
+        # Try simple literal type check first
+        simple_type = simple_literal_type(inner)
+        return simple_type if simple_type
+
+        # Try special case handling
+        complex_type = complex_expression_type(inner, mod)
+        return complex_type if complex_type
+
+        # Fallback to TypeContext for complex cases
+        type_via_context(inner, mod) || "Unknown"
+      end
+
+      private def simple_literal_type(inner)
         case inner
-        when IntegerLiteral then return "Int"
-        when BooleanLiteral then return "Bool"
-        when StringLiteral then return "String"
-        when TypeOfExpression then return "Type" # Type.of() returns Type
-        when TypeReference then return "Type"
-        when FunctionCall
-          # Check if it's a comparison operator (returns Bool)
-          return inner.function_name.match?(/^(==|!=|≠|<|<=|≤|>|>=|≥)$/) ? "Bool" : "Unknown"
-        when PropertyAccess
-          # Recursively determine property access type
-          return infer_property_access_type(inner, mod) || "Unknown"
+        when IntegerLiteral then "Int"
+        when BooleanLiteral then "Bool"
+        when StringLiteral then "String"
+        when TypeOfExpression then "Type"
+        when TypeReference then "Type"
         end
+      end
 
-        # For complex cases, use TypeContext
+      private def complex_expression_type(inner, mod)
+        case inner
+        when FunctionCall then function_call_result_type(inner)
+        when PropertyAccess then infer_property_access_type(inner, mod)
+        end
+      end
+
+      private def function_call_result_type(inner)
+        inner.function_name.match?(/^(==|!=|≠|<|<=|≤|>|>=|≥)$/) ? "Bool" : "Unknown"
+      end
+
+      private def type_via_context(inner, mod)
         context = Stone::TypeContext.new(mod)
-        begin
-          inner_type = inner.type(context)
-          return type_class_to_name(inner_type) if inner_type
-        rescue Stone::TypeError
-          # Type lookup failed
-        end
-
-        "Unknown"
+        inner_type = inner.type(context)
+        type_class_to_name(inner_type) if inner_type
+      rescue Stone::TypeError
+        nil
       end
 
       private def type_class_to_name(type_class)
@@ -132,18 +155,29 @@ module Stone
       end
 
       private def infer_type_from_node(node, mod)
+        literal_node_type(node) || complex_node_type(node, mod) || fail_cannot_infer_type(node)
+      end
+
+      private def literal_node_type(node)
         case node
         when IntegerLiteral then "Int"
         when BooleanLiteral then "Bool"
         when StringLiteral then "String"
         when TypeOfExpression then "Type"
         when TypeReference then "Type"
+        end
+      end
+
+      private def complex_node_type(node, mod)
+        case node
         when Reference then node.type(mod)
         when PropertyAccess then infer_property_access_type(node, mod)
         when FunctionCall then infer_function_call_type(node, mod)
-        else
-          fail "Cannot infer type of #{node.class}"
         end
+      end
+
+      private def fail_cannot_infer_type(node)
+        fail "Cannot infer type of #{node.class}"
       end
 
       private def infer_property_access_type(node, mod)

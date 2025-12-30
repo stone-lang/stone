@@ -22,12 +22,16 @@ module Stone
         # - If same type, delegate to type-specific comparison
         # - This special case should be removed
         return generate_record_equality(builder, mod) if record_equality_comparison?(mod)
+        # TODO: Record instantiation should not be special-cased here.
+        # When the type system is refactored, record constructors should be
+        # regular functions, and this check should be removed.
+        return instantiate_record(builder, mod) if mod.record_type?(function_name)
 
         # For chained comparisons, generate inline comparison logic
         return generate_chained_comparison(builder, mod) if chained_comparison?
 
         # Regular function call
-        generate_regular_function_call(builder, mod)
+        generate_function_call(builder, mod)
       end
 
       def to_s
@@ -48,7 +52,7 @@ module Stone
         end
       end
 
-      private def generate_regular_function_call(builder, mod)
+      private def generate_function_call(builder, mod)
         func = mod.lookup_function(function_name)
         fail Stone::ReferenceError, "undefined function: #{function_name}" unless func
 
@@ -109,8 +113,13 @@ module Stone
       end
 
       private def both_arguments_are_records?(mod)
-        arguments[0].is_a?(Stone::AST::Reference) && arguments[0].record_instance?(mod) &&
-          arguments[1].is_a?(Stone::AST::Reference) && arguments[1].record_instance?(mod)
+        Stone::AST::RecordHelpers.record_instance?(arguments[0], mod) &&
+          Stone::AST::RecordHelpers.record_instance?(arguments[1], mod)
+      end
+
+      private def instantiate_record(builder, mod)
+        record_instantiation = Stone::AST::RecordInstantiation.new(function_name, arguments)
+        record_instantiation.to_llir(builder, mod)
       end
 
       private def equality_operator?
@@ -163,28 +172,39 @@ module Stone
         compare_field_values(builder, val1, val2, field[:type], mod)
       end
 
-      private def compare_field_values(builder, val1, val2, field_type, mod)
-        case field_type
-        when "String"
-          compare_strings(builder, val1, val2, mod)
+      private def compare_field_values(builder, val1, val2, type_name, mod)
+        case type_name
         when "Int", "Bool"
-          builder.icmp(:eq, val1, val2, "cmp_#{field_type.downcase}")
+          builder.icmp(:eq, val1, val2, "field_eq")
+        when "String"
+          # Stone represents strings as i64 pointers to null-terminated C strings
+          # We need to compare the string contents, not just the pointers
+          compare_strings(builder, val1, val2, mod)
         else
-          fail "Unknown field type for comparison: #{field_type}"
+          fail "Unknown type for comparison: #{type_name}"
         end
       end
 
       private def compare_strings(builder, str_ptr1, str_ptr2, mod)
-        # Convert i64 pointers to i8*
-        i8_ptr1 = builder.int2ptr(str_ptr1, LLVM::Type.pointer(LLVM::Int8), "str1_ptr")
-        i8_ptr2 = builder.int2ptr(str_ptr2, LLVM::Type.pointer(LLVM::Int8), "str2_ptr")
+        # Optimization: check if pointers are equal first
+        # If pointers differ, we still need strcmp for content comparison
+        ptrs_equal = builder.icmp(:eq, str_ptr1, str_ptr2, "ptrs_eq")
 
-        # Call strcmp
-        strcmp = LibC.get_or_declare_strcmp(mod)
-        cmp_result = builder.call(strcmp, i8_ptr1, i8_ptr2, "strcmp_result")
+        # Convert i64 pointers back to i8* for strcmp
+        ptr1 = builder.int2ptr(str_ptr1, LLVM::Type.pointer(LLVM::Int8), "ptr1")
+        ptr2 = builder.int2ptr(str_ptr2, LLVM::Type.pointer(LLVM::Int8), "ptr2")
+
+        # Declare or get strcmp function
+        strcmp_func = Stone::LibC.get_or_declare_strcmp(mod)
+        strcmp_result = builder.call(strcmp_func, ptr1, ptr2, "strcmp_result")
 
         # strcmp returns 0 if strings are equal
-        builder.icmp(:eq, cmp_result, LLVM::Int32.from_i(0), "strings_equal")
+        strings_equal = builder.icmp(:eq, strcmp_result, LLVM::Int32.from_i(0), "strings_eq")
+
+        # Return true if pointers are equal OR string contents are equal
+        # Note: This always calls strcmp, but LLVM's optimizer will likely eliminate
+        # the strcmp call when ptrs_equal is true at compile time
+        builder.or(ptrs_equal, strings_equal, "str_cmp_result")
       end
 
     end

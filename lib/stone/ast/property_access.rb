@@ -173,6 +173,8 @@ module Stone
         when Reference then node.type(mod)
         when PropertyAccess then infer_property_access_type(node, mod)
         when FunctionCall then infer_function_call_type(node, mod)
+        else
+          fail "Cannot infer type of #{node.class}"
         end
       end
 
@@ -207,7 +209,7 @@ module Stone
 
       private def record_field_access?(mod)
         # Check if receiver is a Reference to a record instance
-        return @receiver.record_instance?(mod) if @receiver.is_a?(Reference)
+        return Stone::AST::RecordHelpers.record_instance?(@receiver, mod) if @receiver.is_a?(Reference)
 
         # Check if receiver is a FunctionCall that returns a record
         return mod.record_type?(@receiver.function_name) if @receiver.is_a?(FunctionCall)

@@ -1,4 +1,5 @@
 require "llvm/core"
+require "stone/libc"
 
 
 module Stone
@@ -8,9 +9,11 @@ module Stone
 
         def initialize(children)
           @children = children
+          @mod = nil
         end
 
         def generate(mod)
+          @mod = mod
           # Pre-register record types for type checking
           register_record_types(mod)
           mod.functions.add("__top__", function_type) do |func|
@@ -65,9 +68,12 @@ module Stone
         end
 
         private def register_record_instance_if_needed(child, mod)
-          return unless child.value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(child.value_expression.function_name)
-
-          mod.register_record_instance(child.identifier, child.value_expression.function_name)
+          if child.value_expression.is_a?(Stone::AST::RecordInstantiation)
+            record_type_name = child.value_expression.record_type_name
+            mod.register_record_instance(child.identifier, record_type_name)
+          elsif child.value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(child.value_expression.function_name)
+            mod.register_record_instance(child.identifier, child.value_expression.function_name)
+          end
         end
 
       end

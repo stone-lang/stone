@@ -13,6 +13,7 @@ require "stone/ast/computed_property_definition"
 require "stone/ast/lambda"
 require "stone/ast/block"
 require "stone/ast/record_definition"
+require "stone/ast/record_instantiation"
 require "stone/error/overflow"
 require "grammy/tree/transformation"
 

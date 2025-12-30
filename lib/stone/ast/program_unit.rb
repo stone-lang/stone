@@ -54,12 +54,14 @@ module Stone
 
       private def convert_to_ruby(result, result_type)
         case result_type.to_s
+        when "i64"
+          i64_value = result.to_i
+          return read_string_from_pointer(i64_value) if last_child_is_string?
+          last_child_is_boolean? ? (i64_value != 0) : i64_value
+        when "i1", "boolean"
+          result.to_i != 0
         when "string"
           read_string_from_pointer(result.to_i)
-        when "boolean"
-          result.to_i != 0
-        when "i64"
-          result.to_i
         else
           fail "Don't know how to convert LLVM type to Ruby: #{result_type}"
         end

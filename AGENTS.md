@@ -406,7 +406,7 @@ When using the `/pre-commit` command:
 
 Managed by mise and .tool-versions:
 
-- Ruby 3.4.7
+- Ruby 4.0
 - Bun 1.3
 - LLVM 21
 

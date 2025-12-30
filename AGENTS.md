@@ -14,21 +14,24 @@ This file provides guidance to AI agents (such as Claude Code) when working with
    - Uncommitted changes: `git --no-pager status --short`
 
 **If you find yourself in a worktree directory** (like `~/.claude-worktrees/stone/*`):
+
 - Inform the user about the location mismatch
 - Ask whether to:
-  - Continue in the worktree (for isolated feature work on that branch)
-  - Switch context to the main repository (for work on the 0.10 branch)
+    - Continue in the worktree (for isolated feature work on that branch)
+    - Switch context to the main repository (for work on the 0.10 branch)
 
 **Git worktrees**: This repository uses git worktrees for parallel branch work. The main repository is at `~/Work/stone` and worktrees are in `~/.claude-worktrees/stone/`. When working with git commands across repositories, use `--git-dir` and `--work-tree` flags to specify the target repository explicitly.
 
 ### Repository Dependencies
 
 Grammy is linked locally during development:
+
 - Location: `~/Work/Code/grammy`
 - Configured in `Gemfile`: `gem "grammy", path: "~/Work/Code/grammy"`
 - Configured in `.bundle/config` for local development
 
 When working on Stone features that need Grammy changes:
+
 1. Make the Grammy changes first
 2. Test them in Stone
 3. Commit Grammy and Stone changes separately
@@ -72,9 +75,11 @@ I'll tell you to continue once I'm happy with the tests. Proceed with the implem
 
 When the tests pass, check to see if there are any refactoring opportunities. I'm a fan of "merciless refactoring". How simple can we make the code, while still passing the tests? How can we make the code more readable and maintainable? (Great answers: keep it simple; use intention-revealing names.) I plan to have mutation testing in place soon, to encourage this even more.
 
-Double-check to ensure the code is following security best practices, coding best practices. Make sure linting is passing.
+Double-check to ensure the code is following security best practices, coding best practices. Make sure `make specs` and `make lint` are passing before considering the task complete. Do not disable any linting checks without permission; in most cases, you will need to fix the issue.
 
-Once that's done, give yourself a code review. Use a subagent, if possible. Correct any issues identified.
+Once that's done, give yourself a code review - 4 of them, in sequence (after fixing what as found in previous review). Delegate to subagents, whenever possible and reasonable. Consider using different models. Correct any issues identified. Look for edge cases or any other cases that we don't handle well. Look for security issues. Refactor more than you think you should. ;P
+
+Ensure that the code is readable, maintainable, flexible (easily changed), and as simple as possible.
 
 Then suggest a concise commit message, following the directions below. Suggest multiple commits if it's appropriate to keep small atomic commits. I want to be able to use `git bisect` without worries, and I want atomic commits to make rollbacks safer and easier. Have the commit(s) and commit message(s) approved before making the commits. TODO: Please help me figure out how to trust allowing the AI agent to make commits, then PRs. I can always squash or interactively rebase to clean things up after the fact. Especially with AI's help. Especially if I do code reviews.
 
@@ -82,16 +87,28 @@ Please ask me questions, challenge my assumptions, and make suggestions at any t
 
 ## ⚠️ MANDATORY APPROVAL CHECKPOINTS
 
-Before proceeding past any of these points, you MUST have explicit user approval:
+Before proceeding past any of these points, you MUST have my explicit approval:
 
 1. **Before writing tests** - Discuss the problem, requirements, and approach first
 2. **Before writing implementation** - Tests must be reviewed and approved
 3. **Before committing** - Code review and commit message must be approved
 
-If the user gives a task that seems straightforward, STILL discuss the approach first.
+If I give a task that seems straightforward, STILL discuss the approach first.
 Do not assume approval. Look for explicit phrases like "go ahead", "proceed", "continue", "looks good", etc.
 
 When in doubt, ask: "Should I proceed with [next step]?"
+
+## ⚠️ CI REQUIREMENTS (HARD BLOCKERS)
+
+**Before making ANY commit**, you MUST:
+
+1. Run `make ci` (or `make test && make lint`)
+2. **ALL tests must pass** - "460 examples, 0 failures" (exact count will vary)
+3. **ALL lint checks must pass** - "92 files inspected, 0 offenses" (exact count will vary)
+
+**If either check fails, the task is NOT complete.** Fix the issues before committing.
+
+**Each commit must pass CI independently.** If you're making multiple commits, verify each one can pass `make ci` on its own (for `git bisect` safety).
 
 ## Simple Design
 
@@ -106,6 +123,25 @@ Follow Kent Beck's 4 Rules Of Simple Design:
 Write with empathy for future readers of the code we commit. Remember, that's mostly going to be *us*. The ability to make future changes is the key metric we should shoot for, even though that's very difficult to actually measure. We want to minimize anything that slows the pace of delivering future features.
 
 Use immutable values and pure functions whenever possible. They are easier to reason about, reducing potential for bugs.
+
+### Simplicity First
+
+**Before adding new infrastructure** (registries, modules, data structures, classes):
+
+1. Ask: "Can we reuse existing code/tools/infrastructure?"
+2. Ask: "What's the simplest approach that could work?"
+3. Prefer using existing patterns over inventing new ones
+
+**Example**: Instead of creating `mod.computed_properties["Int"]["abs"]`, just use `mod.lookup_function("Int@abs")` - reuse existing function lookup.
+
+**When proposing a solution**, present the simplest option first. If there are trade-offs that justify more complexity, explain them and let me decide.
+
+### File Creation Policy
+
+- Do NOT create documentation files unless I explicitly request them
+- Do NOT create prompt/planning files for future work unless I ask
+- Prefer editing existing files over creating new ones
+- If you must create a file, mention it explicitly: "I'm creating X because Y"
 
 ## Build and Test Commands
 
@@ -162,6 +198,7 @@ This is **necessary** because `git` is configured to use a pager (`delta`) which
 ### Common Git Operations
 
 **Amending older commits** (when they haven't been pushed):
+
 ```bash
 # Create a fixup commit
 git commit --fixup <commit-hash>
@@ -171,30 +208,46 @@ GIT_SEQUENCE_EDITOR=true git rebase --autosquash -i <commit-hash>^
 ```
 
 **Checking commit authorship** (before amending):
+
 ```bash
 git log -1 --format='%an %ae'
 ```
 
 **Working across repositories** (main repo and worktrees):
+
 ```bash
 git --git-dir=~/Work/stone/.git --work-tree=~/Work/stone <command>
 ```
 
 ## Commits
 
-Every non-WIP commit that I push to upstream should pass CI (all tests and linting, via `make ci`).
+Every non-WIP commit that we push to upstream should pass CI (all tests and linting, via `make ci`).
 
-When making a commit, commit **only** the files that you (the AI agent) have changed. Do **not** commit changes that were there before your changes were made.
+When making a commit, commit **only** the files that you (the AI agent) have changed. Do **not** commit changes that were there before your changes were made, unless explicitly requested.
 
-Keep commit messages concise.
+Keep commit messages concise. Don't include details that can easily be inferred from the code changes.
 
-When creating commits for work done with AI assistance, add a co-author trailer to the commit message, similar to pair programming convention:
+### AI Attribution Trailers
+
+When creating commits for work done with AI assistance, include git trailers to indicate the level and source of AI involvement.
+
+#### Trailer Types
+
+- **`AI-Generated-By:`** — AI wrote all of the code in the commit
+- **`AI-Assisted-By:`** — Human collaborated with AI beyond a single prompt (iterative discussion, review, refinement)
+
+If neither applies (e.g., AI answered a one-off question but human wrote all the code), no trailer is needed. If multiple AI tools contributed to a commit, include a trailer for each.
+
+#### Format
 
 ```text
-Co-authored-by: Claude (Anthropic) <claude@anthropic.com>
+<Trailer>: <Common Name> (<model-version>) via <tool> [<tool-version>]
 ```
 
-GitHub will recognize the `Co-authored-by:` trailer and show both authors on the commit.
+- **Common Name**: Human-readable model name (eg. `Claude Sonnet 4.5`, `GPT-4o`)
+- **model-version**: API model string for reproducibility (eg. `claude-sonnet-4-20250514`)
+- **tool**: The interface/application used (eg. `Claude Code`, `Cursor`, `ChatGPT`, `Codex`, `aider`)
+- **tool-version**: Include when known (best effort)
 
 ### Commit Checklist
 
@@ -204,7 +257,18 @@ We must ensure that all of these are completed before making a (non-WIP) commit:
     - runs `make specs`
     - runs `make lint`
 - you have code reviewed your changes and made appropriate updates
-    - use of good intention-revealing names?
+    - names are intention-revealing
+    - no duplication
+    - methods under 10 lines (ideally 5 or less)
+    - each method has one level of abstraction
+    - each class has a single responsibility
+    - comments only explain "why" when necessary
+    - error handling is defensive, with helpful messages
+    - no sensitive data in logs or error messages
+    - user input is validated and sanitized
+    - dependencies injected rather than hardcoded
+    - value objects and immutability where feasible
+    - would we be comfortable maintaining this in 6 months?
     - any security concerns?
     - any performance concerns?
     - any documentation concerns?
@@ -220,6 +284,7 @@ We must ensure that all of these are completed before making a (non-WIP) commit:
 ### Organizing Multiple Changes
 
 When you have multiple uncommitted changes:
+
 1. Run `make ci` first to ensure everything passes
 2. Group related changes logically:
    - Infrastructure/build changes together
@@ -283,7 +348,7 @@ The `stone` binary (not yet implemented) will support:
 
 ### Code Style
 
-- RuboCop configuration inherits from https://raw.githubusercontent.com/booch/config_files/master/ruby/rubocop.yml
+- RuboCop configuration inherits from the `rubocop-boochtek` gem
 - Line length: 120 characters
 - Block style: Use `{}` for functional blocks that return values, `do/end` otherwise
 - Exceptions for RSpec and grammar/transform rules (use {} for `rule`, `let`, `expect`)
@@ -347,6 +412,9 @@ Managed by mise and .tool-versions:
 
 ## Documentation Standards
 
+All Markdown documents must pass `make lint` (markdownlint) before being considered complete.
+Use 4 spaces for indentation in Markdown. Lists and fenced code blocks must be surrounded by blank lines.
+
 When creating documents in `docs/`:
 
 - Do NOT include time estimates, effort assessments, or difficulty ratings
@@ -362,33 +430,51 @@ When creating documents in `docs/`:
 ## AI Agent Best Practices
 
 ### Before Making Changes
+
 - Always read files before editing them (required by tools)
 - Understand existing patterns before suggesting new ones
 - Check recent commits to understand context and style
 
 ### During Work
+
 - Use TodoWrite to track multi-step tasks
 - Mark todos as in_progress before starting work
 - Mark todos as completed immediately after finishing
 - Keep exactly ONE todo in_progress at a time
 
 ### Session Management
+
 - Verify git commands use `--no-pager` flag
 - Avoid `cd` commands; use absolute paths or git flags instead
 - Check for uncommitted changes at session start
 - Clarify which repository (Stone vs Grammy) before starting work
+
+### Subagent Guidelines
+
+When spawning subagents (via Task tool):
+
+1. **Clarify workflow upfront** - Tell subagents whether they need approval checkpoints or can proceed continuously
+2. **Include CI requirements** - Remind subagents that `make ci` must pass before reporting completion
+3. **Be specific about deliverables** - "Write tests only" vs "Implement the feature"
+4. **Consolidate when possible** - Avoid multiple agent invocations for the same logical task
+5. **Verify before accepting** - Don't trust "mostly passes" - check exact CI output
+6. **Big picture** - Ensure subagents understand the overall project goals and context
+
+Subagents should report their high-level actions, along with a list of files created/modified/deleted.
 
 ## Troubleshooting
 
 ### Shell/Directory Issues
 
 If you encounter `cd` failures or mise/zoxide errors when trying to change directories:
+
 - Use absolute paths with git `--git-dir` and `--work-tree` flags instead
 - The shell configuration may interfere with `cd` commands in AI agent sessions
 
 ### SSL Certificate Issues
 
 If RuboCop fails to fetch remote config due to SSL errors:
+
 - Temporary workaround is in `lib/disable_ssl_verify.rb`
 - Loaded via `RUBYOPT` in Makefile's rubocop target
 
@@ -397,3 +483,5 @@ If RuboCop fails to fetch remote config due to SSL errors:
 Don't forget to use the `--no-pager` flag for `git`!
 
 Don't forget to stop and ask for required approvals before moving on to the next task in the workflow.
+
+Don't forget that `make ci` must pass.

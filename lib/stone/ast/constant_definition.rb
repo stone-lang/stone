@@ -1,9 +1,9 @@
-require "stone/ast"
+require "stone/ast/expression"
 
 
 module Stone
   class AST
-    class ConstantDefinition < Stone::AST
+    class ConstantDefinition < Stone::AST::Expression
 
       attr_reader :identifier, :value_expression
 

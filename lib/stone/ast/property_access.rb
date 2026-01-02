@@ -1,10 +1,10 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/error/property_error"
 
 
 module Stone
   class AST
-    class PropertyAccess < Stone::AST
+    class PropertyAccess < Stone::AST::Expression
 
       attr_reader :receiver, :property
 

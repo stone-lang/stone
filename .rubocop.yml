@@ -51,6 +51,8 @@ Naming/MethodName:
   Exclude:
     - lib/extensions/boolean.rb
     - lib/stone/top.rb
+  AllowedPatterns:
+    - as_String
 
 # Allow numbered variables in record field comparisons (field1_0, field2_0).
 Naming/VariableNumber:

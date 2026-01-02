@@ -1,10 +1,10 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/error/type_error"
 
 
 module Stone
   class AST
-    class Reference < Stone::AST
+    class Reference < Stone::AST::Expression
 
       attr_reader :identifier
 

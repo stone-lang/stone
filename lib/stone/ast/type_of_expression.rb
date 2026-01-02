@@ -1,10 +1,10 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/type_context"
 
 
 module Stone
   class AST
-    class TypeOfExpression < Stone::AST
+    class TypeOfExpression < Stone::AST::Expression
 
       attr_reader :inner_expression
 

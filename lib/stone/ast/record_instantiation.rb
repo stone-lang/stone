@@ -1,10 +1,10 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/error/arity_error"
 
 
 module Stone
   class AST
-    class RecordInstantiation < Stone::AST
+    class RecordInstantiation < Stone::AST::Expression
 
       attr_reader :record_type_name, :field_values, :record_definition
 

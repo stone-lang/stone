@@ -1,9 +1,9 @@
-require "stone/ast"
+require "stone/ast/expression"
 
 
 module Stone
   class AST
-    class TypeReference < Stone::AST
+    class TypeReference < Stone::AST::Expression
 
       def initialize
         @name = :type_reference

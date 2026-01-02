@@ -95,17 +95,17 @@ RSpec.describe Stone::Type::Base do
     end
   end
 
-  describe ".as_string" do
+  describe ".as_String" do
     it "returns the type name for Int" do
-      expect(Stone::Type::Int.as_string).to eq("Int")
+      expect(Stone::Type::Int.as_String).to eq("Int")
     end
 
     it "returns the type name for Bool" do
-      expect(Stone::Type::Bool.as_string).to eq("Bool")
+      expect(Stone::Type::Bool.as_String).to eq("Bool")
     end
 
     it "returns the type name for String" do
-      expect(Stone::Type::String.as_string).to eq("String")
+      expect(Stone::Type::String.as_String).to eq("String")
     end
   end
 

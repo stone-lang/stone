@@ -1,11 +1,11 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/libc"
 require "stone/error/argument_error"
 
 
 module Stone
   class AST
-    class FunctionCall < Stone::AST
+    class FunctionCall < Stone::AST::Expression
 
       attr_reader :function_name, :arguments
 

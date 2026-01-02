@@ -8,10 +8,6 @@ module Stone
       @children = children
     end
 
-    def type(_context = nil)
-      fail NotImplementedError, "#{self.class} must implement #type"
-    end
-
     # Helper module for checking if a node represents a record instance
     module RecordHelpers
       # Check if a node is a Reference to a record instance

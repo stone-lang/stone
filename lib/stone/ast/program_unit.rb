@@ -26,11 +26,6 @@ module Stone
         jit_engine&.dispose
       end
 
-      def type(_context = nil)
-        # ProgramUnit doesn't have a meaningful type
-        nil
-      end
-
       private def run_function(func)
         result = jit_engine.run_function(func)
         result_type = result_type(func.function_type.return_type)
@@ -55,9 +50,10 @@ module Stone
       private def convert_to_ruby(result, result_type)
         case result_type.to_s
         when "i64"
-          i64_value = result.to_i
-          return read_string_from_pointer(i64_value) if last_child_is_string?
-          last_child_is_boolean? ? (i64_value != 0) : i64_value
+          result.to_i
+          # i64_value = result.to_i
+          # return read_string_from_pointer(i64_value) if last_child_is_string?
+          # last_child_is_boolean? ? (i64_value != 0) : i64_value
         when "i1", "boolean"
           result.to_i != 0
         when "string"

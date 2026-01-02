@@ -1,4 +1,4 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/type/bool"
 
 # TODO: Eventually, TRUE and FALSE should be top-level constants defined as
@@ -6,7 +6,7 @@ require "stone/type/bool"
 
 module Stone
   class AST
-    class BooleanLiteral < Stone::AST
+    class BooleanLiteral < Stone::AST::Expression
 
       def self.parse(text, location)
         new(text)

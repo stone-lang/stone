@@ -1,11 +1,11 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/ast/block"
 require "stone/types"
 
 
 module Stone
   class AST
-    class Lambda < Stone::AST
+    class Lambda < Stone::AST::Expression
 
       attr_reader :parameters, :block
 

@@ -1,4 +1,4 @@
-require "stone/ast"
+require "stone/ast/expression"
 
 
 module Stone
@@ -9,7 +9,7 @@ module Stone
     # - Record types should be global constants with properties
     # - Record types should have vtables for polymorphic operations
     # - Record instantiation should work like any other function call
-    class RecordDefinition < Stone::AST
+    class RecordDefinition < Stone::AST::Expression
 
       attr_reader :fields
 

@@ -4,7 +4,7 @@ require "stone/types"
 
 module Stone
   class AST
-    class Block < Stone::AST
+    class Block < Stone::AST::Expression
 
       attr_reader :statements
 

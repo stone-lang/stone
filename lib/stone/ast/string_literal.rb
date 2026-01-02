@@ -1,10 +1,10 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/type/String"
 
 
 module Stone
   class AST
-    class StringLiteral < Stone::AST
+    class StringLiteral < Stone::AST::Expression
 
       def self.parse(text, location)
         # Remove surrounding quotes, but do NOT process escape sequences.

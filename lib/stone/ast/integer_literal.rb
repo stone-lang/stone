@@ -1,10 +1,10 @@
-require "stone/ast"
+require "stone/ast/expression"
 require "stone/type/int"
 
 
 module Stone
   class AST
-    class IntegerLiteral < Stone::AST
+    class IntegerLiteral < Stone::AST::Expression
 
       MIN = Stone::Type::Int::MIN
       MAX = Stone::Type::Int::MAX

@@ -29,10 +29,9 @@ module Stone
         "{ #{statements.join("\n")} }"
       end
 
-      def type(_context = nil)
-        # Blocks currently return Int64
-        # TODO: Infer type from last statement
-        Stone::Type::Int
+      def type(context = nil)
+        last_expression = statements.reverse.find { |stmt| stmt.type(context) }
+        last_expression&.type(context)
       end
 
       private def next_block_id

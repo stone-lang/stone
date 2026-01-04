@@ -10,6 +10,7 @@ require "stone/ast/type_reference"
 require "stone/ast/function_call"
 require "stone/ast/lambda"
 require "stone/ast/block"
+require "stone/ast/constant_definition"
 require "stone/type_context"
 require "stone/types"
 
@@ -167,10 +168,22 @@ RSpec.describe "AST node type() method" do
   end
 
   describe "Lambda#type" do
-    it "returns Stone::Type::Int" do
+    it "returns the type of its block" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Lambda.new(["x"], statements)
       expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "returns Bool when block returns Bool" do
+      statements = [Stone::AST::BooleanLiteral.new("TRUE")]
+      node = Stone::AST::Lambda.new([], statements)
+      expect(node.type(context)).to eq(Stone::Type::Bool)
+    end
+
+    it "returns String when block returns String" do
+      statements = [Stone::AST::StringLiteral.new("hello")]
+      node = Stone::AST::Lambda.new([], statements)
+      expect(node.type(context)).to eq(Stone::Type::String)
     end
 
     it "works without context" do
@@ -181,10 +194,36 @@ RSpec.describe "AST node type() method" do
   end
 
   describe "Block#type" do
-    it "returns Stone::Type::Int" do
+    it "infers type from last expression" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Block.new(statements)
       expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "infers Bool type from last expression" do
+      statements = [Stone::AST::BooleanLiteral.new("TRUE")]
+      node = Stone::AST::Block.new(statements)
+      expect(node.type(context)).to eq(Stone::Type::Bool)
+    end
+
+    it "infers String type from last expression" do
+      statements = [Stone::AST::StringLiteral.new("hello")]
+      node = Stone::AST::Block.new(statements)
+      expect(node.type(context)).to eq(Stone::Type::String)
+    end
+
+    it "skips definitions when inferring type" do
+      statements = [
+        Stone::AST::IntegerLiteral.new(1),
+        Stone::AST::ConstantDefinition.new("X", Stone::AST::IntegerLiteral.new(42))
+      ]
+      node = Stone::AST::Block.new(statements)
+      expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "returns nil for empty block" do
+      node = Stone::AST::Block.new([])
+      expect(node.type(context)).to be_nil
     end
 
     it "works without context" do

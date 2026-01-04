@@ -3,6 +3,40 @@ require "stone/ast/integer_literal"
 require "stone/ast/boolean_literal"
 require "stone/ast/string_literal"
 
+# rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+def setup_prelude_properties(mod)
+  prelude_code = <<~STONE
+    Bool@not := λ(this) { if(this, { FALSE }, { TRUE }) }
+    Int@positive? := λ(this) { this > 0 }
+    Int@negative? := λ(this) { this < 0 }
+    Int@zero? := λ(this) { this == 0 }
+  STONE
+  parse_tree = Stone::Grammar.parse(prelude_code)
+  transformer = Stone::Transform.new
+  ast = transformer.transform(parse_tree)
+
+  builder_temp = LLVM::Builder.new
+  func_temp = mod.functions.add("__prelude_setup__", LLVM::Type.function([], LLVM::Int64.type))
+  block_temp = func_temp.basic_blocks.append("entry")
+  builder_temp.position_at_end(block_temp)
+
+  ast.children.each { |child| child.to_llir(builder_temp, mod) if child.respond_to?(:to_llir) }
+end
+# rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+
+RSpec.shared_context "with LLVM builder and prelude" do
+  let(:mod) { LLVM::Module.new("test") }
+  let(:func) { mod.functions.add("test_func", LLVM::Type.function([], LLVM::Int64.type)) }
+  let(:block) { func.basic_blocks.append("entry") }
+  let(:builder) { LLVM::Builder.new }
+
+  before do
+    builder.position_at_end(block)
+    Stone::BuiltIns.new(mod).setup
+    setup_prelude_properties(mod)
+  end
+end
+
 RSpec.describe Stone::AST::PropertyAccess do
 
   describe "#initialize" do
@@ -16,42 +50,7 @@ RSpec.describe Stone::AST::PropertyAccess do
   end
 
   describe "#to_llir" do
-    let(:mod) { LLVM::Module.new("test") }
-    let(:func) { mod.functions.add("test_func", LLVM::Type.function([], LLVM::Int64.type)) }
-    let(:block) { func.basic_blocks.append("entry") }
-    let(:builder) { LLVM::Builder.new }
-
-    before do
-      builder.position_at_end(block)
-      # Set up built-ins that computed properties depend on
-      Stone::BuiltIns.new(mod).setup
-      # Load prelude to set up computed properties
-      setup_prelude_properties(mod)
-    end
-
-    # Helper to set up prelude-defined computed properties
-    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-    def setup_prelude_properties(mod)
-      prelude_code = <<~STONE
-        Bool@not := λ(this) { if(this, { FALSE }, { TRUE }) }
-        Int@positive? := λ(this) { this > 0 }
-        Int@negative? := λ(this) { this < 0 }
-        Int@zero? := λ(this) { this == 0 }
-      STONE
-      # Parse and transform without using Stone.compile (which would add prelude again)
-      parse_tree = Stone::Grammar.parse(prelude_code)
-      transformer = Stone::Transform.new
-      ast = transformer.transform(parse_tree)
-
-      # Generate LLVM IR for all property definitions to register them
-      builder_temp = LLVM::Builder.new
-      func_temp = mod.functions.add("__prelude_setup__", LLVM::Type.function([], LLVM::Int64.type))
-      block_temp = func_temp.basic_blocks.append("entry")
-      builder_temp.position_at_end(block_temp)
-
-      ast.children.each { |child| child.to_llir(builder_temp, mod) if child.respond_to?(:to_llir) }
-    end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+    include_context "with LLVM builder and prelude"
 
     describe "Int properties" do
       it "generates LLVM IR for Int.positive?" do
@@ -131,42 +130,7 @@ RSpec.describe Stone::AST::PropertyAccess do
   end
 
   describe "chained property access" do
-    let(:mod) { LLVM::Module.new("test") }
-    let(:func) { mod.functions.add("test_func", LLVM::Type.function([], LLVM::Int64.type)) }
-    let(:block) { func.basic_blocks.append("entry") }
-    let(:builder) { LLVM::Builder.new }
-
-    before do
-      builder.position_at_end(block)
-      # Set up built-ins that computed properties depend on
-      Stone::BuiltIns.new(mod).setup
-      # Load prelude to set up computed properties
-      setup_prelude_properties(mod)
-    end
-
-    # Helper to set up prelude-defined computed properties
-    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
-    def setup_prelude_properties(mod)
-      prelude_code = <<~STONE
-        Bool@not := λ(this) { if(this, { FALSE }, { TRUE }) }
-        Int@positive? := λ(this) { this > 0 }
-        Int@negative? := λ(this) { this < 0 }
-        Int@zero? := λ(this) { this == 0 }
-      STONE
-      # Parse and transform without using Stone.compile (which would add prelude again)
-      parse_tree = Stone::Grammar.parse(prelude_code)
-      transformer = Stone::Transform.new
-      ast = transformer.transform(parse_tree)
-
-      # Generate LLVM IR for all property definitions to register them
-      builder_temp = LLVM::Builder.new
-      func_temp = mod.functions.add("__prelude_setup__", LLVM::Type.function([], LLVM::Int64.type))
-      block_temp = func_temp.basic_blocks.append("entry")
-      builder_temp.position_at_end(block_temp)
-
-      ast.children.each { |child| child.to_llir(builder_temp, mod) if child.respond_to?(:to_llir) }
-    end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+    include_context "with LLVM builder and prelude"
 
     it "handles chained properties correctly" do
       # TRUE.not.not

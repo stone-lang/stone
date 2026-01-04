@@ -104,6 +104,20 @@ RSpec.describe "AST node type() method" do
       outer_access = Stone::AST::PropertyAccess.new(inner_access, "not")
       expect(outer_access.type(context)).to eq(registry.bool)
     end
+
+    it "works without context for literals" do
+      receiver = Stone::AST::IntegerLiteral.new(42)
+      node = Stone::AST::PropertyAccess.new(receiver, "positive?")
+      expect(node.type).to eq(registry.bool)
+    end
+
+    it "handles triple-chained property access" do
+      inner = Stone::AST::IntegerLiteral.new(42)
+      first = Stone::AST::PropertyAccess.new(inner, "positive?")
+      second = Stone::AST::PropertyAccess.new(first, "not")
+      third = Stone::AST::PropertyAccess.new(second, "not")
+      expect(third.type(context)).to eq(registry.bool)
+    end
   end
 
   describe "TypeOfExpression#type" do

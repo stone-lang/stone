@@ -133,16 +133,18 @@ RSpec.describe "AST node type() method" do
   end
 
   describe "RecordInstantiation#type" do
-    it "returns the record type name" do
+    it "returns the record type from registry when registered" do
+      point_type = Stone::TypeInstance.record(name: "Point", fields: [], llvm_type: :mock)
+      registry.register(point_type)
       field_values = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::RecordInstantiation.new("Point", field_values)
-      expect(node.type(context)).to eq("Point")
+      expect(node.type(context)).to eq(point_type)
     end
 
-    it "works without context" do
+    it "falls back to type name when not in registry" do
       field_values = [Stone::AST::IntegerLiteral.new(42)]
-      node = Stone::AST::RecordInstantiation.new("Point", field_values)
-      expect(node.type).to eq("Point")
+      node = Stone::AST::RecordInstantiation.new("UnknownRecord", field_values)
+      expect(node.type).to eq("UnknownRecord")
     end
   end
 
@@ -161,12 +163,14 @@ RSpec.describe "AST node type() method" do
       expect(node.type(context)).to eq(registry.int)
     end
 
-    it "returns record type name for record constructors" do
+    it "returns record type from registry for record constructors" do
+      point_type = Stone::TypeInstance.record(name: "Point", fields: [], llvm_type: :mock)
+      registry.register(point_type)
       record_context = instance_double(Stone::TypeContext, record_type?: true)
       allow(record_context).to receive(:record_type?).with("Point").and_return(true)
       args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
       node = Stone::AST::FunctionCall.new("Point", args)
-      expect(node.type(record_context)).to eq("Point")
+      expect(node.type(record_context)).to eq(point_type)
     end
 
     it "works without context" do

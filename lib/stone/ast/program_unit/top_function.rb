@@ -64,7 +64,15 @@ module Stone
         private def register_record_type_definition(child, mod)
           return unless child.value_expression.is_a?(Stone::AST::RecordDefinition)
 
-          mod.register_record_type(child.identifier, child.value_expression)
+          record_def = child.value_expression
+          mod.register_record_type(child.identifier, record_def)
+          register_record_type_in_registry(child.identifier, record_def)
+        end
+
+        private def register_record_type_in_registry(name, record_def)
+          fields = record_def.fields.map { |f| {name: f[:name], type: f[:type]} }
+          type = Stone::TypeInstance.record(name:, fields:, llvm_type: record_def.llvm_type)
+          Stone::TypeRegistry.instance.register(type)
         end
 
         private def register_record_instance_if_needed(child, mod)

@@ -7,6 +7,9 @@ require "stone/ast/property_access"
 require "stone/ast/record_instantiation"
 require "stone/ast/type_of_expression"
 require "stone/ast/type_reference"
+require "stone/ast/function_call"
+require "stone/ast/lambda"
+require "stone/ast/block"
 require "stone/type_context"
 require "stone/types"
 
@@ -138,6 +141,56 @@ RSpec.describe "AST node type() method" do
       field_values = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::RecordInstantiation.new("Point", field_values)
       expect(node.type).to eq("Point")
+    end
+  end
+
+  describe "FunctionCall#type" do
+    it "returns Stone::Type::Bool for comparison operators" do
+      args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
+      %w[== != ≠ < <= ≤ > >= ≥].each do |op|
+        node = Stone::AST::FunctionCall.new(op, args)
+        expect(node.type(context)).to eq(Stone::Type::Bool)
+      end
+    end
+
+    it "returns Stone::Type::Int for regular functions" do
+      args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
+      node = Stone::AST::FunctionCall.new("add", args)
+      expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "works without context" do
+      args = [Stone::AST::IntegerLiteral.new(1)]
+      node = Stone::AST::FunctionCall.new("foo", args)
+      expect(node.type).to eq(Stone::Type::Int)
+    end
+  end
+
+  describe "Lambda#type" do
+    it "returns Stone::Type::Int" do
+      statements = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::Lambda.new(["x"], statements)
+      expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "works without context" do
+      statements = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::Lambda.new([], statements)
+      expect(node.type).to eq(Stone::Type::Int)
+    end
+  end
+
+  describe "Block#type" do
+    it "returns Stone::Type::Int" do
+      statements = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::Block.new(statements)
+      expect(node.type(context)).to eq(Stone::Type::Int)
+    end
+
+    it "works without context" do
+      statements = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::Block.new(statements)
+      expect(node.type).to eq(Stone::Type::Int)
     end
   end
 

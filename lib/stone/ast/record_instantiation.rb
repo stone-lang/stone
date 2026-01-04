@@ -42,6 +42,10 @@ module Stone
         "#{@record_type_name}(#{@field_values.map(&:to_s).join(', ')})"
       end
 
+      def type(_context = nil)
+        @record_type_name
+      end
+
       private def verify_field_type(field_name, expected_type, llvm_value)
         expected_llvm_type = llvm_type_for(expected_type)
         actual_llvm_type = llvm_value.type

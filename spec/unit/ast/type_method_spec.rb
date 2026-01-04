@@ -4,6 +4,9 @@ require "stone/ast/boolean_literal"
 require "stone/ast/string_literal"
 require "stone/ast/reference"
 require "stone/ast/property_access"
+require "stone/ast/record_instantiation"
+require "stone/ast/type_of_expression"
+require "stone/ast/type_reference"
 require "stone/type_context"
 require "stone/types"
 
@@ -95,6 +98,46 @@ RSpec.describe "AST node type() method" do
       inner_access = Stone::AST::PropertyAccess.new(inner_receiver, "positive?")
       outer_access = Stone::AST::PropertyAccess.new(inner_access, "not")
       expect(outer_access.type(context)).to eq(Stone::Type::Bool)
+    end
+  end
+
+  describe "TypeOfExpression#type" do
+    it "returns Stone::Type::Type" do
+      inner = Stone::AST::IntegerLiteral.new(42)
+      node = Stone::AST::TypeOfExpression.new(inner)
+      expect(node.type(context)).to eq(Stone::Type::Type)
+    end
+
+    it "works without context" do
+      inner = Stone::AST::IntegerLiteral.new(42)
+      node = Stone::AST::TypeOfExpression.new(inner)
+      expect(node.type).to eq(Stone::Type::Type)
+    end
+  end
+
+  describe "TypeReference#type" do
+    it "returns Stone::Type::Type" do
+      node = Stone::AST::TypeReference.new
+      expect(node.type(context)).to eq(Stone::Type::Type)
+    end
+
+    it "works without context" do
+      node = Stone::AST::TypeReference.new
+      expect(node.type).to eq(Stone::Type::Type)
+    end
+  end
+
+  describe "RecordInstantiation#type" do
+    it "returns the record type name" do
+      field_values = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::RecordInstantiation.new("Point", field_values)
+      expect(node.type(context)).to eq("Point")
+    end
+
+    it "works without context" do
+      field_values = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::RecordInstantiation.new("Point", field_values)
+      expect(node.type).to eq("Point")
     end
   end
 

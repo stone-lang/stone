@@ -75,7 +75,7 @@ module Stone
       end
 
       def type(_context = nil)
-        Stone::Type::String
+        Stone::TypeRegistry.instance.string
       end
 
     end

@@ -1,27 +1,29 @@
 require "stone/type_context"
 require "stone/types"
+require "stone/ast/record_definition"
 
 RSpec.describe Stone::TypeContext do
 
   let(:context) { described_class.new }
+  let(:registry) { Stone::TypeRegistry.instance }
 
   describe "#bind" do
     it "stores a type binding for a variable" do
-      context.bind("x", Stone::Type::Int)
-      expect(context.lookup("x")).to eq(Stone::Type::Int)
+      context.bind("x", registry.int)
+      expect(context.lookup("x")).to eq(registry.int)
     end
 
     it "allows binding multiple variables" do
-      context.bind("x", Stone::Type::Int)
-      context.bind("y", Stone::Type::Bool)
-      expect(context.lookup("x")).to eq(Stone::Type::Int)
-      expect(context.lookup("y")).to eq(Stone::Type::Bool)
+      context.bind("x", registry.int)
+      context.bind("y", registry.bool)
+      expect(context.lookup("x")).to eq(registry.int)
+      expect(context.lookup("y")).to eq(registry.bool)
     end
 
     it "overwrites previous binding for same variable" do
-      context.bind("x", Stone::Type::Int)
-      context.bind("x", Stone::Type::String)
-      expect(context.lookup("x")).to eq(Stone::Type::String)
+      context.bind("x", registry.int)
+      context.bind("x", registry.string)
+      expect(context.lookup("x")).to eq(registry.string)
     end
   end
 
@@ -31,8 +33,8 @@ RSpec.describe Stone::TypeContext do
     end
 
     it "returns the bound type for known variable" do
-      context.bind("x", Stone::Type::Int)
-      expect(context.lookup("x")).to eq(Stone::Type::Int)
+      context.bind("x", registry.int)
+      expect(context.lookup("x")).to eq(registry.int)
     end
   end
 
@@ -50,11 +52,13 @@ RSpec.describe Stone::TypeContext do
       expect(context.record_type?("Point")).to be false
     end
 
+    # rubocop:disable RSpec/VerifiedDoubles -- LLVM::Module extensions aren't verifiable
     it "delegates to module when module is set" do
-      mod = instance_double(LLVM::Module, record_type?: true)
+      mod = double("LLVM::Module", record_type?: true)
       context_with_mod = described_class.new(mod)
       expect(context_with_mod.record_type?("Point")).to be true
     end
+    # rubocop:enable RSpec/VerifiedDoubles
   end
 
   describe "#record_definition" do
@@ -62,12 +66,14 @@ RSpec.describe Stone::TypeContext do
       expect(context.record_definition("Point")).to be_nil
     end
 
+    # rubocop:disable RSpec/VerifiedDoubles -- LLVM::Module extensions aren't verifiable
     it "delegates to module when module is set" do
-      record_def = instance_double(Stone::AST::RecordDefinition)
-      mod = instance_double(LLVM::Module, record_types: {"Point" => record_def})
+      record_def = double("RecordDefinition")
+      mod = double("LLVM::Module", record_types: {"Point" => record_def})
       context_with_mod = described_class.new(mod)
       expect(context_with_mod.record_definition("Point")).to eq(record_def)
     end
+    # rubocop:enable RSpec/VerifiedDoubles
   end
 
 end

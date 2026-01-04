@@ -11,7 +11,7 @@ module Stone
 
       def type(_context = nil)
         # Type itself has the Type metatype
-        Stone::Type::Type
+        Stone::TypeRegistry.instance.type
       end
 
       def to_llir(_builder, _mod)

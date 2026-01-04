@@ -127,8 +127,11 @@ module Stone
         nil
       end
 
-      private def type_class_to_name(type_class)
-        case type_class
+      private def type_class_to_name(type_obj)
+        # Handle both TypeInstance and legacy class-based types
+        return type_obj.name if type_obj.is_a?(Stone::TypeInstance)
+
+        case type_obj
         when Stone::Type::Int then "Int"
         when Stone::Type::Bool then "Bool"
         when Stone::Type::String then "String"

@@ -17,48 +17,49 @@ require "stone/types"
 RSpec.describe "AST node type() method" do
 
   let(:context) { Stone::TypeContext.new }
+  let(:registry) { Stone::TypeRegistry.instance }
 
   describe "IntegerLiteral#type" do
-    it "returns Stone::Type::Int" do
+    it "returns Int type instance" do
       node = Stone::AST::IntegerLiteral.new(42)
-      expect(node.type(context)).to eq(Stone::Type::Int)
+      expect(node.type(context)).to eq(registry.int)
     end
 
     it "works without context" do
       node = Stone::AST::IntegerLiteral.new(42)
-      expect(node.type).to eq(Stone::Type::Int)
+      expect(node.type).to eq(registry.int)
     end
   end
 
   describe "BooleanLiteral#type" do
-    it "returns Stone::Type::Bool" do
+    it "returns Bool type instance" do
       node = Stone::AST::BooleanLiteral.new("TRUE")
-      expect(node.type(context)).to eq(Stone::Type::Bool)
+      expect(node.type(context)).to eq(registry.bool)
     end
 
     it "works without context" do
       node = Stone::AST::BooleanLiteral.new("FALSE")
-      expect(node.type).to eq(Stone::Type::Bool)
+      expect(node.type).to eq(registry.bool)
     end
   end
 
   describe "StringLiteral#type" do
-    it "returns Stone::Type::String" do
+    it "returns String type instance" do
       node = Stone::AST::StringLiteral.new("hello")
-      expect(node.type(context)).to eq(Stone::Type::String)
+      expect(node.type(context)).to eq(registry.string)
     end
 
     it "works without context" do
       node = Stone::AST::StringLiteral.new("world")
-      expect(node.type).to eq(Stone::Type::String)
+      expect(node.type).to eq(registry.string)
     end
   end
 
   describe "Reference#type" do
     it "returns the bound type for known variable" do
-      context.bind("x", Stone::Type::Int)
+      context.bind("x", registry.int)
       node = Stone::AST::Reference.new("x")
-      expect(node.type(context)).to eq(Stone::Type::Int)
+      expect(node.type(context)).to eq(registry.int)
     end
 
     it "raises TypeError for unknown variable" do
@@ -76,19 +77,19 @@ RSpec.describe "AST node type() method" do
     it "returns the property return type for Int.positive?" do
       receiver = Stone::AST::IntegerLiteral.new(42)
       node = Stone::AST::PropertyAccess.new(receiver, "positive?")
-      expect(node.type(context)).to eq(Stone::Type::Bool)
+      expect(node.type(context)).to eq(registry.bool)
     end
 
     it "returns the property return type for Bool.not" do
       receiver = Stone::AST::BooleanLiteral.new("TRUE")
       node = Stone::AST::PropertyAccess.new(receiver, "not")
-      expect(node.type(context)).to eq(Stone::Type::Bool)
+      expect(node.type(context)).to eq(registry.bool)
     end
 
     it "returns the property return type for String.byte_count" do
       receiver = Stone::AST::StringLiteral.new("hello")
       node = Stone::AST::PropertyAccess.new(receiver, "byte_count")
-      expect(node.type(context)).to eq(Stone::Type::Int)
+      expect(node.type(context)).to eq(registry.int)
     end
 
     it "raises PropertyError for unknown property" do
@@ -101,33 +102,33 @@ RSpec.describe "AST node type() method" do
       inner_receiver = Stone::AST::IntegerLiteral.new(42)
       inner_access = Stone::AST::PropertyAccess.new(inner_receiver, "positive?")
       outer_access = Stone::AST::PropertyAccess.new(inner_access, "not")
-      expect(outer_access.type(context)).to eq(Stone::Type::Bool)
+      expect(outer_access.type(context)).to eq(registry.bool)
     end
   end
 
   describe "TypeOfExpression#type" do
-    it "returns Stone::Type::Type" do
+    it "returns Type type instance" do
       inner = Stone::AST::IntegerLiteral.new(42)
       node = Stone::AST::TypeOfExpression.new(inner)
-      expect(node.type(context)).to eq(Stone::Type::Type)
+      expect(node.type(context)).to eq(registry.type)
     end
 
     it "works without context" do
       inner = Stone::AST::IntegerLiteral.new(42)
       node = Stone::AST::TypeOfExpression.new(inner)
-      expect(node.type).to eq(Stone::Type::Type)
+      expect(node.type).to eq(registry.type)
     end
   end
 
   describe "TypeReference#type" do
-    it "returns Stone::Type::Type" do
+    it "returns Type type instance" do
       node = Stone::AST::TypeReference.new
-      expect(node.type(context)).to eq(Stone::Type::Type)
+      expect(node.type(context)).to eq(registry.type)
     end
 
     it "works without context" do
       node = Stone::AST::TypeReference.new
-      expect(node.type).to eq(Stone::Type::Type)
+      expect(node.type).to eq(registry.type)
     end
   end
 
@@ -146,24 +147,32 @@ RSpec.describe "AST node type() method" do
   end
 
   describe "FunctionCall#type" do
-    it "returns Stone::Type::Bool for comparison operators" do
+    it "returns Bool type for comparison operators" do
       args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
       %w[== != ≠ < <= ≤ > >= ≥].each do |op|
         node = Stone::AST::FunctionCall.new(op, args)
-        expect(node.type(context)).to eq(Stone::Type::Bool)
+        expect(node.type(context)).to eq(registry.bool)
       end
     end
 
-    it "returns Stone::Type::Int for regular functions" do
+    it "returns Int type for regular functions" do
       args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
       node = Stone::AST::FunctionCall.new("add", args)
-      expect(node.type(context)).to eq(Stone::Type::Int)
+      expect(node.type(context)).to eq(registry.int)
+    end
+
+    it "returns record type name for record constructors" do
+      record_context = instance_double(Stone::TypeContext, record_type?: true)
+      allow(record_context).to receive(:record_type?).with("Point").and_return(true)
+      args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
+      node = Stone::AST::FunctionCall.new("Point", args)
+      expect(node.type(record_context)).to eq("Point")
     end
 
     it "works without context" do
       args = [Stone::AST::IntegerLiteral.new(1)]
       node = Stone::AST::FunctionCall.new("foo", args)
-      expect(node.type).to eq(Stone::Type::Int)
+      expect(node.type).to eq(registry.int)
     end
   end
 
@@ -171,25 +180,25 @@ RSpec.describe "AST node type() method" do
     it "returns the type of its block" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Lambda.new(["x"], statements)
-      expect(node.type(context)).to eq(Stone::Type::Int)
+      expect(node.type(context)).to eq(registry.int)
     end
 
     it "returns Bool when block returns Bool" do
       statements = [Stone::AST::BooleanLiteral.new("TRUE")]
       node = Stone::AST::Lambda.new([], statements)
-      expect(node.type(context)).to eq(Stone::Type::Bool)
+      expect(node.type(context)).to eq(registry.bool)
     end
 
     it "returns String when block returns String" do
       statements = [Stone::AST::StringLiteral.new("hello")]
       node = Stone::AST::Lambda.new([], statements)
-      expect(node.type(context)).to eq(Stone::Type::String)
+      expect(node.type(context)).to eq(registry.string)
     end
 
     it "works without context" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Lambda.new([], statements)
-      expect(node.type).to eq(Stone::Type::Int)
+      expect(node.type).to eq(registry.int)
     end
   end
 
@@ -197,19 +206,19 @@ RSpec.describe "AST node type() method" do
     it "infers type from last expression" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Block.new(statements)
-      expect(node.type(context)).to eq(Stone::Type::Int)
+      expect(node.type(context)).to eq(registry.int)
     end
 
     it "infers Bool type from last expression" do
       statements = [Stone::AST::BooleanLiteral.new("TRUE")]
       node = Stone::AST::Block.new(statements)
-      expect(node.type(context)).to eq(Stone::Type::Bool)
+      expect(node.type(context)).to eq(registry.bool)
     end
 
     it "infers String type from last expression" do
       statements = [Stone::AST::StringLiteral.new("hello")]
       node = Stone::AST::Block.new(statements)
-      expect(node.type(context)).to eq(Stone::Type::String)
+      expect(node.type(context)).to eq(registry.string)
     end
 
     it "skips definitions when inferring type" do
@@ -218,7 +227,7 @@ RSpec.describe "AST node type() method" do
         Stone::AST::ConstantDefinition.new("X", Stone::AST::IntegerLiteral.new(42))
       ]
       node = Stone::AST::Block.new(statements)
-      expect(node.type(context)).to eq(Stone::Type::Int)
+      expect(node.type(context)).to eq(registry.int)
     end
 
     it "returns nil for empty block" do
@@ -229,7 +238,7 @@ RSpec.describe "AST node type() method" do
     it "works without context" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Block.new(statements)
-      expect(node.type).to eq(Stone::Type::Int)
+      expect(node.type).to eq(registry.int)
     end
   end
 

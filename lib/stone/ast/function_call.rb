@@ -39,16 +39,13 @@ module Stone
       end
 
       def type(context = nil)
-        # For now, assume most functions return Int
-        # TODO: Track function return types in TypeContext
+        registry = Stone::TypeRegistry.instance
         if comparison_operator?
-          Stone::Type::Bool
+          registry.bool
         elsif context&.record_type?(function_name)
-          # Record constructor - would need to create record type instances
-          # For now, return nil to indicate we can't determine the type yet
-          nil
+          function_name
         else
-          Stone::Type::Int
+          registry.int
         end
       end
 

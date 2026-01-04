@@ -15,7 +15,7 @@ module Stone
 
       def type(_context = nil)
         # Type.of() returns the Type metatype
-        Stone::Type::Type
+        Stone::TypeRegistry.instance.type
       end
 
       def to_llir(_builder, mod)
@@ -36,11 +36,12 @@ module Stone
       end
 
       private def type_to_id(type)
+        registry = Stone::TypeRegistry.instance
         case type
-        when Stone::Type::Int then 1
-        when Stone::Type::Bool then 2
-        when Stone::Type::String then 3
-        when Stone::Type::Type then 4
+        when registry.int then 1
+        when registry.bool then 2
+        when registry.string then 3
+        when registry.type then 4
         else 0 # Unknown
         end
       end

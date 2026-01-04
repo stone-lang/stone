@@ -42,7 +42,7 @@ module Stone
       end
 
       def type(_context = nil)
-        Stone::Type::Int
+        Stone::TypeRegistry.instance.int
       end
 
     end

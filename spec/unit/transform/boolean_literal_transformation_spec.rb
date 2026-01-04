@@ -11,7 +11,7 @@ RSpec.describe "Boolean Literal Transformation" do
       ast = transformer.transform(parse_tree)
 
       expect(ast.children.first).to be_a(Stone::AST::BooleanLiteral)
-      expect(ast.children.first.value).to eq(Stone::Type::Bool::TRUE)
+      expect(ast.children.first.value).to eq(Stone::AST::BooleanLiteral::TRUE)
       expect(ast.children.first.value).to eq(1)
     end
 
@@ -20,7 +20,7 @@ RSpec.describe "Boolean Literal Transformation" do
       ast = transformer.transform(parse_tree)
 
       expect(ast.children.first).to be_a(Stone::AST::BooleanLiteral)
-      expect(ast.children.first.value).to eq(Stone::Type::Bool::FALSE)
+      expect(ast.children.first.value).to eq(Stone::AST::BooleanLiteral::FALSE)
       expect(ast.children.first.value).to eq(0)
     end
 

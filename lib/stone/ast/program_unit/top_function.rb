@@ -71,8 +71,8 @@ module Stone
 
         private def register_record_type_in_registry(name, record_def)
           fields = record_def.fields.map { |f| {name: f[:name], type: f[:type]} }
-          type = Stone::TypeInstance.record(name:, fields:, llvm_type: record_def.llvm_type)
-          Stone::TypeRegistry.instance.register(type)
+          type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type)
+          Stone::Type::Registry.register(type)
         end
 
         private def register_record_instance_if_needed(child, mod)

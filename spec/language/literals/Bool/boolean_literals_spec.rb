@@ -1,5 +1,4 @@
 require "stone"
-require "stone/type/Bool"
 
 
 # Language Specification: Boolean Literals

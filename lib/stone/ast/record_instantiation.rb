@@ -44,7 +44,7 @@ module Stone
 
       def type(_context = nil)
         # Look up from registry if available, otherwise return name for backward compat
-        Stone::TypeRegistry.instance.lookup(@record_type_name) || @record_type_name
+        Stone::Type::Registry.lookup(@record_type_name) || @record_type_name
       end
 
       private def verify_field_type(field_name, expected_type, llvm_value)

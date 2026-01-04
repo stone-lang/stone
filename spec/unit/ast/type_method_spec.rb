@@ -134,7 +134,7 @@ RSpec.describe "AST node type() method" do
 
   describe "RecordInstantiation#type" do
     it "returns the record type from registry when registered" do
-      point_type = Stone::TypeInstance.record(name: "Point", fields: [], llvm_type: :mock)
+      point_type = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
       registry.register(point_type)
       field_values = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::RecordInstantiation.new("Point", field_values)
@@ -164,7 +164,7 @@ RSpec.describe "AST node type() method" do
     end
 
     it "returns record type from registry for record constructors" do
-      point_type = Stone::TypeInstance.record(name: "Point", fields: [], llvm_type: :mock)
+      point_type = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
       registry.register(point_type)
       record_context = instance_double(Stone::TypeContext, record_type?: true)
       allow(record_context).to receive(:record_type?).with("Point").and_return(true)

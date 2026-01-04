@@ -1,12 +1,8 @@
 require "stone/types"
 
-RSpec.describe Stone::Type::Base do
+RSpec.describe "Stone::Type built-in types" do
 
-  describe ".name" do
-    it "raises NotImplementedError for Base" do
-      expect { Stone::Type::Base.name }.to raise_error(NotImplementedError)
-    end
-
+  describe "#name" do
     it "returns 'Int' for Int type" do
       expect(Stone::Type::Int.name).to eq("Int")
     end
@@ -20,11 +16,7 @@ RSpec.describe Stone::Type::Base do
     end
   end
 
-  describe ".llvm_type" do
-    it "raises NotImplementedError for Base" do
-      expect { Stone::Type::Base.llvm_type }.to raise_error(NotImplementedError)
-    end
-
+  describe "#llvm_type" do
     it "returns LLVM::Int64 for Int type" do
       expect(Stone::Type::Int.llvm_type).to eq(LLVM::Int64.type)
     end
@@ -33,13 +25,12 @@ RSpec.describe Stone::Type::Base do
       expect(Stone::Type::Bool.llvm_type).to eq(LLVM::Int1.type)
     end
 
-    it "returns struct type for String type" do
-      string_type = Stone::Type::String.llvm_type
-      expect(string_type.kind).to eq(:struct)
+    it "returns LLVM::Int64 for String type" do
+      expect(Stone::Type::String.llvm_type).to eq(LLVM::Int64.type)
     end
   end
 
-  describe ".property_return_type" do
+  describe "#property_return_type" do
     context "with Int type" do
       it "returns Bool for positive?" do
         expect(Stone::Type::Int.property_return_type("positive?")).to eq(Stone::Type::Bool)
@@ -95,7 +86,7 @@ RSpec.describe Stone::Type::Base do
     end
   end
 
-  describe ".as_String" do
+  describe "#as_String" do
     it "returns the type name for Int" do
       expect(Stone::Type::Int.as_String).to eq("Int")
     end

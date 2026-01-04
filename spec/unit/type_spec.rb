@@ -1,7 +1,8 @@
 require "stone/type"
+require "stone/types"
 
 
-RSpec.describe Stone::TypeInstance do
+RSpec.describe Stone::Type do
 
   describe ".primitive" do
     it "creates a primitive type" do
@@ -19,6 +20,23 @@ RSpec.describe Stone::TypeInstance do
         property_types: {"positive?" => bool_type}
       )
       expect(type.property_return_type("positive?")).to eq(bool_type)
+    end
+
+    it "accepts min and max bounds" do
+      type = described_class.primitive(
+        name: "Int",
+        llvm_type: :mock,
+        min: -100,
+        max: 100
+      )
+      expect(type.min).to eq(-100)
+      expect(type.max).to eq(100)
+    end
+
+    it "defaults min and max to nil" do
+      type = described_class.primitive(name: "Bool", llvm_type: :mock)
+      expect(type.min).to be_nil
+      expect(type.max).to be_nil
     end
   end
 
@@ -45,6 +63,45 @@ RSpec.describe Stone::TypeInstance do
       type2 = described_class.primitive(name: "Bool", llvm_type: :mock)
       expect(type1).not_to eq(type2)
     end
+
+    it "returns false when compared with non-Type object" do
+      type = described_class.primitive(name: "Int", llvm_type: :mock)
+      expect(type).not_to eq("Int")
+      expect(type).not_to be_nil
+    end
+
+    it "considers only name for equality (different llvm_type)" do
+      type1 = described_class.primitive(name: "Int", llvm_type: :mock1)
+      type2 = described_class.primitive(name: "Int", llvm_type: :mock2)
+      expect(type1).to eq(type2)
+    end
+  end
+
+  describe "#hash and #eql?" do
+    it "can be used as hash keys" do
+      type1 = described_class.primitive(name: "Int", llvm_type: :mock)
+      type2 = described_class.primitive(name: "Int", llvm_type: :mock)
+      hash = {type1 => "value"}
+      expect(hash[type2]).to eq("value")
+    end
+
+    it "produces same hash for equal types" do
+      type1 = described_class.primitive(name: "Int", llvm_type: :mock)
+      type2 = described_class.primitive(name: "Int", llvm_type: :mock)
+      expect(type1.hash).to eq(type2.hash)
+    end
+
+    it "produces different hash for different types" do
+      type1 = described_class.primitive(name: "Int", llvm_type: :mock)
+      type2 = described_class.primitive(name: "Bool", llvm_type: :mock)
+      expect(type1.hash).not_to eq(type2.hash)
+    end
+
+    it "eql? is aliased to ==" do
+      type1 = described_class.primitive(name: "Int", llvm_type: :mock)
+      type2 = described_class.primitive(name: "Int", llvm_type: :mock)
+      expect(type1.eql?(type2)).to be true
+    end
   end
 
   describe "#to_s" do
@@ -58,6 +115,61 @@ RSpec.describe Stone::TypeInstance do
     it "returns the type name" do
       type = described_class.primitive(name: "Int", llvm_type: :mock)
       expect(type.as_String).to eq("Int")
+    end
+  end
+
+  describe "#inspect" do
+    it "returns a readable representation" do
+      type = described_class.primitive(name: "Int", llvm_type: :mock)
+      expect(type.inspect).to eq("#<Stone::Type:Int>")
+    end
+  end
+
+  describe "built-in type constants" do
+    it "provides Stone::Type::Int" do
+      expect(Stone::Type::Int).to be_a(Stone::Type)
+      expect(Stone::Type::Int.name).to eq("Int")
+    end
+
+    it "provides Stone::Type::Bool" do
+      expect(Stone::Type::Bool).to be_a(Stone::Type)
+      expect(Stone::Type::Bool.name).to eq("Bool")
+    end
+
+    it "provides Stone::Type::String" do
+      expect(Stone::Type::String).to be_a(Stone::Type)
+      expect(Stone::Type::String.name).to eq("String")
+    end
+
+    it "provides Stone::Type::Type" do
+      expect(Stone::Type::Type).to be_a(Stone::Type)
+      expect(Stone::Type::Type.name).to eq("Type")
+    end
+
+    it "provides Stone::Type::Int with min and max bounds" do
+      expect(Stone::Type::Int.min).to eq(-(2**63))
+      expect(Stone::Type::Int.max).to eq(2**63 - 1)
+    end
+  end
+
+  describe "Stone::Type::Registry" do
+    it "is the TypeRegistry singleton" do
+      expect(Stone::Type::Registry).to eq(Stone::TypeRegistry.instance)
+    end
+
+    it "can look up types by name" do
+      expect(Stone::Type::Registry["Int"]).to eq(Stone::Type::Int)
+    end
+  end
+
+  describe "backward compatibility" do
+    it "provides Stone::TypeInstance as alias for Stone::Type" do
+      expect(Stone::TypeInstance).to eq(Stone::Type)
+    end
+
+    it "allows creating types through the alias" do
+      type = Stone::TypeInstance.primitive(name: "Test", llvm_type: :mock)
+      expect(type).to be_a(Stone::Type)
     end
   end
 

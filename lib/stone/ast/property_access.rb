@@ -128,16 +128,9 @@ module Stone
       end
 
       private def type_class_to_name(type_obj)
-        # Handle both TypeInstance and legacy class-based types
-        return type_obj.name if type_obj.is_a?(Stone::TypeInstance)
+        return type_obj.name if type_obj.is_a?(Stone::Type)
 
-        case type_obj
-        when Stone::Type::Int then "Int"
-        when Stone::Type::Bool then "Bool"
-        when Stone::Type::String then "String"
-        when Stone::Type::Type then "Type"
-        else "Unknown"
-        end
+        "Unknown"
       end
 
       private def get_string_literal(mod)

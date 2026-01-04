@@ -18,13 +18,13 @@ RSpec.describe Stone::TypeRegistry do
 
   describe "#register" do
     it "registers a type" do
-      type = Stone::TypeInstance.primitive(name: "Int", llvm_type: :mock)
+      type = Stone::Type.primitive(name: "Int", llvm_type: :mock)
       registry.register(type)
       expect(registry.lookup("Int")).to eq(type)
     end
 
     it "returns the registered type" do
-      type = Stone::TypeInstance.primitive(name: "Int", llvm_type: :mock)
+      type = Stone::Type.primitive(name: "Int", llvm_type: :mock)
       expect(registry.register(type)).to eq(type)
     end
   end
@@ -35,7 +35,7 @@ RSpec.describe Stone::TypeRegistry do
     end
 
     it "returns registered type" do
-      type = Stone::TypeInstance.primitive(name: "Bool", llvm_type: :mock)
+      type = Stone::Type.primitive(name: "Bool", llvm_type: :mock)
       registry.register(type)
       expect(registry.lookup("Bool")).to eq(type)
     end
@@ -43,7 +43,7 @@ RSpec.describe Stone::TypeRegistry do
 
   describe "#[]" do
     it "is an alias for lookup" do
-      type = Stone::TypeInstance.primitive(name: "String", llvm_type: :mock)
+      type = Stone::Type.primitive(name: "String", llvm_type: :mock)
       registry.register(type)
       expect(registry["String"]).to eq(type)
     end
@@ -55,7 +55,7 @@ RSpec.describe Stone::TypeRegistry do
     end
 
     it "returns true for registered types" do
-      type = Stone::TypeInstance.primitive(name: "Int", llvm_type: :mock)
+      type = Stone::Type.primitive(name: "Int", llvm_type: :mock)
       registry.register(type)
       expect(registry.registered?("Int")).to be true
     end
@@ -63,13 +63,13 @@ RSpec.describe Stone::TypeRegistry do
 
   describe "#record?" do
     it "returns false for primitives" do
-      type = Stone::TypeInstance.primitive(name: "Int", llvm_type: :mock)
+      type = Stone::Type.primitive(name: "Int", llvm_type: :mock)
       registry.register(type)
       expect(registry.record?("Int")).to be false
     end
 
     it "returns true for records" do
-      type = Stone::TypeInstance.record(name: "Point", fields: [], llvm_type: :mock)
+      type = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
       registry.register(type)
       expect(registry.record?("Point")).to be true
     end
@@ -81,8 +81,8 @@ RSpec.describe Stone::TypeRegistry do
 
   describe "#primitives" do
     it "returns only primitive types" do
-      int = Stone::TypeInstance.primitive(name: "Int", llvm_type: :mock)
-      point = Stone::TypeInstance.record(name: "Point", fields: [], llvm_type: :mock)
+      int = Stone::Type.primitive(name: "Int", llvm_type: :mock)
+      point = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
       registry.register(int)
       registry.register(point)
       expect(registry.primitives).to eq([int])
@@ -91,8 +91,8 @@ RSpec.describe Stone::TypeRegistry do
 
   describe "#records" do
     it "returns only record types" do
-      int = Stone::TypeInstance.primitive(name: "Int", llvm_type: :mock)
-      point = Stone::TypeInstance.record(name: "Point", fields: [], llvm_type: :mock)
+      int = Stone::Type.primitive(name: "Int", llvm_type: :mock)
+      point = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
       registry.register(int)
       registry.register(point)
       expect(registry.records).to eq([point])
@@ -101,10 +101,10 @@ RSpec.describe Stone::TypeRegistry do
 
   describe "convenience accessors" do
     before do
-      registry.register(Stone::TypeInstance.primitive(name: "Int", llvm_type: :mock))
-      registry.register(Stone::TypeInstance.primitive(name: "Bool", llvm_type: :mock))
-      registry.register(Stone::TypeInstance.primitive(name: "String", llvm_type: :mock))
-      registry.register(Stone::TypeInstance.primitive(name: "Type", llvm_type: :mock))
+      registry.register(Stone::Type.primitive(name: "Int", llvm_type: :mock))
+      registry.register(Stone::Type.primitive(name: "Bool", llvm_type: :mock))
+      registry.register(Stone::Type.primitive(name: "String", llvm_type: :mock))
+      registry.register(Stone::Type.primitive(name: "Type", llvm_type: :mock))
     end
 
     it "#int returns Int type" do

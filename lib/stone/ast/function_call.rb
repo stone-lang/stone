@@ -39,14 +39,13 @@ module Stone
       end
 
       def type(context = nil)
-        registry = Stone::TypeRegistry.instance
         if comparison_operator?
-          registry.bool
+          Stone::Type::Bool
         elsif context&.record_type?(function_name)
           # Look up from registry if available, otherwise return name for backward compat
-          registry.lookup(function_name) || function_name
+          Stone::Type::Registry.lookup(function_name) || function_name
         else
-          registry.int
+          Stone::Type::Int
         end
       end
 

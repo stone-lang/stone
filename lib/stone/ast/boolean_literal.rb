@@ -1,5 +1,4 @@
 require "stone/ast/expression"
-require "stone/type/bool"
 
 # TODO: Eventually, TRUE and FALSE should be top-level constants defined as
 # __BUILTIN__.Boolean.TRUE and __BUILTIN__.Boolean.FALSE rather than literals.
@@ -7,6 +6,9 @@ require "stone/type/bool"
 module Stone
   class AST
     class BooleanLiteral < Stone::AST::Expression
+
+      TRUE = 1
+      FALSE = 0
 
       def self.parse(text, location)
         new(text)
@@ -18,23 +20,22 @@ module Stone
 
       def initialize(value)
         @name = :boolean_literal
-        @value = Stone::Type::Bool
         case value
         when "TRUE"
-          @value = Stone::Type::Bool::TRUE
+          @value = TRUE
         when "FALSE"
-          @value = Stone::Type::Bool::FALSE
+          @value = FALSE
         else
           fail "expected TRUE or FALSE"
         end
       end
 
       def to_llir(_builder, _mod)
-        @value == Stone::Type::Bool::TRUE ? LLVM::TRUE : LLVM::FALSE
+        @value == TRUE ? LLVM::TRUE : LLVM::FALSE
       end
 
       def type(_context = nil)
-        Stone::TypeRegistry.instance.bool
+        Stone::Type::Bool
       end
 
     end

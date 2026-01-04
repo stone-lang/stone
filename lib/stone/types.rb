@@ -1,25 +1,9 @@
-require "stone/type/base"
-require "stone/type/Bool"
-require "stone/type/Int"
-require "stone/type/String"
-require "stone/type/type"
+require "llvm/core"
 require "stone/type"
 require "stone/type_registry"
 
-# Set up property type mappings for class-based types (backward compat)
-Stone::Type::Int::PROPERTY_TYPES["positive?"] = Stone::Type::Bool
-Stone::Type::Int::PROPERTY_TYPES["negative?"] = Stone::Type::Bool
-Stone::Type::Int::PROPERTY_TYPES["zero?"] = Stone::Type::Bool
-Stone::Type::Int::PROPERTY_TYPES["as_String"] = Stone::Type::String
-
-Stone::Type::Bool::PROPERTY_TYPES["not"] = Stone::Type::Bool
-Stone::Type::Bool::PROPERTY_TYPES["as_String"] = Stone::Type::String
-
-Stone::Type::String::PROPERTY_TYPES["byte_count"] = Stone::Type::Int
-Stone::Type::String::PROPERTY_TYPES["empty?"] = Stone::Type::Bool
-Stone::Type::String::PROPERTY_TYPES["as_String"] = Stone::Type::String
-
-Stone::Type::Type::PROPERTY_TYPES["as_String"] = Stone::Type::String
+# LLVM type alias for convenience
+I64 = LLVM::Int64.type
 
 
 # Bootstrap the TypeRegistry with primitive types
@@ -27,19 +11,23 @@ module Stone
   module Types
   module_function
 
+    INT_MIN = -(2**63)   # -9_223_372_036_854_775_808
+    INT_MAX = 2**63 - 1  # +9_223_372_036_854_775_807
+
     def bootstrap_registry!
       types = create_primitive_types
       register_all_types(types)
       setup_property_types(types)
+      setup_type_constants(types)
       Stone::TypeRegistry.instance
     end
 
     def create_primitive_types
       {
-        int: Stone::TypeInstance.primitive(name: "Int", llvm_type: LLVM::Int64.type),
-        bool: Stone::TypeInstance.primitive(name: "Bool", llvm_type: LLVM::Int1.type),
-        string: Stone::TypeInstance.primitive(name: "String", llvm_type: LLVM::Int64.type),
-        type: Stone::TypeInstance.primitive(name: "Type", llvm_type: LLVM::Int64.type)
+        int: Stone::Type.primitive(name: "Int", llvm_type: LLVM::Int64.type, min: INT_MIN, max: INT_MAX),
+        bool: Stone::Type.primitive(name: "Bool", llvm_type: LLVM::Int1.type),
+        string: Stone::Type.primitive(name: "String", llvm_type: LLVM::Int64.type),
+        type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Int64.type)
       }
     end
 
@@ -70,6 +58,18 @@ module Stone
       types[:string].property_types.merge!(
         "byte_count" => types[:int], "empty?" => types[:bool], "as_String" => types[:string]
       )
+    end
+
+    def setup_type_constants(types)
+      registry = Stone::TypeRegistry.instance
+
+      # Define type constants on Stone::Type for convenient access
+      # Only define if not already defined (avoids warnings during test resets)
+      Stone::Type.const_set(:Int, types[:int]) unless Stone::Type.const_defined?(:Int, false)
+      Stone::Type.const_set(:Bool, types[:bool]) unless Stone::Type.const_defined?(:Bool, false)
+      Stone::Type.const_set(:String, types[:string]) unless Stone::Type.const_defined?(:String, false)
+      Stone::Type.const_set(:Type, types[:type]) unless Stone::Type.const_defined?(:Type, false)
+      Stone::Type.const_set(:Registry, registry) unless Stone::Type.const_defined?(:Registry, false)
     end
   end
 end

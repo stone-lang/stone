@@ -1,20 +1,20 @@
-require "singleton"
-
-
 module Stone
-  # Type instance class - represents a type as an object rather than a class.
-  # This is the new type system; Stone::Type module is the legacy class-based system.
-  class TypeInstance
+  # Value object representing a type in the Stone language.
+  # Each type (Int, Bool, String, etc.) is a singleton instance registered in TypeRegistry.
+  # Access via Stone::Type::Int, Stone::Type::Bool, etc.
+  class Type
 
-    attr_reader :name, :llvm_type, :fields
+    attr_reader :name, :llvm_type, :fields, :min, :max
     attr_accessor :property_types
 
-    def initialize(name:, llvm_type:, property_types: {}, fields: nil, primitive: false)
+    def initialize(name:, llvm_type:, property_types: {}, fields: nil, **options)
       @name = name
       @llvm_type = llvm_type
       @property_types = property_types
       @fields = fields
-      @primitive = primitive
+      @primitive = options[:primitive] || false
+      @min = options[:min]
+      @max = options[:max]
     end
 
     def property_return_type(property_name)
@@ -34,7 +34,7 @@ module Stone
     end
 
     def ==(other)
-      other.is_a?(TypeInstance) && other.name == name
+      other.is_a?(self.class) && other.name == name
     end
     alias eql? ==
 
@@ -47,11 +47,11 @@ module Stone
     end
 
     def inspect
-      "#<Stone::TypeInstance:#{name}>"
+      "#<Stone::Type:#{name}>"
     end
 
-    def self.primitive(name:, llvm_type:, property_types: {})
-      new(name:, llvm_type:, property_types:, primitive: true)
+    def self.primitive(name:, llvm_type:, property_types: {}, min: nil, max: nil)
+      new(name:, llvm_type:, property_types:, primitive: true, min:, max:)
     end
 
     def self.record(name:, fields:, llvm_type:)
@@ -59,4 +59,7 @@ module Stone
     end
 
   end
+
+  # Backwards compatibility alias (deprecated - use Stone::Type directly)
+  TypeInstance = Type
 end

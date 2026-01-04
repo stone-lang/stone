@@ -1,5 +1,4 @@
 require "stone/ast/expression"
-require "stone/type/String"
 
 
 module Stone
@@ -75,7 +74,7 @@ module Stone
       end
 
       def type(_context = nil)
-        Stone::TypeRegistry.instance.string
+        Stone::Type::String
       end
 
     end

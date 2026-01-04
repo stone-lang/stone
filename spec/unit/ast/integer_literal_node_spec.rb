@@ -1,4 +1,5 @@
 require "stone/ast/integer_literal"
+require "stone/types"
 
 RSpec.describe Stone::AST::IntegerLiteral do
 
@@ -32,6 +33,25 @@ RSpec.describe Stone::AST::IntegerLiteral do
 
     it "returns false for values below i64 min" do
       expect(Stone::AST::IntegerLiteral.in_range?(-(2**63) - 1)).to be false
+    end
+  end
+
+  describe ".in_range? uses Stone::Type::Int bounds" do
+    it "validates against Stone::Type::Int.min" do
+      expect(Stone::AST::IntegerLiteral.in_range?(Stone::Type::Int.min)).to be true
+      expect(Stone::AST::IntegerLiteral.in_range?(Stone::Type::Int.min - 1)).to be false
+    end
+
+    it "validates against Stone::Type::Int.max" do
+      expect(Stone::AST::IntegerLiteral.in_range?(Stone::Type::Int.max)).to be true
+      expect(Stone::AST::IntegerLiteral.in_range?(Stone::Type::Int.max + 1)).to be false
+    end
+  end
+
+  describe "#type" do
+    it "returns Stone::Type::Int" do
+      literal = Stone::AST::IntegerLiteral.new(42)
+      expect(literal.type).to eq(Stone::Type::Int)
     end
   end
 

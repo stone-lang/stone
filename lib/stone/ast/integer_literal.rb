@@ -1,13 +1,9 @@
 require "stone/ast/expression"
-require "stone/type/int"
 
 
 module Stone
   class AST
     class IntegerLiteral < Stone::AST::Expression
-
-      MIN = Stone::Type::Int::MIN
-      MAX = Stone::Type::Int::MAX
 
       BASES = {
         "0b" => 2,
@@ -27,7 +23,7 @@ module Stone
       end
 
       def self.in_range?(value)
-        value >= MIN && value <= MAX
+        value >= Stone::Type::Int.min && value <= Stone::Type::Int.max
       end
 
       attr_reader :value
@@ -42,7 +38,7 @@ module Stone
       end
 
       def type(_context = nil)
-        Stone::TypeRegistry.instance.int
+        Stone::Type::Int
       end
 
     end

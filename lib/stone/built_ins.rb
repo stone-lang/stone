@@ -1,4 +1,5 @@
 require "llvm/core"
+require "stone/types"
 
 
 module Stone
@@ -12,6 +13,7 @@ module Stone
     def setup
       define_predefined_constants
       define_builtin_functions
+      register_builtin_function_types
     end
 
     private def define_predefined_constants
@@ -145,6 +147,18 @@ module Stone
 
     private def block_func_type
       @block_func_type ||= LLVM::Type.function([], LLVM::Int64.type)
+    end
+
+    private def register_builtin_function_types
+      int = Stone::Type::Int
+      bool = Stone::Type::Bool
+
+      # sum(Int, Int) -> Int
+      Stone::Type::Registry.register_as("sum", Stone::Type.function(param_types: [int, int], return_type: int))
+
+      # if(Bool, Block, Block) -> Int
+      # Note: Block type not yet in type system, so we just record param count conceptually
+      Stone::Type::Registry.register_as("if", Stone::Type.function(param_types: [bool], return_type: int))
     end
 
   end

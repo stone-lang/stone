@@ -70,4 +70,35 @@ RSpec.describe "Function type registration" do
     end
   end
 
+  describe "built-in function types" do
+    it "registers sum function type" do
+      ast = Stone.compile("1")
+      ast.to_llir
+
+      func_type = registry.lookup("sum")
+      expect(func_type).not_to be_nil
+      expect(func_type.function?).to be true
+      expect(func_type.param_types).to eq([Stone::Type::Int, Stone::Type::Int])
+      expect(func_type.return_type).to eq(Stone::Type::Int)
+    end
+
+    it "registers if function type" do
+      ast = Stone.compile("1")
+      ast.to_llir
+
+      func_type = registry.lookup("if")
+      expect(func_type).not_to be_nil
+      expect(func_type.function?).to be true
+      expect(func_type.return_type).to eq(Stone::Type::Int)
+    end
+
+    it "allows FunctionCall#type to return Int for sum" do
+      ast = Stone.compile("sum(1, 2)")
+      ast.to_llir
+
+      func_call = ast.children.last
+      expect(func_call.type).to eq(Stone::Type::Int)
+    end
+  end
+
 end

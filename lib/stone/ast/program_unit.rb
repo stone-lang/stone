@@ -101,13 +101,15 @@ module Stone
 
       private def boolean_property_access?(node)
         return false unless node.is_a?(Stone::AST::PropertyAccess)
-        # Property access returns i1 if the property itself returns a boolean
-        infer_property_return_type(node) == "Bool"
+
+        infer_property_return_type(node) == Stone::Type::Bool
       end
 
       private def string_constant_reference?(node)
         return false unless node.is_a?(Stone::AST::Reference)
-        node.type(module_ref) == "String"
+
+        result = node.type(module_ref)
+        ["String", Stone::Type::String].include?(result)
       end
 
       private def string_property_access?(node)
@@ -116,41 +118,29 @@ module Stone
         node.returns_string_field?(module_ref)
       end
 
-      private def infer_receiver_type(node)
-        literal_type(node) || reference_type(node) || property_access_type(node)
-      end
-
-      private def literal_type(node)
+      private def resolve_node_type(node)
         case node
-        when Stone::AST::IntegerLiteral then "Int"
-        when Stone::AST::BooleanLiteral then "Bool"
-        when Stone::AST::StringLiteral then "String"
-        when Stone::AST::TypeOfExpression then "Type"
-        when Stone::AST::TypeReference then "Type"
+        when Stone::AST::Reference then resolve_reference_type(node)
+        when Stone::AST::PropertyAccess then infer_property_return_type(node)
+        when Stone::AST::FunctionCall then resolve_function_call_type(node)
+        else node.type
         end
       end
 
-      private def reference_type(node)
-        node.type(module_ref) if node.is_a?(Stone::AST::Reference)
+      private def resolve_function_call_type(node)
+        node.type(module_ref)
       end
 
-      private def property_access_type(node)
-        infer_property_return_type(node) if node.is_a?(Stone::AST::PropertyAccess)
+      private def resolve_reference_type(node)
+        result = node.type(module_ref)
+        result.is_a?(Stone::Type) ? result : Stone::Type::Registry[result.to_s]
       end
 
       private def infer_property_return_type(property_access_node)
-        receiver_type = infer_receiver_type(property_access_node.receiver)
+        receiver_type = resolve_node_type(property_access_node.receiver)
         return nil unless receiver_type
 
-        # Check what type this property returns
-        property_return_types = {
-          "Bool" => {"not" => "Bool", "as_String" => "String"},
-          "Int" => {"positive?" => "Bool", "negative?" => "Bool", "zero?" => "Bool", "as_String" => "String"},
-          "String" => {"byte_count" => "Int", "empty?" => "Bool", "as_String" => "String"},
-          "Type" => {"as_String" => "String"}
-        }
-
-        property_return_types.dig(receiver_type, property_access_node.property)
+        receiver_type.property_return_type(property_access_node.property)
       end
 
       private def module_ref

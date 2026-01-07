@@ -51,6 +51,57 @@ RSpec.describe Stone::Type do
     end
   end
 
+  describe ".function" do
+    let(:int_type) { Stone::Type::Int }
+    let(:bool_type) { Stone::Type::Bool }
+    let(:string_type) { Stone::Type::String }
+
+    it "creates a function type with param and return types" do
+      type = described_class.function(param_types: [int_type, int_type], return_type: int_type)
+      expect(type.param_types).to eq([int_type, int_type])
+      expect(type.return_type).to eq(int_type)
+    end
+
+    it "generates name from param and return types" do
+      type = described_class.function(param_types: [int_type, int_type], return_type: int_type)
+      expect(type.name).to eq("(Int, Int) -> Int")
+    end
+
+    it "handles single parameter" do
+      type = described_class.function(param_types: [string_type], return_type: bool_type)
+      expect(type.name).to eq("(String) -> Bool")
+    end
+
+    it "handles no parameters" do
+      type = described_class.function(param_types: [], return_type: int_type)
+      expect(type.name).to eq("() -> Int")
+    end
+
+    it "is not primitive" do
+      type = described_class.function(param_types: [int_type], return_type: int_type)
+      expect(type.primitive?).to be false
+    end
+
+    it "is not a record" do
+      type = described_class.function(param_types: [int_type], return_type: int_type)
+      expect(type.record?).to be false
+    end
+
+    it "is a function" do
+      type = described_class.function(param_types: [int_type], return_type: int_type)
+      expect(type.function?).to be true
+    end
+
+    it "primitives are not functions" do
+      expect(int_type.function?).to be false
+    end
+
+    it "records are not functions" do
+      record = described_class.record(name: "Point", fields: [], llvm_type: :mock)
+      expect(record.function?).to be false
+    end
+  end
+
   describe "#==" do
     it "returns true for types with same name" do
       type1 = described_class.primitive(name: "Int", llvm_type: :mock)

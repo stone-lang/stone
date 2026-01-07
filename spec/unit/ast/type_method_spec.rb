@@ -5,6 +5,7 @@ require "stone/ast/string_literal"
 require "stone/ast/reference"
 require "stone/ast/property_access"
 require "stone/ast/record_instantiation"
+require "stone/ast/record_definition"
 require "stone/ast/type_of_expression"
 require "stone/ast/type_reference"
 require "stone/ast/function_call"
@@ -236,6 +237,35 @@ RSpec.describe "AST node type() method" do
     end
   end
 
+  describe "RecordDefinition#type" do
+    it "returns nil when assigned_name is not set" do
+      fields = [{name: "x", type: "Int"}]
+      node = Stone::AST::RecordDefinition.new(fields)
+      expect(node.type).to be_nil
+    end
+
+    it "returns constructor function type when assigned_name is set and type is registered" do
+      fields = [{name: "x", type: "Int"}, {name: "y", type: "Int"}]
+      point_type = Stone::Type.record(name: "Point", fields:, llvm_type: :mock)
+      registry.register(point_type)
+
+      node = Stone::AST::RecordDefinition.new(fields)
+      node.assigned_name = "Point"
+      func_type = node.type
+
+      expect(func_type.function?).to be true
+      expect(func_type.param_types).to eq([Stone::Type::Int, Stone::Type::Int])
+      expect(func_type.return_type).to eq(point_type)
+    end
+
+    it "returns nil when assigned_name is set but type is not registered" do
+      fields = [{name: "x", type: "Int"}]
+      node = Stone::AST::RecordDefinition.new(fields)
+      node.assigned_name = "UnregisteredType"
+      expect(node.type).to be_nil
+    end
+  end
+
   describe "FunctionCall#type" do
     it "returns Bool type for comparison operators" do
       args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
@@ -269,28 +299,52 @@ RSpec.describe "AST node type() method" do
   end
 
   describe "Lambda#type" do
-    it "returns the type of its block" do
+    it "returns function type with inferred return type" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Lambda.new(["x"], statements)
-      expect(node.type(context)).to eq(registry.int)
+      func_type = node.type(context)
+
+      expect(func_type.function?).to be true
+      expect(func_type.return_type).to eq(registry.int)
+      expect(func_type.param_types).to eq([registry.int])
     end
 
-    it "returns Bool when block returns Bool" do
+    it "returns function type with Bool return" do
       statements = [Stone::AST::BooleanLiteral.new("TRUE")]
       node = Stone::AST::Lambda.new([], statements)
-      expect(node.type(context)).to eq(registry.bool)
+      func_type = node.type(context)
+
+      expect(func_type.function?).to be true
+      expect(func_type.return_type).to eq(registry.bool)
+      expect(func_type.param_types).to eq([])
     end
 
-    it "returns String when block returns String" do
+    it "returns function type with String return" do
       statements = [Stone::AST::StringLiteral.new("hello")]
-      node = Stone::AST::Lambda.new([], statements)
-      expect(node.type(context)).to eq(registry.string)
+      node = Stone::AST::Lambda.new(["s"], statements)
+      func_type = node.type(context)
+
+      expect(func_type.function?).to be true
+      expect(func_type.return_type).to eq(registry.string)
+    end
+
+    it "returns function type with multiple parameters" do
+      statements = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::Lambda.new(%w[a b c], statements)
+      func_type = node.type(context)
+
+      expect(func_type.function?).to be true
+      expect(func_type.param_types.size).to eq(3)
+      expect(func_type.name).to eq("(Int, Int, Int) -> Int")
     end
 
     it "works without context" do
       statements = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::Lambda.new([], statements)
-      expect(node.type).to eq(registry.int)
+      func_type = node.type
+
+      expect(func_type.function?).to be true
+      expect(func_type.return_type).to eq(registry.int)
     end
   end
 

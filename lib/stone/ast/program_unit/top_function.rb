@@ -65,6 +65,7 @@ module Stone
           return unless child.value_expression.is_a?(Stone::AST::RecordDefinition)
 
           record_def = child.value_expression
+          record_def.assigned_name = child.identifier
           mod.register_record_type(child.identifier, record_def)
           register_record_type_in_registry(child.identifier, record_def)
         end

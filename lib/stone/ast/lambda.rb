@@ -32,7 +32,9 @@ module Stone
       end
 
       def type(context = nil)
-        @block.type(context)
+        return_type = @block.type(context) || Stone::Type::Int
+        param_types = parameters.map { Stone::Type::Int }
+        Stone::Type.function(param_types:, return_type:)
       end
 
       private def next_lambda_id

@@ -12,11 +12,13 @@ module Stone
     class RecordDefinition < Stone::AST::Expression
 
       attr_reader :fields
+      attr_accessor :assigned_name
 
       # fields is an array of { name: "field_name", type: "TypeName" } hashes
       def initialize(fields)
         @name = :record_definition
         @fields = fields
+        @assigned_name = nil
       end
 
       def to_llir(_builder, mod)
@@ -48,10 +50,15 @@ module Stone
       end
 
       def type(_context = nil)
-        # RecordDefinition evaluates to a constructor function
-        # For now, return nil as we don't have function types yet
-        # TODO: Return a proper function type when implemented
-        nil
+        return nil unless @assigned_name
+
+        record_type = Stone::Type::Registry.lookup(@assigned_name)
+        return nil unless record_type
+
+        param_types = @fields.map { |f| Stone::Type::Registry.lookup(f[:type]) }
+        return nil if param_types.any?(&:nil?)
+
+        Stone::Type.function(param_types:, return_type: record_type)
       end
 
       private def llvm_type_for(type_name)

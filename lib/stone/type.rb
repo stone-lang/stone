@@ -4,7 +4,7 @@ module Stone
   # Access via Stone::Type::Int, Stone::Type::Bool, etc.
   class Type
 
-    attr_reader :name, :llvm_type, :fields, :min, :max
+    attr_reader :name, :llvm_type, :fields, :min, :max, :param_types, :return_type
     attr_accessor :property_types
 
     def initialize(name:, llvm_type:, property_types: {}, fields: nil, **options)
@@ -15,6 +15,8 @@ module Stone
       @primitive = options[:primitive] || false
       @min = options[:min]
       @max = options[:max]
+      @param_types = options[:param_types]
+      @return_type = options[:return_type]
     end
 
     def property_return_type(property_name)
@@ -27,6 +29,10 @@ module Stone
 
     def record?
       !@primitive && !@fields.nil?
+    end
+
+    def function?
+      @param_types.is_a?(Array)
     end
 
     def as_String
@@ -56,6 +62,12 @@ module Stone
 
     def self.record(name:, fields:, llvm_type:)
       new(name:, llvm_type:, fields:, primitive: false)
+    end
+
+    def self.function(param_types:, return_type:)
+      param_names = param_types.map(&:name).join(", ")
+      name = "(#{param_names}) -> #{return_type.name}"
+      new(name:, llvm_type: nil, param_types:, return_type:)
     end
 
   end

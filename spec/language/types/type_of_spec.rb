@@ -37,6 +37,17 @@ RSpec.describe "Type.of() special form" do
     end
   end
 
+  describe "with record instances" do
+    it "returns the record type name" do
+      code = <<~STONE
+        Point := Record(x :: Int, y :: Int)
+        p := Point(1, 2)
+        Type.of(p).as_String
+      STONE
+      expect(Stone.eval(code)).to eq("Point")
+    end
+  end
+
   describe "metatypes" do
     it "Type.of(Type.of(anything)) returns Type" do
       code = <<~STONE

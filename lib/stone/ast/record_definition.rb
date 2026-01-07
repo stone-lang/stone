@@ -38,9 +38,9 @@ module Stone
         field_names.index(field_name)
       end
 
-      def llvm_type
+      def llvm_type(mod = nil)
         # Convert field types to LLVM types
-        llvm_field_types = @fields.map { |field| llvm_type_for(field[:type]) }
+        llvm_field_types = @fields.map { |field| llvm_type_for_field(field[:type], mod) }
         LLVM::Type.struct(llvm_field_types, false)
       end
 
@@ -61,38 +61,41 @@ module Stone
         Stone::Type.function(param_types:, return_type: record_type)
       end
 
-      private def llvm_type_for(type_name)
-        case type_name
-        when "Int" then LLVM::Int64
-        when "Bool" then LLVM::Int1
-        when "String"
-          # Stone currently represents strings as i64 pointers, not as {ptr, i64} structs
-          # This is for JIT compatibility
-          LLVM::Int64
-        else
-          fail "Unknown type: #{type_name}"
-        end
+      # Returns the LLVM type for a field type name.
+      # Uses Stone's type system for primitives, and ptr for record types.
+      private def llvm_type_for_field(type_name, mod)
+        # Check for self-reference (recursive type)
+        return LLVM::Type.ptr if type_name == @assigned_name
+
+        # Check for reference to another record type
+        return LLVM::Type.ptr if mod&.record_type?(type_name)
+
+        # Look up primitive types from Stone's type system
+        stone_type = Stone::Type::Registry.lookup(type_name)
+        return stone_type.llvm_type if stone_type
+
+        fail "Unknown type: #{type_name}"
       end
 
       private def generate_constructor_function(mod)
         func_name = "__record_constructor_#{object_id}__"
-        func_type = constructor_function_type
+        func_type = constructor_function_type(mod)
 
         mod.functions.add(func_name, func_type).tap do |func|
-          build_constructor_body(func)
+          build_constructor_body(func, mod)
         end
       end
 
-      private def constructor_function_type
+      private def constructor_function_type(mod)
         # Constructor function signature: (field_types...) -> struct_type
-        field_llvm_types = @fields.map { |field| llvm_type_for(field[:type]) }
-        LLVM::Type.function(field_llvm_types, llvm_type)
+        field_llvm_types = @fields.map { |field| llvm_type_for_field(field[:type], mod) }
+        LLVM::Type.function(field_llvm_types, llvm_type(mod))
       end
 
-      private def build_constructor_body(func)
+      private def build_constructor_body(func, mod)
         func.basic_blocks.append("entry").build do |builder|
           # Start with null/undef struct value
-          struct_value = llvm_type.null
+          struct_value = llvm_type(mod).null
 
           # Insert each field value from function parameters
           @fields.each_with_index do |_field, index|

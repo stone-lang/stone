@@ -35,7 +35,7 @@ module Stone
         # When the type system is refactored with proper Type objects, add field type checking here.
 
         # Create struct value
-        create_struct(record_def.llvm_type, llvm_values, builder)
+        create_struct(record_def.llvm_type(mod), llvm_values, builder)
       end
 
       def to_s

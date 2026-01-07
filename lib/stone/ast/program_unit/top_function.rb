@@ -70,12 +70,12 @@ module Stone
           record_def = child.value_expression
           record_def.assigned_name = child.identifier
           mod.register_record_type(child.identifier, record_def)
-          register_record_type_in_registry(child.identifier, record_def)
+          register_record_type_in_registry(child.identifier, record_def, mod)
         end
 
-        private def register_record_type_in_registry(name, record_def)
+        private def register_record_type_in_registry(name, record_def, mod)
           fields = record_def.fields.map { |f| {name: f[:name], type: f[:type]} }
-          type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type)
+          type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type(mod))
           Stone::Type::Registry.register(type)
         end
 

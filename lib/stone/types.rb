@@ -28,7 +28,7 @@ module Stone
         bool: Stone::Type.primitive(name: "Bool", llvm_type: LLVM::Int1.type),
         string: Stone::Type.primitive(name: "String", llvm_type: LLVM::Int64.type),
         type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Int64.type),
-        null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Int64.type)
+        null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Type.ptr)
       }
     end
 

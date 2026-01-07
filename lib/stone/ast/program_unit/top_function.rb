@@ -38,6 +38,8 @@ module Stone
         private def return_value_for(builder, value)
           return LLVM::Int64.from_i(0) if value.nil?
           return builder.zext(value, LLVM::Int64.type, "bool_to_i64") if value.type.to_s == "i1"
+          return builder.ptr2int(value, LLVM::Int64.type, "ptr_to_i64") if value.type.kind == :pointer
+
           value
         end
 

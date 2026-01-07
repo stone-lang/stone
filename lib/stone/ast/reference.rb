@@ -72,9 +72,19 @@ module Stone
         global = mod.globals[identifier]
         return unless global
 
+        # Check if the initializer is a null pointer (NULL constant)
+        initializer = global.initializer
+        return Stone::Type::Null if null_pointer?(initializer)
+
         # In LLVM 21+, globals use opaque pointers, so check the initializer's type
-        llvm_type = global.initializer&.type
+        llvm_type = initializer&.type
         llvm_type_to_stone_type(llvm_type) if llvm_type
+      end
+
+      private def null_pointer?(value)
+        return false unless value
+
+        value.type.kind == :pointer && value.null?
       end
 
       private def llvm_type_to_stone_type(llvm_type)

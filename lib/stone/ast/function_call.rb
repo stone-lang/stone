@@ -16,6 +16,9 @@ module Stone
       end
 
       def to_llir(builder, mod)
+        # NULL comparisons with non-NULL values are always unequal (different types)
+        return null_comparison_result if mixed_null_comparison?
+
         # TODO: Record equality should be delegated to the type system.
         # When the type system is refactored, equality should be polymorphic:
         # - Global `==` checks that both args are the same type
@@ -125,6 +128,20 @@ module Stone
 
       private def equality_operator?
         %w[== != ≠].include?(function_name)
+      end
+
+      private def mixed_null_comparison?
+        return false unless equality_operator?
+        return false unless arguments.size == 2
+
+        null_args = arguments.count { |arg| arg.is_a?(Stone::AST::NullLiteral) }
+        null_args == 1 # Exactly one NULL means mixed comparison
+      end
+
+      private def null_comparison_result
+        # For ==: different types are not equal, return false
+        # For != or ≠: different types are not equal, return true
+        function_name == "==" ? LLVM::FALSE : LLVM::TRUE
       end
 
       private def generate_record_equality(builder, mod)

@@ -4,9 +4,6 @@ module Stone
   class AST
     class NullLiteral < Stone::AST::Expression
 
-      # NULL is represented as 0 at runtime (null pointer convention)
-      LLVM_VALUE = 0
-
       def self.parse(_text, _location)
         new
       end
@@ -16,7 +13,7 @@ module Stone
       end
 
       def to_llir(_builder, _mod)
-        LLVM::Int64.from_i(LLVM_VALUE)
+        LLVM::Type.ptr.null
       end
 
       def to_s

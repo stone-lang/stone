@@ -4,12 +4,6 @@ require "stone/types"
 
 RSpec.describe Stone::AST::NullLiteral do
 
-  describe "constants" do
-    it "defines LLVM_VALUE as 0" do
-      expect(Stone::AST::NullLiteral::LLVM_VALUE).to eq(0)
-    end
-  end
-
   describe "#initialize" do
     it "sets name to :null_literal" do
       literal = Stone::AST::NullLiteral.new
@@ -44,11 +38,12 @@ RSpec.describe Stone::AST::NullLiteral do
   end
 
   describe "#to_llir" do
-    it "returns LLVM i64 with value 0" do
+    it "returns LLVM null pointer" do
       literal = Stone::AST::NullLiteral.new
       llvm_value = literal.to_llir(nil, nil)
-      expect(llvm_value).to be_a(LLVM::ConstantInt)
-      expect(llvm_value.to_i).to eq(0)
+      expect(llvm_value).to be_a(LLVM::Constant)
+      expect(llvm_value.type.kind).to eq(:pointer)
+      expect(llvm_value.null?).to be true
     end
   end
 

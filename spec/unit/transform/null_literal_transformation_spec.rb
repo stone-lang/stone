@@ -22,13 +22,14 @@ RSpec.describe "NULL Literal Transformation" do
   end
 
   describe "NULL LLVM representation" do
-    it "represents NULL as i64 value 0 in LLVM" do
+    it "represents NULL as a null pointer in LLVM" do
       parse_tree = Stone::Grammar.parse("NULL")
       ast = transformer.transform(parse_tree)
       null_node = ast.children.first
 
       llvm_value = null_node.to_llir(nil, nil)
-      expect(llvm_value.to_i).to eq(0)
+      expect(llvm_value.type.kind).to eq(:pointer)
+      expect(llvm_value.null?).to be true
     end
   end
 

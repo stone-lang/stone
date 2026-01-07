@@ -125,15 +125,26 @@ RSpec.describe "AST node type() method" do
         expect(node.type(llvm_module)).to eq(Stone::Type::Bool)
       end
 
-      it "returns Stone::Type::String for pointer globals" do
+      it "returns Stone::Type::String for non-null pointer globals" do
         global = double("LLVM::GlobalVariable")
         initializer = double("LLVM::Value")
         llvm_type = double("LLVM::Type", kind: :pointer)
         allow(global).to receive(:initializer).and_return(initializer)
-        allow(initializer).to receive(:type).and_return(llvm_type)
+        allow(initializer).to receive_messages(type: llvm_type, null?: false)
         allow(llvm_module).to receive(:globals).and_return({"message" => global})
         node = Stone::AST::Reference.new("message")
         expect(node.type(llvm_module)).to eq(Stone::Type::String)
+      end
+
+      it "returns Stone::Type::Null for null pointer globals" do
+        global = double("LLVM::GlobalVariable")
+        initializer = double("LLVM::Value")
+        llvm_type = double("LLVM::Type", kind: :pointer)
+        allow(global).to receive(:initializer).and_return(initializer)
+        allow(initializer).to receive_messages(type: llvm_type, null?: true)
+        allow(llvm_module).to receive(:globals).and_return({"nothing" => global})
+        node = Stone::AST::Reference.new("nothing")
+        expect(node.type(llvm_module)).to eq(Stone::Type::Null)
       end
 
       it "returns Stone::Type::Int for lambda parameters" do

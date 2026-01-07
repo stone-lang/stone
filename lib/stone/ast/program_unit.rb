@@ -41,6 +41,7 @@ module Stone
       end
 
       private def resolve_i64_type
+        return :null if last_child_is_null?
         return :string if last_child_is_string?
         return :boolean if last_child_is_boolean?
 
@@ -49,17 +50,11 @@ module Stone
 
       private def convert_to_ruby(result, result_type)
         case result_type.to_s
-        when "i64"
-          result.to_i
-          # i64_value = result.to_i
-          # return read_string_from_pointer(i64_value) if last_child_is_string?
-          # last_child_is_boolean? ? (i64_value != 0) : i64_value
-        when "i1", "boolean"
-          result.to_i != 0
-        when "string"
-          read_string_from_pointer(result.to_i)
-        else
-          fail "Don't know how to convert LLVM type to Ruby: #{result_type}"
+        when "i64" then result.to_i
+        when "i1", "boolean" then result.to_i != 0
+        when "string" then read_string_from_pointer(result.to_i)
+        when "null" then nil
+        else fail "Don't know how to convert LLVM type to Ruby: #{result_type}"
         end
       end
 
@@ -93,6 +88,20 @@ module Stone
         last_child.is_a?(Stone::AST::BooleanLiteral) ||
           boolean_function_call?(last_child) ||
           boolean_property_access?(last_child)
+      end
+
+      private def last_child_is_null?
+        last_child = children&.last
+        return false unless last_child
+
+        last_child.is_a?(Stone::AST::NullLiteral) ||
+          null_constant_reference?(last_child)
+      end
+
+      private def null_constant_reference?(node)
+        return false unless node.is_a?(Stone::AST::Reference)
+
+        node.type(module_ref) == Stone::Type::Null
       end
 
       private def boolean_function_call?(node)

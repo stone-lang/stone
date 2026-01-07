@@ -7,15 +7,17 @@ require "stone"
 # that the Stone language correctly implements NULL literal semantics.
 #
 # NULL is the single value of the Null type. It represents "no value"
-# and is special-cased to be compatible with any type, enabling
+# and is a proper pointer type (not an integer). This enables type-safe
 # recursive data structures like linked lists.
+#
+# NULL is represented as a null pointer in LLVM IR and returns nil to Ruby.
 
 
 RSpec.describe "NULL Literals" do
 
   describe "basic usage" do
-    it "evaluates NULL to 0" do
-      expect(Stone.eval("NULL")).to eq(0)
+    it "evaluates NULL to nil" do
+      expect(Stone.eval("NULL")).to be_nil
     end
 
     it "can be assigned to a constant" do
@@ -23,7 +25,7 @@ RSpec.describe "NULL Literals" do
         x := NULL
         x
       STONE
-      expect(Stone.eval(code)).to eq(0)
+      expect(Stone.eval(code)).to be_nil
     end
   end
 
@@ -32,6 +34,11 @@ RSpec.describe "NULL Literals" do
       expect(Stone.eval("NULL == NULL")).to be(true)
     end
 
+    it "NULL != NULL is false" do
+      expect(Stone.eval("NULL != NULL")).to be(false)
+    end
+
+    # NULL is a pointer type, integers are i64 - different types cannot be equal
     it "NULL does not equal an integer" do
       expect(Stone.eval("NULL == 42")).to be(false)
     end
@@ -44,12 +51,8 @@ RSpec.describe "NULL Literals" do
       expect(Stone.eval("NULL != 42")).to be(true)
     end
 
-    it "NULL != NULL is false" do
-      expect(Stone.eval("NULL != NULL")).to be(false)
-    end
-
-    it "0 equals NULL (both are i64 value 0)" do
-      expect(Stone.eval("0 == NULL")).to be(true)
+    it "0 does not equal NULL (different types: i64 vs pointer)" do
+      expect(Stone.eval("0 == NULL")).to be(false)
     end
   end
 

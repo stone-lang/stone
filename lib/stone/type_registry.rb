@@ -14,6 +14,11 @@ module Stone
       type
     end
 
+    def register_as(name, type)
+      @types[name] = type
+      type
+    end
+
     def lookup(name)
       @types[name]
     end

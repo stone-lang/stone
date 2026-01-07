@@ -39,11 +39,18 @@ module Stone
       end
 
       def type(context = nil)
-        if comparison_operator?
-          Stone::Type::Bool
-        elsif context&.record_type?(function_name)
-          Stone::Type::Registry.lookup(function_name)
-        end
+        return Stone::Type::Bool if comparison_operator?
+        return record_constructor_type if context&.record_type?(function_name)
+
+        function_return_type
+      end
+
+      private def record_constructor_type
+        Stone::Type::Registry.lookup(function_name)
+      end
+
+      private def function_return_type
+        Stone::Type::Registry.lookup(function_name)&.return_type
       end
 
       private def generate_function_call(builder, mod)

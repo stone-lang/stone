@@ -296,6 +296,22 @@ RSpec.describe "AST node type() method" do
       node = Stone::AST::FunctionCall.new("foo", args)
       expect(node.type).to be_nil
     end
+
+    it "returns return type for registered function" do
+      func_type = Stone::Type.function(param_types: [registry.int, registry.int], return_type: registry.int)
+      registry.register_as("add", func_type)
+      args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
+      node = Stone::AST::FunctionCall.new("add", args)
+      expect(node.type(context)).to eq(registry.int)
+    end
+
+    it "returns Bool return type for registered predicate function" do
+      func_type = Stone::Type.function(param_types: [registry.int], return_type: registry.bool)
+      registry.register_as("even?", func_type)
+      args = [Stone::AST::IntegerLiteral.new(42)]
+      node = Stone::AST::FunctionCall.new("even?", args)
+      expect(node.type(context)).to eq(registry.bool)
+    end
   end
 
   describe "Lambda#type" do

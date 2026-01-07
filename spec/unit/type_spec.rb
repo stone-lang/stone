@@ -4,6 +4,11 @@ require "stone/types"
 
 RSpec.describe Stone::Type do
 
+  after do
+    Stone::TypeRegistry.instance.reset!
+    Stone::Types.bootstrap_registry!
+  end
+
   describe ".primitive" do
     it "creates a primitive type" do
       type = described_class.primitive(name: "Int", llvm_type: :mock_llvm)
@@ -210,6 +215,12 @@ RSpec.describe Stone::Type do
 
     it "can look up types by name" do
       expect(Stone::Type::Registry["Int"]).to eq(Stone::Type::Int)
+    end
+
+    it "can register a type under a custom name" do
+      func_type = Stone::Type.function(param_types: [Stone::Type::Int], return_type: Stone::Type::Bool)
+      Stone::Type::Registry.register_as("even?", func_type)
+      expect(Stone::Type::Registry["even?"]).to eq(func_type)
     end
   end
 

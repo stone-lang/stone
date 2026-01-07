@@ -14,8 +14,9 @@ module Stone
 
         def generate(mod)
           @mod = mod
-          # Pre-register record types for type checking
+          # Pre-register types for type checking
           register_record_types(mod)
+          register_function_types
           mod.functions.add("__top__", function_type) do |func|
             func.basic_blocks.append("entry").build do |builder|
               compiled = compile_children(builder, mod)
@@ -82,6 +83,16 @@ module Stone
             mod.register_record_instance(child.identifier, record_type_name)
           elsif child.value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(child.value_expression.function_name)
             mod.register_record_instance(child.identifier, child.value_expression.function_name)
+          end
+        end
+
+        private def register_function_types
+          @children&.each do |child|
+            next unless child.is_a?(Stone::AST::ConstantDefinition)
+            next unless child.value_expression.is_a?(Stone::AST::Lambda)
+
+            func_type = child.value_expression.type
+            Stone::Type::Registry.register_as(child.identifier, func_type)
           end
         end
 

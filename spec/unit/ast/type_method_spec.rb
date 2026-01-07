@@ -229,10 +229,10 @@ RSpec.describe "AST node type() method" do
       expect(node.type(context)).to eq(point_type)
     end
 
-    it "falls back to type name when not in registry" do
+    it "returns nil when type not in registry" do
       field_values = [Stone::AST::IntegerLiteral.new(42)]
       node = Stone::AST::RecordInstantiation.new("UnknownRecord", field_values)
-      expect(node.type).to eq("UnknownRecord")
+      expect(node.type).to be_nil
     end
   end
 

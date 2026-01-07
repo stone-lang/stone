@@ -50,6 +50,44 @@ RSpec.describe "Recursive Record Types" do
     end
   end
 
+  describe "accessing recursive fields" do
+    it "can access the rest field (returns pointer)" do
+      code = <<~STONE
+        IntList := Record(first :: Int, rest :: IntList)
+        list := IntList(1, IntList(2, NULL))
+        list.rest.first
+      STONE
+      expect(Stone.eval(code)).to eq(2)
+    end
+
+    it "can access deeply nested elements" do
+      code = <<~STONE
+        IntList := Record(first :: Int, rest :: IntList)
+        list := IntList(1, IntList(2, IntList(3, NULL)))
+        list.rest.rest.first
+      STONE
+      expect(Stone.eval(code)).to eq(3)
+    end
+
+    it "can check if rest is NULL" do
+      code = <<~STONE
+        IntList := Record(first :: Int, rest :: IntList)
+        list := IntList(42, NULL)
+        list.rest == NULL
+      STONE
+      expect(Stone.eval(code)).to be true
+    end
+
+    it "can check if rest is not NULL" do
+      code = <<~STONE
+        IntList := Record(first :: Int, rest :: IntList)
+        list := IntList(1, IntList(2, NULL))
+        list.rest == NULL
+      STONE
+      expect(Stone.eval(code)).to be false
+    end
+  end
+
   describe "string lists" do
     it "can create a list of strings" do
       code = <<~STONE
@@ -58,6 +96,15 @@ RSpec.describe "Recursive Record Types" do
         list.first
       STONE
       expect(Stone.eval(code)).to eq("hello")
+    end
+
+    it "can access nested string elements" do
+      code = <<~STONE
+        StringList := Record(first :: String, rest :: StringList)
+        list := StringList("hello", StringList("world", NULL))
+        list.rest.first
+      STONE
+      expect(Stone.eval(code)).to eq("world")
     end
   end
 

@@ -118,7 +118,30 @@ module Stone
         # Check if receiver is a FunctionCall that returns a record
         return mod.record_type?(@receiver.function_name) if @receiver.is_a?(FunctionCall)
 
+        # Check if receiver is a PropertyAccess that returns a record type
+        return receiver_property_returns_record?(mod) if @receiver.is_a?(PropertyAccess)
+
         false
+      end
+
+      private def receiver_property_returns_record?(mod)
+        field_type = get_receiver_field_type(mod)
+        field_type && mod.record_type?(field_type)
+      end
+
+      private def get_receiver_field_type(mod)
+        return nil unless @receiver.is_a?(PropertyAccess)
+
+        # Get the record type that the receiver's receiver is accessing
+        parent_record_type = @receiver.get_record_type_name(mod)
+        return nil unless parent_record_type
+
+        # Look up the field type for the receiver's property
+        record_def = mod.record_types[parent_record_type]
+        return nil unless record_def
+
+        field = record_def.fields.find { |f| f[:name] == @receiver.property }
+        field&.dig(:type)
       end
 
       private def access_record_field(builder, mod)
@@ -128,6 +151,12 @@ module Stone
 
         # Evaluate the receiver to get the record struct
         receiver_value = @receiver.to_llir(builder, mod)
+
+        # If receiver is a pointer (recursive field), load the struct first
+        if receiver_value.type.kind == :pointer
+          struct_type = record_def.llvm_type(mod)
+          receiver_value = builder.load2(struct_type, receiver_value, "loaded_struct")
+        end
 
         # Extract the field value from the struct
         builder.extract_value(receiver_value, field_index, "#{@property}_value")
@@ -144,11 +173,15 @@ module Stone
         field_def && field_def[:type] == "String"
       end
 
-      private def get_record_type_name(mod)
-        if @receiver.is_a?(Reference)
+      def get_record_type_name(mod)
+        case @receiver
+        when Reference
           mod.record_instance_type(@receiver.identifier)
-        elsif @receiver.is_a?(FunctionCall)
+        when FunctionCall
           @receiver.function_name
+        when PropertyAccess
+          # Receiver is a PropertyAccess - get the field type it returns
+          get_receiver_field_type(mod)
         end
       end
 

@@ -135,7 +135,18 @@ module Stone
         return false unless arguments.size == 2
 
         null_args = arguments.count { |arg| arg.is_a?(Stone::AST::NullLiteral) }
-        null_args == 1 # Exactly one NULL means mixed comparison
+        return false unless null_args == 1 # Exactly one NULL
+
+        # If the non-NULL operand returns a pointer, it's a valid pointer comparison
+        non_null_arg = arguments.find { |arg| !arg.is_a?(Stone::AST::NullLiteral) }
+        !returns_pointer?(non_null_arg)
+      end
+
+      private def returns_pointer?(node)
+        # PropertyAccess to a recursive field returns a pointer
+        return true if node.is_a?(Stone::AST::PropertyAccess)
+
+        false
       end
 
       private def null_comparison_result

@@ -30,9 +30,8 @@ module Stone
         # Evaluate each field value
         llvm_values = @field_values.map { |field_ast| field_ast.to_llir(builder, mod) }
 
-        # TODO: Type checking is skipped for now because Stone's current implementation
-        # represents strings as i64 pointers rather than {ptr, i64} structs.
-        # When the type system is refactored with proper Type objects, add field type checking here.
+        # Convert struct values to pointers for record-typed fields
+        llvm_values = convert_structs_to_pointers(builder, mod, record_def, llvm_values)
 
         # Create struct value
         create_struct(record_def.llvm_type(mod), llvm_values, builder)
@@ -68,6 +67,27 @@ module Stone
         else
           fail "Unknown type: #{type_name}"
         end
+      end
+
+      private def convert_structs_to_pointers(builder, mod, record_def, llvm_values)
+        llvm_values.each_with_index.map do |value, index|
+          field_type = record_def.fields[index][:type]
+          if field_expects_pointer?(field_type, mod) && value.type.kind == :struct
+            allocate_and_store(builder, value)
+          else
+            value
+          end
+        end
+      end
+
+      private def field_expects_pointer?(field_type, mod)
+        field_type == @record_type_name || mod.record_type?(field_type)
+      end
+
+      private def allocate_and_store(builder, struct_value)
+        ptr = builder.alloca(struct_value.type, "nested_record")
+        builder.store(struct_value, ptr)
+        ptr
       end
 
       private def create_struct(struct_type, values, builder)

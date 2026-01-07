@@ -245,10 +245,10 @@ RSpec.describe "AST node type() method" do
       end
     end
 
-    it "returns Int type for regular functions" do
+    it "returns nil for unknown functions" do
       args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
       node = Stone::AST::FunctionCall.new("add", args)
-      expect(node.type(context)).to eq(registry.int)
+      expect(node.type(context)).to be_nil
     end
 
     it "returns record type from registry for record constructors" do
@@ -261,10 +261,10 @@ RSpec.describe "AST node type() method" do
       expect(node.type(record_context)).to eq(point_type)
     end
 
-    it "works without context" do
+    it "returns nil without context" do
       args = [Stone::AST::IntegerLiteral.new(1)]
       node = Stone::AST::FunctionCall.new("foo", args)
-      expect(node.type).to eq(registry.int)
+      expect(node.type).to be_nil
     end
   end
 

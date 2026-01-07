@@ -42,10 +42,7 @@ module Stone
         if comparison_operator?
           Stone::Type::Bool
         elsif context&.record_type?(function_name)
-          # Look up from registry if available, otherwise return name for backward compat
-          Stone::Type::Registry.lookup(function_name) || function_name
-        else
-          Stone::Type::Int
+          Stone::Type::Registry.lookup(function_name)
         end
       end
 

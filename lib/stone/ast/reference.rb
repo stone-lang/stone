@@ -58,11 +58,14 @@ module Stone
       end
 
       private def type_from_string_constant(mod)
-        "String" if mod.string_constant?(identifier)
+        Stone::Type::String if mod.string_constant?(identifier)
       end
 
       private def type_from_record_instance(mod)
-        mod.record_instance_type(identifier) if mod.record_instance?(identifier)
+        return unless mod.record_instance?(identifier)
+
+        type_name = mod.record_instance_type(identifier)
+        Stone::Type::Registry.lookup(type_name)
       end
 
       private def type_from_global(mod)
@@ -77,18 +80,16 @@ module Stone
       private def llvm_type_to_stone_type(llvm_type)
         return nil unless llvm_type
 
-        actual_type = unwrap_pointer_type(llvm_type)
-        stone_type_from_llvm_kind(actual_type)
+        llvm_kind_to_stone_type(llvm_type)
       end
 
-      private def unwrap_pointer_type(llvm_type)
-        llvm_type.kind == :pointer ? llvm_type.element_type : llvm_type
-      end
-
-      private def stone_type_from_llvm_kind(llvm_type)
+      # Maps LLVM type kinds to Stone types.
+      # Note: Record instances are handled by type_from_record_instance BEFORE this is called,
+      # so :struct here represents Stone strings (which use struct {i64 len, i8* data}).
+      private def llvm_kind_to_stone_type(llvm_type)
         case llvm_type.kind
-        when :integer then llvm_type.width == 1 ? "Bool" : "Int"
-        when :pointer, :struct then "String"
+        when :integer then llvm_type.width == 1 ? Stone::Type::Bool : Stone::Type::Int
+        when :pointer, :struct then Stone::Type::String
         end
       end
 

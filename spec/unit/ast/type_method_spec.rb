@@ -19,6 +19,11 @@ RSpec.describe "AST node type() method" do
   let(:context) { Stone::TypeContext.new }
   let(:registry) { Stone::TypeRegistry.instance }
 
+  after do
+    registry.reset!
+    Stone::Types.bootstrap_registry!
+  end
+
   describe "IntegerLiteral#type" do
     it "returns Int type instance" do
       node = Stone::AST::IntegerLiteral.new(42)
@@ -71,6 +76,75 @@ RSpec.describe "AST node type() method" do
       node = Stone::AST::Reference.new("x")
       expect(node.type).to be_nil
     end
+
+    # rubocop:disable RSpec/VerifiedDoubles -- Stone extends LLVM classes with custom methods
+    context "with LLVM module context" do
+      let(:llvm_module) do
+        double("LLVM::Module",
+               lambda_param_storage: nil,
+               string_constant?: false,
+               record_instance?: false,
+               globals: {})
+      end
+
+      it "returns Stone::Type::String for string constants" do
+        allow(llvm_module).to receive(:string_constant?).with("greeting").and_return(true)
+        node = Stone::AST::Reference.new("greeting")
+        expect(node.type(llvm_module)).to eq(Stone::Type::String)
+      end
+
+      it "returns Stone::Type from registry for record instances" do
+        point_type = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
+        registry.register(point_type)
+        allow(llvm_module).to receive(:record_instance?).with("p").and_return(true)
+        allow(llvm_module).to receive(:record_instance_type).with("p").and_return("Point")
+        node = Stone::AST::Reference.new("p")
+        expect(node.type(llvm_module)).to eq(point_type)
+      end
+
+      it "returns Stone::Type::Int for i64 globals" do
+        global = double("LLVM::GlobalVariable")
+        initializer = double("LLVM::Value")
+        llvm_type = double("LLVM::Type", kind: :integer, width: 64)
+        allow(global).to receive(:initializer).and_return(initializer)
+        allow(initializer).to receive(:type).and_return(llvm_type)
+        allow(llvm_module).to receive(:globals).and_return({"count" => global})
+        node = Stone::AST::Reference.new("count")
+        expect(node.type(llvm_module)).to eq(Stone::Type::Int)
+      end
+
+      it "returns Stone::Type::Bool for i1 globals" do
+        global = double("LLVM::GlobalVariable")
+        initializer = double("LLVM::Value")
+        llvm_type = double("LLVM::Type", kind: :integer, width: 1)
+        allow(global).to receive(:initializer).and_return(initializer)
+        allow(initializer).to receive(:type).and_return(llvm_type)
+        allow(llvm_module).to receive(:globals).and_return({"flag" => global})
+        node = Stone::AST::Reference.new("flag")
+        expect(node.type(llvm_module)).to eq(Stone::Type::Bool)
+      end
+
+      it "returns Stone::Type::String for pointer globals" do
+        global = double("LLVM::GlobalVariable")
+        initializer = double("LLVM::Value")
+        llvm_type = double("LLVM::Type", kind: :pointer)
+        allow(global).to receive(:initializer).and_return(initializer)
+        allow(initializer).to receive(:type).and_return(llvm_type)
+        allow(llvm_module).to receive(:globals).and_return({"message" => global})
+        node = Stone::AST::Reference.new("message")
+        expect(node.type(llvm_module)).to eq(Stone::Type::String)
+      end
+
+      it "returns Stone::Type::Int for lambda parameters" do
+        alloca = double("LLVM::Instruction")
+        llvm_type = double("LLVM::Type", kind: :integer, width: 64)
+        allow(alloca).to receive(:allocated_type).and_return(llvm_type)
+        allow(llvm_module).to receive(:lambda_param_storage).and_return({"x" => alloca})
+        node = Stone::AST::Reference.new("x")
+        expect(node.type(llvm_module)).to eq(Stone::Type::Int)
+      end
+    end
+    # rubocop:enable RSpec/VerifiedDoubles
   end
 
   describe "PropertyAccess#type" do

@@ -16,6 +16,8 @@ module Stone
 
       def type(context = nil)
         receiver_type = @receiver.type(context)
+        return nil unless receiver_type
+
         return_type = receiver_type.property_return_type(@property)
         fail Stone::PropertyError, "Property '#{@property}' not found for type '#{receiver_type.name}'" unless return_type
 
@@ -106,38 +108,7 @@ module Stone
       end
 
       private def resolve_node_type(node, mod)
-        case node
-        when Reference then resolve_reference_type(node, mod)
-        when FunctionCall then resolve_function_call_type(node, mod)
-        when PropertyAccess then resolve_property_access_type(node, mod)
-        else node.type
-        end
-      end
-
-      private def resolve_reference_type(node, mod)
-        result = node.type(mod)
-        return nil unless result
-
-        # TODO: Remove string fallback once Reference#type always returns Stone::Type instances
-        result.is_a?(Stone::Type) ? result : Stone::Type::Registry[result.to_s]
-      end
-
-      private def resolve_property_access_type(node, mod)
-        receiver_type = resolve_node_type(node.receiver, mod)
-        return nil unless receiver_type
-
-        receiver_type.property_return_type(node.property)
-      end
-
-      private def resolve_function_call_type(node, mod)
-        # Record constructor returns record type
-        return Stone::Type::Registry[node.function_name] if mod.record_type?(node.function_name)
-
-        # Comparison operators return Bool
-        return Stone::Type::Bool if node.function_name.match?(/^(==|!=|≠|<|<=|≤|>|>=|≥)$/)
-
-        # Otherwise, we can't infer the type yet (would need return type annotations)
-        nil
+        Stone::AST::TypeResolver.resolve_node_type(node, mod)
       end
 
       private def record_field_access?(mod)

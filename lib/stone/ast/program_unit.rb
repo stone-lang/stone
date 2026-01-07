@@ -90,7 +90,9 @@ module Stone
         last_child = children&.last
         return false unless last_child
 
-        last_child.is_a?(Stone::AST::BooleanLiteral) || boolean_function_call?(last_child) || boolean_property_access?(last_child)
+        last_child.is_a?(Stone::AST::BooleanLiteral) ||
+          boolean_function_call?(last_child) ||
+          boolean_property_access?(last_child)
       end
 
       private def boolean_function_call?(node)
@@ -102,14 +104,13 @@ module Stone
       private def boolean_property_access?(node)
         return false unless node.is_a?(Stone::AST::PropertyAccess)
 
-        infer_property_return_type(node) == Stone::Type::Bool
+        resolve_node_type(node) == Stone::Type::Bool
       end
 
       private def string_constant_reference?(node)
         return false unless node.is_a?(Stone::AST::Reference)
 
-        result = node.type(module_ref)
-        ["String", Stone::Type::String].include?(result)
+        node.type(module_ref) == Stone::Type::String
       end
 
       private def string_property_access?(node)
@@ -119,28 +120,7 @@ module Stone
       end
 
       private def resolve_node_type(node)
-        case node
-        when Stone::AST::Reference then resolve_reference_type(node)
-        when Stone::AST::PropertyAccess then infer_property_return_type(node)
-        when Stone::AST::FunctionCall then resolve_function_call_type(node)
-        else node.type
-        end
-      end
-
-      private def resolve_function_call_type(node)
-        node.type(module_ref)
-      end
-
-      private def resolve_reference_type(node)
-        result = node.type(module_ref)
-        result.is_a?(Stone::Type) ? result : Stone::Type::Registry[result.to_s]
-      end
-
-      private def infer_property_return_type(property_access_node)
-        receiver_type = resolve_node_type(property_access_node.receiver)
-        return nil unless receiver_type
-
-        receiver_type.property_return_type(property_access_node.property)
+        Stone::AST::TypeResolver.resolve_node_type(node, module_ref)
       end
 
       private def module_ref

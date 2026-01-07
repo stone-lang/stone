@@ -20,7 +20,16 @@ module Stone
     end
 
     def property_return_type(property_name)
-      @property_types[property_name]
+      @property_types[property_name] || field_type(property_name)
+    end
+
+    private def field_type(field_name)
+      return nil unless @fields
+
+      field = @fields.find { |f| f[:name] == field_name }
+      return nil unless field
+
+      Stone::Type::Registry.lookup(field[:type])
     end
 
     def primitive?

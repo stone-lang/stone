@@ -193,6 +193,33 @@ RSpec.describe "AST node type() method" do
       third = Stone::AST::PropertyAccess.new(second, "not")
       expect(third.type(context)).to eq(registry.bool)
     end
+
+    it "returns field type for record field access" do
+      # Register a Point record type with x: Int, y: Int
+      fields = [{name: "x", type: "Int"}, {name: "y", type: "Int"}]
+      point_type = Stone::Type.record(name: "Point", fields:, llvm_type: :mock)
+      registry.register(point_type)
+
+      # Create a RecordInstantiation as the receiver
+      field_values = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
+      receiver = Stone::AST::RecordInstantiation.new("Point", field_values)
+
+      # Access the x field
+      node = Stone::AST::PropertyAccess.new(receiver, "x")
+      expect(node.type(context)).to eq(registry.int)
+    end
+
+    it "returns String type for String field on record" do
+      fields = [{name: "name", type: "String"}, {name: "age", type: "Int"}]
+      person_type = Stone::Type.record(name: "Person", fields:, llvm_type: :mock)
+      registry.register(person_type)
+
+      field_values = [Stone::AST::StringLiteral.new("Alice"), Stone::AST::IntegerLiteral.new(30)]
+      receiver = Stone::AST::RecordInstantiation.new("Person", field_values)
+
+      node = Stone::AST::PropertyAccess.new(receiver, "name")
+      expect(node.type(context)).to eq(registry.string)
+    end
   end
 
   describe "TypeOfExpression#type" do

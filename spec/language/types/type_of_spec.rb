@@ -28,12 +28,7 @@ RSpec.describe "Type.of() special form" do
   end
 
   describe "with variables" do
-    # TODO: This requires tracking constant types during IR generation
-    # and making them available to TypeContext. This is a limitation of
-    # the current implementation.
-    # rubocop:disable RSpec/PendingWithoutReason
-    xit "returns the type of a defined constant" do
-      # rubocop:enable RSpec/PendingWithoutReason
+    it "returns the type of a defined constant" do
       code = <<~STONE
         x := 42
         Type.of(x).as_String

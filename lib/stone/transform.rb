@@ -1,6 +1,7 @@
 require "stone/ast"
 require "stone/ast/boolean_literal"
 require "stone/ast/integer_literal"
+require "stone/ast/null_literal"
 require "stone/ast/string_literal"
 require "stone/ast/reference"
 require "stone/ast/type_reference"
@@ -55,6 +56,11 @@ module Stone
     transform(:literal_boolean) do |node|
       token = node.children.first
       Stone::AST::BooleanLiteral.parse(token.text, token.start_location)
+    end
+
+    transform(:literal_null) do |node|
+      token = node.children.first
+      Stone::AST::NullLiteral.parse(token.text, token.start_location)
     end
 
     transform(:literal_string) do |node|

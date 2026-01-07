@@ -38,7 +38,7 @@ module Stone
     rule(:type_reference) { str("Type") }
     rule(:argument_list) { parens(comma_separated(argument)) }
     rule(:argument) { expression }
-    rule(:literal) { literal_boolean | literal_string | literal_i64 }
+    rule(:literal) { literal_null | literal_boolean | literal_string | literal_i64 }
     rule(:reference) { identifier }
     rule(:lambda) { lambda_op + parameter_list + ws? + block }
     rule(:parameter_list) { parens(comma_separated(parameter, allow_trailing: false)) }
@@ -87,6 +87,7 @@ module Stone
     terminal(:define_op) { ":=" }
 
     # Literals
+    rule(:literal_null) { str("NULL") }
     rule(:literal_boolean) { reg(/(TRUE|FALSE)/) }
     # WARNING: String literal rule must come before comment rule to handle `#` inside strings correctly.
     rule(:literal_string) { reg(/"(?:[^"\\]|\\.)*"/) }

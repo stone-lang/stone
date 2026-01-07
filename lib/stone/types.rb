@@ -27,7 +27,8 @@ module Stone
         int: Stone::Type.primitive(name: "Int", llvm_type: LLVM::Int64.type, min: INT_MIN, max: INT_MAX),
         bool: Stone::Type.primitive(name: "Bool", llvm_type: LLVM::Int1.type),
         string: Stone::Type.primitive(name: "String", llvm_type: LLVM::Int64.type),
-        type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Int64.type)
+        type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Int64.type),
+        null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Int64.type)
       }
     end
 
@@ -61,15 +62,16 @@ module Stone
     end
 
     def setup_type_constants(types)
-      registry = Stone::TypeRegistry.instance
-
       # Define type constants on Stone::Type for convenient access
       # Only define if not already defined (avoids warnings during test resets)
-      Stone::Type.const_set(:Int, types[:int]) unless Stone::Type.const_defined?(:Int, false)
-      Stone::Type.const_set(:Bool, types[:bool]) unless Stone::Type.const_defined?(:Bool, false)
-      Stone::Type.const_set(:String, types[:string]) unless Stone::Type.const_defined?(:String, false)
-      Stone::Type.const_set(:Type, types[:type]) unless Stone::Type.const_defined?(:Type, false)
-      Stone::Type.const_set(:Registry, registry) unless Stone::Type.const_defined?(:Registry, false)
+      types.each_value do |type|
+        define_type_constant(type.name.to_sym, type)
+      end
+      define_type_constant(:Registry, Stone::TypeRegistry.instance)
+    end
+
+    private def define_type_constant(name, value)
+      Stone::Type.const_set(name, value) unless Stone::Type.const_defined?(name, false)
     end
   end
 end

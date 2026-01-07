@@ -101,4 +101,24 @@ RSpec.describe "Function type registration" do
     end
   end
 
+  describe "chained expressions" do
+    it "returns Bool for sum(1, 2).positive?" do
+      ast = Stone.compile("sum(1, 2).positive?")
+      ast.to_llir
+
+      property_access = ast.children.last
+      expect(property_access).to be_a(Stone::AST::PropertyAccess)
+      expect(property_access.type).to eq(Stone::Type::Bool)
+    end
+
+    it "returns Bool for add(1, 2).positive? with user-defined function" do
+      ast = Stone.compile("add := λ(a, b) { sum(a, b) }\nadd(1, 2).positive?")
+      ast.to_llir
+
+      property_access = ast.children.last
+      expect(property_access).to be_a(Stone::AST::PropertyAccess)
+      expect(property_access.type).to eq(Stone::Type::Bool)
+    end
+  end
+
 end

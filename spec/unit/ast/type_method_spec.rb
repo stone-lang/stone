@@ -194,6 +194,19 @@ RSpec.describe "AST node type() method" do
       expect(third.type(context)).to eq(registry.bool)
     end
 
+    it "handles function call result with property access" do
+      # sum(1, 2).positive? should return Bool
+      # First, register sum's type
+      sum_type = Stone::Type.function(param_types: [registry.int, registry.int], return_type: registry.int)
+      registry.register_as("sum", sum_type)
+
+      args = [Stone::AST::IntegerLiteral.new(1), Stone::AST::IntegerLiteral.new(2)]
+      func_call = Stone::AST::FunctionCall.new("sum", args)
+      property_access = Stone::AST::PropertyAccess.new(func_call, "positive?")
+
+      expect(property_access.type(context)).to eq(registry.bool)
+    end
+
     it "returns field type for record field access" do
       # Register a Point record type with x: Int, y: Int
       fields = [{name: "x", type: "Int"}, {name: "y", type: "Int"}]

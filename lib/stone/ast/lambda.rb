@@ -22,9 +22,9 @@ module Stone
         @lambda_id = next_lambda_id
       end
 
-      def to_llir(_builder, mod)
+      def to_llir(_builder, mod, scope = Stone::Scope.top_level)
         # Check if function already exists (happens if to_llir called multiple times on same lambda).
-        mod.functions[function_name] || create_function(mod, function_name, function_type)
+        mod.functions[function_name] || create_function(mod, function_name, function_type, scope)
       end
 
       def to_s
@@ -60,10 +60,10 @@ module Stone
         "lambda"
       end
 
-      private def create_function(mod, function_name, function_type)
+      private def create_function(mod, function_name, function_type, scope)
         mod.functions.add(function_name, function_type).tap do |func|
           name_parameters(func)
-          build_function_body(func, mod)
+          build_function_body(func, mod, scope)
         end
       end
 
@@ -73,12 +73,12 @@ module Stone
         end
       end
 
-      private def build_function_body(func, mod)
+      private def build_function_body(func, mod, scope)
         func.basic_blocks.append("entry").build do |lambda_builder|
           args = argument_storage(func, lambda_builder)
 
           with_parameter_context(mod, args) do
-            evaluate_body_and_return(lambda_builder, mod)
+            evaluate_body_and_return(lambda_builder, mod, scope)
           end
         end
       end
@@ -103,9 +103,9 @@ module Stone
         mod.lambda_param_storage = original
       end
 
-      # Evaluate all statements in block and return value of last statement.
-      private def evaluate_body_and_return(builder, mod)
-        @block.evaluate_body_and_return(builder, mod)
+      # Lambda parameters use lambda_param_storage (not scope) for stack alloca loading.
+      private def evaluate_body_and_return(builder, mod, scope)
+        @block.evaluate_body_and_return(builder, mod, scope)
       end
 
     end

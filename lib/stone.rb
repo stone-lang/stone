@@ -8,6 +8,7 @@ require "llvm/execution_engine"
 
 require "extensions/llvm_module"
 require "grammy/scanner"
+require "stone/scope"
 require "stone/error"
 require "stone/error/overflow"
 require "stone/error/reference_error"

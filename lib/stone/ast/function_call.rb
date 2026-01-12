@@ -15,7 +15,7 @@ module Stone
         @name = :function_call
       end
 
-      def to_llir(builder, mod)
+      def to_llir(builder, mod, scope = Stone::Scope.top_level)
         # NULL comparisons with non-NULL values are always unequal (different types)
         return null_comparison_result if mixed_null_comparison?
 
@@ -24,20 +24,20 @@ module Stone
         # - Global `==` checks that both args are the same type
         # - If same type, delegate to type-specific comparison
         # - This special case should be removed
-        return generate_record_equality(builder, mod) if record_equality_comparison?(mod)
+        return generate_record_equality(builder, mod, scope) if record_equality_comparison?(mod)
         # TODO: Record instantiation should not be special-cased here.
         # When the type system is refactored, record constructors should be
         # regular functions, and this check should be removed.
-        return instantiate_record(builder, mod) if mod.record_type?(function_name)
+        return instantiate_record(builder, mod, scope) if mod.record_type?(function_name)
 
         # For chained comparisons, generate inline comparison logic
-        return generate_chained_comparison(builder, mod) if chained_comparison?
+        return generate_chained_comparison(builder, mod, scope) if chained_comparison?
 
         # For chained boolean operations, generate inline logic
-        return generate_chained_boolean(builder, mod) if chained_boolean?
+        return generate_chained_boolean(builder, mod, scope) if chained_boolean?
 
         # Regular function call
-        generate_function_call(builder, mod)
+        generate_function_call(builder, mod, scope)
       end
 
       def to_s
@@ -59,12 +59,12 @@ module Stone
         Stone::Type::Registry.lookup(function_name)&.return_type
       end
 
-      private def generate_function_call(builder, mod)
+      private def generate_function_call(builder, mod, scope)
         func = mod.lookup_function(function_name)
         fail Stone::ReferenceError, "undefined function: #{function_name}" unless func
 
         validate_argument_count(func.function_type.argument_types.size)
-        args = evaluate_arguments(builder, mod)
+        args = evaluate_arguments(builder, mod, scope)
         builder.call(func, *args, "#{function_name}_result")
       end
 
@@ -84,11 +84,11 @@ module Stone
         boolean_operator? && arguments.length > 2
       end
 
-      private def generate_chained_boolean(builder, mod)
+      private def generate_chained_boolean(builder, mod, scope)
         # Generate inline code for chained boolean operations
         # ∧(a, b, c) generates: (a && b) && c
         func = lookup_and_validate_function(mod)
-        args = evaluate_arguments(builder, mod)
+        args = evaluate_arguments(builder, mod, scope)
         build_chained_boolean_op(builder, func, args)
       end
 
@@ -129,11 +129,11 @@ module Stone
         end
       end
 
-      private def generate_chained_comparison(builder, mod)
+      private def generate_chained_comparison(builder, mod, scope)
         # Generate inline code for chained comparisons
         # <(a, b, c) generates: (a < b) && (b < c)
         func = lookup_and_validate_function(mod)
-        args = evaluate_arguments(builder, mod)
+        args = evaluate_arguments(builder, mod, scope)
         build_comparison_conjunction(builder, func, args)
       end
 
@@ -155,8 +155,8 @@ module Stone
         fail Stone::ArgumentError, "wrong number of arguments for #{function_name} (given #{arguments.length}, expected #{expected})"
       end
 
-      private def evaluate_arguments(builder, mod)
-        arguments.map { |arg| arg.to_llir(builder, mod) }
+      private def evaluate_arguments(builder, mod, scope)
+        arguments.map { |arg| arg.to_llir(builder, mod, scope) }
       end
 
       private def record_equality_comparison?(mod)
@@ -171,9 +171,9 @@ module Stone
           Stone::AST::RecordHelpers.record_instance?(arguments[1], mod)
       end
 
-      private def instantiate_record(builder, mod)
+      private def instantiate_record(builder, mod, scope)
         record_instantiation = Stone::AST::RecordInstantiation.new(function_name, arguments)
-        record_instantiation.to_llir(builder, mod)
+        record_instantiation.to_llir(builder, mod, scope)
       end
 
       private def equality_operator?
@@ -205,8 +205,8 @@ module Stone
         function_name == "==" ? LLVM::FALSE : LLVM::TRUE
       end
 
-      private def generate_record_equality(builder, mod)
-        records = evaluate_record_arguments(builder, mod)
+      private def generate_record_equality(builder, mod, scope)
+        records = evaluate_record_arguments(builder, mod, scope)
         type1, type2 = get_record_types(mod)
 
         return different_types_result if type1 != type2
@@ -215,8 +215,8 @@ module Stone
         apply_not_operator(builder, result)
       end
 
-      private def evaluate_record_arguments(builder, mod)
-        [arguments[0].to_llir(builder, mod), arguments[1].to_llir(builder, mod)]
+      private def evaluate_record_arguments(builder, mod, scope)
+        [arguments[0].to_llir(builder, mod, scope), arguments[1].to_llir(builder, mod, scope)]
       end
 
       private def get_record_types(mod)

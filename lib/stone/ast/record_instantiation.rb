@@ -15,7 +15,7 @@ module Stone
         @record_definition = nil
       end
 
-      def to_llir(builder, mod)
+      def to_llir(builder, mod, scope = Stone::Scope.top_level)
         record_def = mod.record_types[@record_type_name]
         fail "Unknown record type: #{@record_type_name}" unless record_def
 
@@ -28,7 +28,7 @@ module Stone
         end
 
         # Evaluate each field value
-        llvm_values = @field_values.map { |field_ast| field_ast.to_llir(builder, mod) }
+        llvm_values = @field_values.map { |field_ast| field_ast.to_llir(builder, mod, scope) }
 
         # Convert struct values to pointers for record-typed fields
         llvm_values = convert_structs_to_pointers(builder, mod, record_def, llvm_values)

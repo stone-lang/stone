@@ -24,9 +24,9 @@ module Stone
         return_type
       end
 
-      def to_llir(builder, mod)
+      def to_llir(builder, mod, scope = Stone::Scope.top_level)
         # 1. Check if this is a record field access (highest priority)
-        return access_record_field(builder, mod) if record_field_access?(mod)
+        return access_record_field(builder, mod, scope) if record_field_access?(mod)
 
         # Resolve the receiver type for subsequent checks
         receiver_type = resolve_node_type(@receiver, mod)
@@ -34,7 +34,7 @@ module Stone
         # Try different property access strategies
         handle_type_as_string(builder, mod, receiver_type) ||
           handle_byte_count(mod) ||
-          handle_computed_property(builder, mod, receiver_type) ||
+          handle_computed_property(builder, mod, scope, receiver_type) ||
           fail_property_not_found(receiver_type)
       end
 
@@ -51,13 +51,13 @@ module Stone
         LLVM::Int64.from_i(string_literal.bytesize) if string_literal
       end
 
-      private def handle_computed_property(builder, mod, receiver_type)
+      private def handle_computed_property(builder, mod, scope, receiver_type)
         return nil unless receiver_type
 
         computed_func = lookup_computed_property_function(mod, receiver_type)
         return nil unless computed_func
 
-        receiver_value = @receiver.to_llir(builder, mod)
+        receiver_value = @receiver.to_llir(builder, mod, scope)
         builder.call(computed_func, receiver_value, "#{@property}_result")
       end
 
@@ -144,13 +144,13 @@ module Stone
         field&.dig(:type)
       end
 
-      private def access_record_field(builder, mod)
+      private def access_record_field(builder, mod, scope)
         record_type_name = get_record_type_name(mod)
         record_def = lookup_record_definition(mod, record_type_name)
         field_index = get_field_index(record_def, record_type_name)
 
         # Evaluate the receiver to get the record struct
-        receiver_value = @receiver.to_llir(builder, mod)
+        receiver_value = @receiver.to_llir(builder, mod, scope)
 
         # If receiver is a pointer (recursive field), load the struct first
         if receiver_value.type.kind == :pointer

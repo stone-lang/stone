@@ -1,5 +1,6 @@
 require "llvm/core"
 require "stone/libc"
+require "stone/scope"
 
 
 module Stone
@@ -12,14 +13,14 @@ module Stone
           @mod = nil
         end
 
-        def generate(mod)
+        def generate(mod, scope = Stone::Scope.top_level)
           @mod = mod
           # Pre-register types for type checking
           register_record_types(mod)
           register_function_types
           mod.functions.add("__top__", function_type) do |func|
             func.basic_blocks.append("entry").build do |builder|
-              compiled = compile_children(builder, mod)
+              compiled = compile_children(builder, mod, scope)
               build_return(builder, compiled&.last)
             end
           end
@@ -43,8 +44,8 @@ module Stone
           value
         end
 
-        private def compile_children(builder, mod)
-          @children&.compact&.select { |child| child.respond_to?(:to_llir) }&.map { |child| child.to_llir(builder, mod) }
+        private def compile_children(builder, mod, scope)
+          @children&.compact&.select { |child| child.respond_to?(:to_llir) }&.map { |child| child.to_llir(builder, mod, scope) }
         end
 
         private def find_string_constant_value(name)

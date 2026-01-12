@@ -14,9 +14,9 @@ module Stone
         @lambda = lambda
       end
 
-      def to_llir(builder, mod)
+      def to_llir(builder, mod, scope = Stone::Scope.top_level)
         # Generate the lambda function
-        func = @lambda.to_llir(builder, mod)
+        func = @lambda.to_llir(builder, mod, scope)
 
         # Register as a function alias with the name "Type@property"
         # This allows lookup via mod.lookup_function("Type@property")

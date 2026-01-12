@@ -97,3 +97,12 @@ end
 Dir[File.join(__dir__, "support", "**", "*.rb")].each do
   require _1
 end
+
+# Reset scope and counters between tests to ensure isolation
+RSpec.configure do |config|
+  config.before do
+    Stone::Scope.reset_top_level! if defined?(Stone::Scope)
+    Stone::AST::Lambda.lambda_count = 0 if defined?(Stone::AST::Lambda)
+    Stone::AST::Block.block_count = 0 if defined?(Stone::AST::Block)
+  end
+end

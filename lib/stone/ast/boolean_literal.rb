@@ -30,7 +30,7 @@ module Stone
         end
       end
 
-      def to_llir(_builder, _mod)
+      def to_llir(_builder, _mod, _scope = Stone::Scope.top_level)
         @value == TRUE ? LLVM::TRUE : LLVM::FALSE
       end
 

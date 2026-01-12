@@ -12,7 +12,7 @@ module Stone
         @name = :null_literal
       end
 
-      def to_llir(_builder, _mod)
+      def to_llir(_builder, _mod, _scope = Stone::Scope.top_level)
         LLVM::Type.ptr.null
       end
 

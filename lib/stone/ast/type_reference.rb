@@ -14,7 +14,7 @@ module Stone
         Stone::Type::Type
       end
 
-      def to_llir(_builder, _mod)
+      def to_llir(_builder, _mod, _scope = Stone::Scope.top_level)
         # Type reference returns the Type ID
         LLVM::Int64.from_i(4) # Type's ID
       end

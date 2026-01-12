@@ -21,7 +21,7 @@ module Stone
         @assigned_name = nil
       end
 
-      def to_llir(_builder, mod)
+      def to_llir(_builder, mod, _scope = Stone::Scope.top_level)
         # Generate and return a constructor function that creates instances of this record
         generate_constructor_function(mod)
       end

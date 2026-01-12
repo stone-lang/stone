@@ -13,16 +13,16 @@ module Stone
         @name = :constant_definition
       end
 
-      def to_llir(builder, mod)
+      def to_llir(builder, mod, scope = Stone::Scope.top_level)
         return register_record_type(mod) if value_expression.is_a?(Stone::AST::RecordDefinition)
 
-        llvm_value = value_expression.to_llir(builder, mod)
+        llvm_value = value_expression.to_llir(builder, mod, scope)
 
         return handle_record_definition(mod, llvm_value) if value_expression.is_a?(Stone::AST::RecordDefinition)
-        return register_function_alias(mod, llvm_value) if llvm_value.is_a?(LLVM::Function)
+        return register_function_alias(mod, llvm_value, scope) if llvm_value.is_a?(LLVM::Function)
 
         handle_value_expression(mod)
-        create_global(mod, builder, llvm_value)
+        create_global(mod, builder, llvm_value, scope)
       end
 
       def type(_context = nil)
@@ -31,7 +31,7 @@ module Stone
         nil
       end
 
-      private def create_global(mod, builder, llvm_value)
+      private def create_global(mod, builder, llvm_value, scope)
         global = mod.globals.add(llvm_value.type, identifier)
         global.linkage = :internal
 
@@ -40,6 +40,9 @@ module Stone
         else
           initialize_at_runtime(global, builder, llvm_value)
         end
+
+        # Register in scope for lexical lookup
+        scope.define(identifier, value: llvm_value)
 
         nil
       end
@@ -62,8 +65,9 @@ module Stone
       end
 
       # Register a function (lambda) as an alias so it can be called by the constant name
-      private def register_function_alias(mod, function)
+      private def register_function_alias(mod, function, scope)
         mod.register_function_alias(identifier, function)
+        scope.define(identifier, value: function)
         nil
       end
 

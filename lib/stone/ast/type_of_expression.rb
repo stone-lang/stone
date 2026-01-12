@@ -18,7 +18,7 @@ module Stone
         Stone::Type::Type
       end
 
-      def to_llir(_builder, mod)
+      def to_llir(_builder, mod, _scope = Stone::Scope.top_level)
         # At compile time, determine the type of the inner expression
         # For now, create a TypeContext from the module
         context = Stone::TypeContext.new(mod)

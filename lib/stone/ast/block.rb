@@ -20,9 +20,9 @@ module Stone
         @block_id = next_block_id
       end
 
-      def to_llir(_builder, mod)
+      def to_llir(_builder, mod, scope = Stone::Scope.top_level)
         # Check if function already exists (happens if to_llir called multiple times on same block).
-        mod.functions[function_name] || create_function(mod, function_name, function_type)
+        mod.functions[function_name] || create_function(mod, function_name, function_type, scope)
       end
 
       def to_s
@@ -52,21 +52,22 @@ module Stone
         "block"
       end
 
-      private def create_function(mod, function_name, function_type)
+      private def create_function(mod, function_name, function_type, scope)
         mod.functions.add(function_name, function_type).tap do |func|
-          build_function_body(func, mod)
+          build_function_body(func, mod, scope)
         end
       end
 
-      private def build_function_body(func, mod)
+      private def build_function_body(func, mod, scope)
         func.basic_blocks.append("entry").build do |block_builder|
-          evaluate_body_and_return(block_builder, mod)
+          evaluate_body_and_return(block_builder, mod, scope)
         end
       end
 
       # Evaluate all statements in block and return value of last statement.
-      def evaluate_body_and_return(builder, mod)
-        results = Array(statements).compact.map { |stmt| stmt.to_llir(builder, mod) }
+      def evaluate_body_and_return(builder, mod, scope)
+        child_scope = scope.child
+        results = Array(statements).compact.map { |stmt| stmt.to_llir(builder, mod, child_scope) }
         last_result = results.compact.last || LLVM::Int64.from_i(0)
         builder.ret(last_result)
       end

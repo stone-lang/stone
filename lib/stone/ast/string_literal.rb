@@ -30,7 +30,7 @@ module Stone
         @value.length
       end
 
-      def to_llir(builder, mod)
+      def to_llir(builder, mod, _scope = Stone::Scope.top_level)
         string_global = create_global_string(mod)
 
         # Get pointer to the string data (GEP to first element)

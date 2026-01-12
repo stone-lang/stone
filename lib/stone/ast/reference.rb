@@ -39,8 +39,10 @@ module Stone
         mod.record_instance?(identifier)
       end
 
-      def to_llir(builder, mod)
+      def to_llir(builder, mod, scope = Stone::Scope.top_level)
+        # Check lambda parameters first - they should shadow outer scope definitions
         lookup_parameter(builder, mod) ||
+          lookup_in_scope(scope) ||
           lookup_global(builder, mod) ||
           lookup_function(mod) ||
           lookup_record_type(mod) ||
@@ -127,6 +129,11 @@ module Stone
         return LLVM::Int64.from_i(0) if mod.record_type?(identifier)
 
         nil
+      end
+
+      private def lookup_in_scope(scope)
+        definition = scope&.lookup(identifier)
+        definition&.dig(:value)
       end
 
       private def fail_with_reference_error

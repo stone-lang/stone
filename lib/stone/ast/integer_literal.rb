@@ -33,7 +33,7 @@ module Stone
         @name = :integer_literal
       end
 
-      def to_llir(_builder, _mod)
+      def to_llir(_builder, _mod, _scope = Stone::Scope.top_level)
         LLVM::Int64.from_i(@value)
       end
 

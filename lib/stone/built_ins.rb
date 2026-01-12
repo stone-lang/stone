@@ -25,6 +25,7 @@ module Stone
       define_if_function
       define_sum_function
       define_comparison_operators
+      define_boolean_operators
     end
 
     private def define_constant(name, value)
@@ -61,6 +62,58 @@ module Stone
     private def build_icmp_body(func, predicate)
       func.basic_blocks.append("entry").build do |builder|
         result = builder.icmp(predicate, func.params[0], func.params[1], "cmp_result")
+        builder.ret(result)
+      end
+    end
+
+    private def define_boolean_operators
+      define_boolean_binary("and", :and)
+      define_boolean_binary("or", :or)
+      define_boolean_binary("xor", :xor)
+      define_boolean_unary("not", :xor)
+
+      define_boolean_binary("∧", :and)
+      define_boolean_binary("∨", :or)
+      define_boolean_binary("⊻", :xor)
+      define_boolean_unary("¬", :xor)
+
+      # TODO: Overload `==` and `!=` for Bool type once we support function overloading.
+      # Currently these operators only work for Int. For Booleans, use `xor` for XOR/inequality,
+      # or the integer comparison operators will work since TRUE=1 and FALSE=0.
+    end
+
+    private def define_boolean_binary(name, instruction)
+      @mod.functions.add(name, boolean_binary_function_type).tap do |func|
+        build_boolean_binary_body(func, instruction)
+      end
+    end
+
+    private def define_boolean_unary(name, instruction)
+      @mod.functions.add(name, boolean_unary_function_type).tap do |func|
+        build_boolean_unary_body(func, instruction)
+      end
+    end
+
+    private def boolean_binary_function_type
+      @boolean_binary_function_type ||= LLVM::Type.function([LLVM::Int1.type, LLVM::Int1.type], LLVM::Int1.type)
+    end
+
+    private def boolean_unary_function_type
+      @boolean_unary_function_type ||= LLVM::Type.function([LLVM::Int1.type], LLVM::Int1.type)
+    end
+
+    private def build_boolean_binary_body(func, instruction)
+      func.basic_blocks.append("entry").build do |builder|
+        result = builder.send(instruction, func.params[0], func.params[1], "bool_result") # rubocop:disable Style/Send
+        builder.ret(result)
+      end
+    end
+
+    private def build_boolean_unary_body(func, instruction)
+      func.basic_blocks.append("entry").build do |builder|
+        # NOT is implemented as XOR with TRUE (i.e., not(a) = a xor TRUE)
+        # The instruction parameter should always be :xor for unary boolean operations
+        result = builder.send(instruction, func.params[0], LLVM::TRUE, "not_result") # rubocop:disable Style/Send
         builder.ret(result)
       end
     end
@@ -149,6 +202,7 @@ module Stone
       @block_func_type ||= LLVM::Type.function([], LLVM::Int64.type)
     end
 
+    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
     private def register_builtin_function_types
       int = Stone::Type::Int
       bool = Stone::Type::Bool
@@ -159,7 +213,27 @@ module Stone
       # if(Bool, Block, Block) -> Int
       # Note: Block type not yet in type system, so we just record param count conceptually
       Stone::Type::Registry.register_as("if", Stone::Type.function(param_types: [bool], return_type: int))
+
+      # Boolean operators
+      # and(Bool, Bool) -> Bool
+      Stone::Type::Registry.register_as("and", Stone::Type.function(param_types: [bool, bool], return_type: bool))
+
+      # or(Bool, Bool) -> Bool
+      Stone::Type::Registry.register_as("or", Stone::Type.function(param_types: [bool, bool], return_type: bool))
+
+      # xor(Bool, Bool) -> Bool
+      Stone::Type::Registry.register_as("xor", Stone::Type.function(param_types: [bool, bool], return_type: bool))
+
+      # not(Bool) -> Bool
+      Stone::Type::Registry.register_as("not", Stone::Type.function(param_types: [bool], return_type: bool))
+
+      # Unicode operator aliases
+      Stone::Type::Registry.register_as("∧", Stone::Type.function(param_types: [bool, bool], return_type: bool))
+      Stone::Type::Registry.register_as("∨", Stone::Type.function(param_types: [bool, bool], return_type: bool))
+      Stone::Type::Registry.register_as("⊻", Stone::Type.function(param_types: [bool, bool], return_type: bool))
+      Stone::Type::Registry.register_as("¬", Stone::Type.function(param_types: [bool], return_type: bool))
     end
+    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
 
   end
 end

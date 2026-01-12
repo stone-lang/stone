@@ -33,6 +33,9 @@ module Stone
         # For chained comparisons, generate inline comparison logic
         return generate_chained_comparison(builder, mod) if chained_comparison?
 
+        # For chained boolean operations, generate inline logic
+        return generate_chained_boolean(builder, mod) if chained_boolean?
+
         # Regular function call
         generate_function_call(builder, mod)
       end
@@ -42,7 +45,7 @@ module Stone
       end
 
       def type(context = nil)
-        return Stone::Type::Bool if comparison_operator?
+        return Stone::Type::Bool if comparison_operator? || boolean_operator?
         return record_constructor_type if context&.record_type?(function_name)
 
         function_return_type
@@ -73,22 +76,69 @@ module Stone
         %w[== != ≠ < <= ≤ > >= ≥].include?(function_name)
       end
 
-      private def generate_chained_comparison(builder, mod)
-        # Generate inline code for chained comparisons
-        # <(a, b, c) generates: (a < b) && (b < c)
-        func = lookup_comparison_function(mod)
-        args = evaluate_arguments(builder, mod)
-        build_chained_and(builder, func, args)
+      private def boolean_operator?
+        %w[∧ ∨ ⊻ ¬].include?(function_name)
       end
 
-      private def lookup_comparison_function(mod)
+      private def chained_boolean?
+        boolean_operator? && arguments.length > 2
+      end
+
+      private def generate_chained_boolean(builder, mod)
+        # Generate inline code for chained boolean operations
+        # ∧(a, b, c) generates: (a && b) && c
+        func = lookup_and_validate_function(mod)
+        args = evaluate_arguments(builder, mod)
+        build_chained_boolean_op(builder, func, args)
+      end
+
+      private def lookup_and_validate_function(mod)
         func = mod.lookup_function(function_name)
         fail Stone::ReferenceError, "undefined function: #{function_name}" unless func
 
         func
       end
 
-      private def build_chained_and(builder, func, args)
+      private def build_chained_boolean_op(builder, func, args)
+        # Compute first pair using the function
+        result = builder.call(func, args[0], args[1], "bool_0")
+
+        # Chain remaining operands left-to-right: (a ⊻ b) ⊻ c
+        # This produces: ((a op b) op c) op d ...
+        # NOT overlapping pairs like: (a op b) and (b op c)
+        remaining_args = args[2..]
+        remaining_args.each_with_index do |arg, i|
+          result = chain_with_next_operand(builder, result, arg, i + 1)
+        end
+
+        result
+      end
+
+      private def chain_with_next_operand(builder, current_result, next_arg, index)
+        # NOTE: NOT (¬) is unary and never reaches this code path
+        # because chained_boolean? requires arguments.length > 2
+        case function_name
+        when "∧"
+          builder.and(current_result, next_arg, "and_#{index}")
+        when "∨"
+          builder.or(current_result, next_arg, "or_#{index}")
+        when "⊻"
+          builder.xor(current_result, next_arg, "xor_#{index}")
+        else
+          fail "Unsupported boolean operator for chaining: #{function_name}"
+        end
+      end
+
+      private def generate_chained_comparison(builder, mod)
+        # Generate inline code for chained comparisons
+        # <(a, b, c) generates: (a < b) && (b < c)
+        func = lookup_and_validate_function(mod)
+        args = evaluate_arguments(builder, mod)
+        build_comparison_conjunction(builder, func, args)
+      end
+
+
+      private def build_comparison_conjunction(builder, func, args)
         result = builder.call(func, args[0], args[1], "cmp_0")
 
         (1...args.length - 1).each do |i|

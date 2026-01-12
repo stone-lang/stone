@@ -142,7 +142,7 @@ module Stone
       # Desugar comparison operations to function calls:
       # - Binary: `5 < 3` → `<(5, 3)`
       # - Chained: `1 < 2 < 3` → `<(1, 2, 3)`
-      postfix_expressions = node.children.select { |c| c.respond_to?(:name) && c.name == :postfix_expression }
+      boolean_operations = node.children.select { |c| c.respond_to?(:name) && c.name == :boolean_operation }
 
       # All operators in a chain must be the same (e.g., all `<` or all `==`)
       operators = node.children.select { |c| c.is_a?(Grammy::Match) && c.text !~ /\s/ }
@@ -150,6 +150,33 @@ module Stone
 
       # Verify all operators are the same
       fail "Mixed comparison operators not allowed: use parentheses to clarify precedence" unless operators.all? { |op| op.text == operator_name }
+
+      # Collect all operands and create varargs function call
+      operands = boolean_operations.map { |expr| transform(expr) }
+      Stone::AST::FunctionCall.new(operator_name, operands)
+    end
+
+    transform(:boolean_operation) do |node|
+      # Desugar boolean operations to function calls:
+      # - Binary: `TRUE ∧ FALSE` → `∧(TRUE, FALSE)`
+      # - Chained: `TRUE ∧ FALSE ∧ TRUE` → `∧(TRUE, FALSE, TRUE)`
+      # - Zero operators: `5` → just return the postfix_expression
+      postfix_expressions = node.children.select { |c| c.respond_to?(:name) && c.name == :postfix_expression }
+
+      # All operators in a chain must be the same (e.g., all `∧` or all `∨`)
+      operators = node.children.select { |c| c.is_a?(Grammy::Match) && c.text !~ /\s/ }
+
+      # If there are no boolean operators, just return the single postfix_expression
+      next transform(postfix_expressions.first) if operators.empty?
+
+      operator_name = operators.first.text
+
+      # Verify all operators are the same
+      fail "Mixed boolean operators not allowed: use parentheses to clarify precedence" unless operators.all? { |op| op.text == operator_name }
+
+      # TODO: Consider detecting mixing of comparison and boolean operators without parentheses
+      # (e.g., `a < b ∧ c > d` parsed as `a < (b ∧ c) > d`). This is valid in the current grammar
+      # but may produce unexpected results.
 
       # Collect all operands and create varargs function call
       operands = postfix_expressions.map { |expr| transform(expr) }

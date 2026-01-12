@@ -8,6 +8,7 @@ module Stone
     ALPHA_IDENTIFIER = /[a-zA-Z_][a-zA-Z0-9_]*[!?]?/
     COMPUTED_PROPERTY_ID = /[A-Z][a-zA-Z0-9_]*@[a-zA-Z_][a-zA-Z0-9_]*[!?]?/
     COMPARISON_OPERATOR = /(==|!=|<=|>=|≠|≤|≥|<|>)/
+    BOOLEAN_OPERATOR = /(∧|∨|⊻|¬)/
 
     start :program_unit
 
@@ -21,16 +22,19 @@ module Stone
     # Expressions
     # Expression hierarchy (from lowest to highest precedence):
     # 1. comparison_operation (lowest - binary/variadic operators)
-    # 2. postfix (function_call, property_access)
-    # 3. primary (highest - atoms)
+    # 2. boolean_operation (binary/variadic boolean operators)
+    # 3. postfix (function_call, property_access)
+    # 4. primary (highest - atoms)
     #
-    # Postfix expressions (function calls and property access) have higher precedence
-    # than comparisons but can chain: obj.prop(args).other_prop
-    # Comparisons can chain: 1 < 2 < 3 desugars to <(1, 2, 3)
-    rule(:expression) { type_declaration | comparison_operation | postfix_expression }
+    # Comparisons operate on boolean operations, which operate on postfix expressions.
+    # boolean_operation with zero operators is equivalent to postfix_expression.
+    # This allows mixing with parentheses: (5 < 3) ∧ TRUE
+    # Both can chain: 1 < 2 < 3 desugars to <(1, 2, 3)
+    rule(:expression) { type_declaration | comparison_operation | boolean_operation }
     rule(:type_declaration) { identifier + ws! + str("::") + ws! + type_annotation }
     rule(:type_annotation) { identifier }
-    rule(:comparison_operation) { postfix_expression + (ws! + comparison_operator + ws! + postfix_expression)[1..] }
+    rule(:comparison_operation) { boolean_operation + (ws! + comparison_operator + ws! + boolean_operation)[1..] }
+    rule(:boolean_operation) { postfix_expression + (ws! + boolean_operator + ws! + postfix_expression)[0..] }
     rule(:postfix_expression) { primary + (argument_list | property_accessor)[0..] }
     rule(:property_accessor) { str(".") + identifier }
     rule(:primary) { parens(expression) | type_of_expression | record_definition | literal | type_reference | reference | lambda | block }
@@ -79,10 +83,11 @@ module Stone
 
     # Identifiers
     terminal(:computed_property_id) { COMPUTED_PROPERTY_ID }
-    terminal(:identifier) { Regexp.union(ALPHA_IDENTIFIER, COMPARISON_OPERATOR) }
+    terminal(:identifier) { Regexp.union(ALPHA_IDENTIFIER, BOOLEAN_OPERATOR, COMPARISON_OPERATOR) }
 
     # Operators
     terminal(:comparison_operator) { COMPARISON_OPERATOR }
+    terminal(:boolean_operator) { BOOLEAN_OPERATOR }
     terminal(:lambda_op) { "λ" }
     terminal(:define_op) { ":=" }
 

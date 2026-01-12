@@ -6,6 +6,8 @@ require "stone/ast/string_literal"
 require "stone/ast/reference"
 require "stone/ast/type_reference"
 require "stone/ast/type_of_expression"
+require "stone/ast/type_annotation"
+require "stone/ast/type_declaration"
 require "stone/ast/function_call"
 require "stone/ast/property_access"
 require "stone/ast/program_unit"
@@ -201,6 +203,15 @@ module Stone
       Stone::AST::Block.new(body_statements)
     end
 
+    transform(:type_declaration) do |node|
+      identifier = extract_field_name(node)
+      type_name = extract_type_name(node)
+      location = extract_location(node)
+      type_annotation = Stone::AST::TypeAnnotation.new(type_name)
+
+      Stone::AST::TypeDeclaration.new(identifier, type_annotation, location:)
+    end
+
     transform(:record_definition) do |node|
       type_declarations = node.children.select { |c| c.respond_to?(:name) && c.name == :type_declaration }
 
@@ -292,6 +303,16 @@ module Stone
       elsif node.respond_to?(:children)
         node.children.each { |child| collect_statements(child, statements) }
       end
+    end
+
+    private def extract_location(node)
+      # Find the first Match child to get the start location
+      first_match = node.children.find { |c| c.is_a?(Grammy::Match) }
+      return nil unless first_match
+      return nil unless first_match.respond_to?(:start_location)
+
+      loc = first_match.start_location
+      {line: loc.line, column: loc.column}
     end
 
     private def extract_field_info(type_decl)

@@ -1,12 +1,14 @@
 require "llvm/core"
 require "stone/libc"
 require "stone/scope"
+require "stone/ast/two_phase_processing"
 
 
 module Stone
   class AST
     class ProgramUnit < Stone::AST
       class TopFunction
+        include TwoPhaseProcessing
 
         def initialize(children)
           @children = children
@@ -45,7 +47,16 @@ module Stone
         end
 
         private def compile_children(builder, mod, scope)
-          @children&.compact&.select { |child| child.respond_to?(:to_llir) }&.map { |child| child.to_llir(builder, mod, scope) }
+          register_type_declarations(scope)
+          compile_statements(builder, mod, scope)
+        end
+
+        private def compile_statements(builder, mod, scope)
+          other_statements.select { |child| child.respond_to?(:to_llir) }.map { |child| child.to_llir(builder, mod, scope) }
+        end
+
+        private def all_statements
+          @all_statements ||= Array(@children).compact
         end
 
         private def find_string_constant_value(name)

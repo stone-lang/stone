@@ -1,10 +1,12 @@
 require "stone/ast"
+require "stone/ast/two_phase_processing"
 require "stone/types"
 
 
 module Stone
   class AST
     class Block < Stone::AST::Expression
+      include TwoPhaseProcessing
 
       attr_reader :statements
 
@@ -67,9 +69,18 @@ module Stone
       # Evaluate all statements in block and return value of last statement.
       def evaluate_body_and_return(builder, mod, scope)
         child_scope = scope.child
-        results = Array(statements).compact.map { |stmt| stmt.to_llir(builder, mod, child_scope) }
-        last_result = results.compact.last || LLVM::Int64.from_i(0)
+        register_type_declarations(child_scope)
+        last_result = compile_statements(builder, mod, child_scope)
         builder.ret(last_result)
+      end
+
+      private def compile_statements(builder, mod, scope)
+        results = other_statements.map { |stmt| stmt.to_llir(builder, mod, scope) }
+        results.compact.last || LLVM::Int64.from_i(0)
+      end
+
+      private def all_statements
+        @all_statements ||= Array(statements).compact
       end
 
     end

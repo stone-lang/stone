@@ -60,4 +60,10 @@ module Stone
     ast.eval
   end
 
+  def self.eval_with_scope(input)
+    Stone::Scope.reset_top_level!
+    result = self.eval(input)
+    [result, Stone::Scope.top_level]
+  end
+
 end

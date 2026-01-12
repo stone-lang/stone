@@ -21,7 +21,7 @@ module Stone
         return handle_record_definition(mod, llvm_value) if value_expression.is_a?(Stone::AST::RecordDefinition)
         return register_function_alias(mod, llvm_value, scope) if llvm_value.is_a?(LLVM::Function)
 
-        handle_value_expression(mod)
+        handle_value_expression(mod, scope)
         create_global(mod, builder, llvm_value, scope)
       end
 
@@ -53,9 +53,16 @@ module Stone
         nil
       end
 
-      private def handle_value_expression(mod)
-        mod.register_string_constant(identifier, value_expression) if value_expression.is_a?(Stone::AST::StringLiteral)
-        register_record_instance(mod) if record_instantiation_or_record_constructor_call?(mod)
+      # Register type information for expressions whose types cannot be inferred from LLVM types.
+      # - Strings: LLVM value is ptr-as-i64, need explicit String type tracking
+      # - Records: User-defined types, need explicit type name tracking
+      # - Integers/Booleans: Types inferred from LLVM types (i64, i1), no special handling needed
+      private def handle_value_expression(mod, scope)
+        if value_expression.is_a?(Stone::AST::StringLiteral)
+          mod.register_string_constant(identifier, value_expression)
+          scope.declare_type(identifier, type_annotation: "String")
+        end
+        register_record_instance(mod, scope)
       end
 
       # Register a record type definition
@@ -90,33 +97,23 @@ module Stone
           value_expression.is_a?(Stone::AST::StringLiteral)
       end
 
-      private def record_instantiation_or_record_constructor_call?(mod)
-        return true if record_instantiation?
+      private def register_record_instance(mod, scope)
+        type_name = record_type_name(mod)
+        return unless type_name
 
-        # Check if this is a FunctionCall to a record constructor
-        return mod.record_type?(value_expression.function_name) if value_expression.is_a?(Stone::AST::FunctionCall)
-
-        false
+        mod.register_record_instance(identifier, type_name)
+        scope.declare_type(identifier, type_annotation: type_name)
       end
 
-      private def register_record_instance(mod)
-        # Find the record type from the expression (it was already evaluated in to_llir)
-        record_type_name = find_record_type_name(mod)
-        mod.register_record_instance(identifier, record_type_name) if record_type_name
-      end
-
-      private def record_instantiation?
-        value_expression.is_a?(Stone::AST::RecordInstantiation)
-      end
-
-      private def find_record_type_name(mod)
-        # If value_expression is a RecordInstantiation, get its type
+      private def record_type_name(mod)
         return value_expression.record_type_name if value_expression.is_a?(Stone::AST::RecordInstantiation)
-
-        # If it's a FunctionCall to a record constructor, get the function name
-        return value_expression.function_name if value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(value_expression.function_name)
+        return value_expression.function_name if record_constructor_call?(mod)
 
         nil
+      end
+
+      private def record_constructor_call?(mod)
+        value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(value_expression.function_name)
       end
 
     end

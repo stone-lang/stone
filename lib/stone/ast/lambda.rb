@@ -77,9 +77,22 @@ module Stone
         func.basic_blocks.append("entry").build do |lambda_builder|
           args = argument_storage(func, lambda_builder)
 
+          # Create child scope with lambda parameters for type resolution
+          lambda_scope = scope.child
+          bind_parameters_in_scope(lambda_scope)
+
           with_parameter_context(mod, args) do
-            evaluate_body_and_return(lambda_builder, mod, scope)
+            evaluate_body_and_return(lambda_builder, mod, lambda_scope)
           end
+        end
+      end
+
+      # Bind lambda parameters in scope so they can be resolved as types in annotations.
+      # The value :type_parameter is a placeholder - only the presence in scope matters
+      # for type resolution. Runtime access uses lambda_param_storage instead.
+      private def bind_parameters_in_scope(scope)
+        @parameters.each do |param|
+          scope.define(param, value: :type_parameter)
         end
       end
 

@@ -50,6 +50,22 @@ module Stone
       decl&.dig(:location)
     end
 
+    # Resolve a type name to verify it exists in scope.
+    # Returns the type name if found, nil otherwise.
+    # Checks: built-in types, type declarations, definitions (constants).
+    # Note: lookup_type_declaration and lookup already traverse parent chain.
+    def lookup_type(name)
+      return name if builtin_type?(name)
+      return name if lookup_type_declaration(name)
+      return name if lookup(name)
+
+      nil
+    end
+
+    private def builtin_type?(name)
+      %w[Int Bool String Type Null].include?(name)
+    end
+
     def depth
       @parent ? @parent.depth + 1 : 0
     end

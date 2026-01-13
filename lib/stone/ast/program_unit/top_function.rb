@@ -17,8 +17,10 @@ module Stone
 
         def generate(mod, scope = Stone::Scope.top_level)
           @mod = mod
+          # Register type declarations first so they're available for record type resolution
+          register_type_declarations(scope)
           # Pre-register types for type checking
-          register_record_types(mod)
+          register_record_types(mod, scope)
           register_function_types
           mod.functions.add("__top__", function_type) do |func|
             func.basic_blocks.append("entry").build do |builder|
@@ -47,7 +49,7 @@ module Stone
         end
 
         private def compile_children(builder, mod, scope)
-          register_type_declarations(scope)
+          # Type declarations already registered in generate()
           compile_statements(builder, mod, scope)
         end
 
@@ -67,27 +69,27 @@ module Stone
           node.is_a?(Stone::AST::ConstantDefinition) && node.value_expression.is_a?(Stone::AST::StringLiteral)
         end
 
-        private def register_record_types(mod)
+        private def register_record_types(mod, scope)
           @children&.each do |child|
             next unless child.is_a?(Stone::AST::ConstantDefinition)
 
-            register_record_type_definition(child, mod)
+            register_record_type_definition(child, mod, scope)
             register_record_instance_if_needed(child, mod)
           end
         end
 
-        private def register_record_type_definition(child, mod)
+        private def register_record_type_definition(child, mod, scope)
           return unless child.value_expression.is_a?(Stone::AST::RecordDefinition)
 
           record_def = child.value_expression
           record_def.assigned_name = child.identifier
           mod.register_record_type(child.identifier, record_def)
-          register_record_type_in_registry(child.identifier, record_def, mod)
+          register_record_type_in_registry(child.identifier, record_def, mod, scope)
         end
 
-        private def register_record_type_in_registry(name, record_def, mod)
+        private def register_record_type_in_registry(name, record_def, mod, scope)
           fields = record_def.fields.map { |f| {name: f[:name], type: f[:type]} }
-          type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type(mod))
+          type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type(mod, scope))
           Stone::Type::Registry.register(type)
         end
 

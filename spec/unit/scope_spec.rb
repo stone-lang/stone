@@ -171,6 +171,49 @@ RSpec.describe Stone::Scope do
     end
   end
 
+  describe "#lookup_type" do
+    it "returns name for built-in types" do
+      scope = described_class.new
+      expect(scope.lookup_type("Int")).to eq("Int")
+      expect(scope.lookup_type("Bool")).to eq("Bool")
+      expect(scope.lookup_type("String")).to eq("String")
+      expect(scope.lookup_type("Type")).to eq("Type")
+      expect(scope.lookup_type("Null")).to eq("Null")
+    end
+
+    it "returns nil for unknown types" do
+      scope = described_class.new
+      expect(scope.lookup_type("Unknown")).to be_nil
+    end
+
+    it "finds types through type declarations" do
+      scope = described_class.new
+      scope.declare_type("MyType", type_annotation: "Int")
+      expect(scope.lookup_type("MyType")).to eq("MyType")
+    end
+
+    it "finds types through definitions" do
+      scope = described_class.new
+      scope.define("T", value: :type_parameter)
+      expect(scope.lookup_type("T")).to eq("T")
+    end
+
+    it "finds types through parent chain" do
+      parent = described_class.new
+      parent.define("T", value: :type_parameter)
+      child = parent.child
+      expect(child.lookup_type("T")).to eq("T")
+    end
+
+    it "inner scope shadows outer scope" do
+      parent = described_class.new
+      parent.define("T", value: :outer)
+      child = parent.child
+      child.define("T", value: :inner)
+      expect(child.lookup_type("T")).to eq("T")
+    end
+  end
+
   describe "top-level scope" do
     before do described_class.reset_top_level! end
     after do described_class.reset_top_level! end

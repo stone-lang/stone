@@ -8,6 +8,7 @@ require "stone/ast/type_reference"
 require "stone/ast/type_of_expression"
 require "stone/ast/type_annotation"
 require "stone/ast/function_type_annotation"
+require "stone/ast/union_type_annotation"
 require "stone/ast/type_declaration"
 require "stone/ast/function_call"
 require "stone/ast/property_access"
@@ -318,13 +319,30 @@ module Stone
 
     private def transform_type_annotation(node)
       return nil unless node
-      return transform_type_function(node.find_child(:type_function)) if node.find_child(:type_function)
 
-      Stone::AST::TypeAnnotation.new(extract_identifier_from(node.find_child(:type_name)))
+      type_union_node = node.find_child(:type_union)
+      type_union_node ? transform_type_union(type_union_node) : transform_type_term(node)
+    end
+
+    private def transform_type_union(node)
+      return nil unless node
+
+      type_terms = node.children.select { |c| c.respond_to?(:name) && c.name == :type_term }
+      wrap_in_union_if_multiple(type_terms.map { |t| transform_type_term(t) })
+    end
+
+    private def transform_type_term(node)
+      return nil unless node
+      return transform_type_function(node.find_child(:type_function)) if node.find_child(:type_function)
+      return transform_type_annotation(node.find_child(:type_annotation)) if node.find_child(:type_annotation)
+
+      type_name_node = node.find_child(:type_name)
+      type_name_node ? Stone::AST::TypeAnnotation.new(extract_identifier_from(type_name_node)) : nil
     end
 
     private def transform_type_function(node)
       return nil unless node
+
       Stone::AST::FunctionTypeAnnotation.new(
         extract_type_params(node.find_child(:type_params)),
         transform_type_return(node.find_child(:type_return))
@@ -333,9 +351,23 @@ module Stone
 
     private def transform_type_return(node)
       return nil unless node
-      return Stone::AST::TypeAnnotation.new(extract_identifier_from(node.find_child(:type_name))) if node.find_child(:type_name)
 
-      transform_type_function(node.find_child(:type_function))
+      type_return_union = node.find_child(:type_return_union)
+      return transform_type_return_union(type_return_union) if type_return_union
+
+      type_annotation = node.find_child(:type_annotation)
+      type_annotation ? transform_type_annotation(type_annotation) : nil
+    end
+
+    private def transform_type_return_union(node)
+      return nil unless node
+
+      type_names = node.children.select { |c| c.respond_to?(:name) && c.name == :type_name }
+      wrap_in_union_if_multiple(type_names.map { |tn| Stone::AST::TypeAnnotation.new(extract_identifier_from(tn)) })
+    end
+
+    private def wrap_in_union_if_multiple(alternatives)
+      alternatives.length == 1 ? alternatives.first : Stone::AST::UnionTypeAnnotation.new(alternatives)
     end
 
     private def extract_type_params(params_node)

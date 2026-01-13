@@ -44,6 +44,36 @@ module Stone
       @param_types.is_a?(Array)
     end
 
+    def union?
+      false
+    end
+
+    def nullable?
+      false
+    end
+
+    def non_null_type
+      self
+    end
+
+    def compatible_with?(other)
+      return true if self == other
+      return other.alternatives.any? { |alt| compatible_with?(alt) } if other.union?
+
+      function? && function_compatible_with?(other)
+    end
+
+    private def function_compatible_with?(other)
+      return false unless other.function?
+      return false unless param_types.length == other.param_types.length
+
+      params_compatible?(other) && return_type.compatible_with?(other.return_type)
+    end
+
+    private def params_compatible?(other)
+      param_types.zip(other.param_types).all? { |a, b| a.compatible_with?(b) }
+    end
+
     def as_String
       name
     end
@@ -78,6 +108,89 @@ module Stone
       return_name = return_type.function? ? "(#{return_type.name})" : return_type.name
       name = "(#{param_names}) -> #{return_name}"
       new(name:, llvm_type: nil, param_types:, return_type:)
+    end
+
+    def self.union(alternatives:)
+      union = Union.new(alternatives:)
+      union.alternatives.length == 1 ? union.alternatives.first : union
+    end
+
+    # Union type - represents a value that can be one of several types
+    class Union < Type
+      attr_reader :alternatives
+
+      def initialize(alternatives:)
+        @alternatives = flatten_and_dedupe(alternatives)
+        fail ::ArgumentError, "Union type requires at least one alternative" if @alternatives.empty?
+
+        super(name: generate_name, llvm_type: nil)
+      end
+
+      def union?
+        true
+      end
+
+      def primitive?
+        false
+      end
+
+      def record?
+        false
+      end
+
+      def function?
+        false
+      end
+
+      def nullable?
+        @alternatives.any? { |t| null_type?(t) }
+      end
+
+      def non_null_type
+        remaining = @alternatives.reject { |t| null_type?(t) }
+        return remaining.first if remaining.length == 1
+
+        Stone::Type.union(alternatives: remaining)
+      end
+
+      def compatible_with?(other)
+        other.union? ? covers_all_alternatives?(other) : includes_compatible_type?(other)
+      end
+
+      private def covers_all_alternatives?(union)
+        union.alternatives.all? { |alt| includes_compatible_type?(alt) }
+      end
+
+      private def includes_compatible_type?(type)
+        @alternatives.any? { |t| t.compatible_with?(type) }
+      end
+
+      def ==(other)
+        return false unless other.is_a?(Union)
+
+        Set.new(@alternatives) == Set.new(other.alternatives)
+      end
+      alias eql? ==
+
+      def hash
+        Set.new(@alternatives).hash
+      end
+
+      private def generate_name
+        names = @alternatives.map(&:name)
+        non_null = names.reject { |n| n == "Null" }.sort
+        null = names.select { |n| n == "Null" }
+        (non_null + null).join(" | ")
+      end
+
+      private def flatten_and_dedupe(types)
+        flattened = types.flat_map { |t| t.union? ? t.alternatives : [t] }
+        flattened.uniq
+      end
+
+      private def null_type?(type)
+        type.name == "Null"
+      end
     end
 
   end

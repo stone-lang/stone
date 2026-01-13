@@ -241,4 +241,264 @@ RSpec.describe Stone::Type do
     end
   end
 
+  describe "#nullable?" do
+    it "returns false for primitive types" do
+      expect(Stone::Type::Int.nullable?).to be false
+      expect(Stone::Type::Bool.nullable?).to be false
+      expect(Stone::Type::String.nullable?).to be false
+    end
+
+    it "returns false for Null type itself" do
+      expect(Stone::Type::Null.nullable?).to be false
+    end
+
+    it "returns false for record types" do
+      record = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
+      expect(record.nullable?).to be false
+    end
+
+    it "returns false for function types" do
+      func = Stone::Type.function(param_types: [Stone::Type::Int], return_type: Stone::Type::Int)
+      expect(func.nullable?).to be false
+    end
+  end
+
+  describe "#non_null_type" do
+    it "returns self for primitive types" do
+      expect(Stone::Type::Int.non_null_type).to eq(Stone::Type::Int)
+      expect(Stone::Type::Bool.non_null_type).to eq(Stone::Type::Bool)
+    end
+
+    it "returns self for Null type" do
+      expect(Stone::Type::Null.non_null_type).to eq(Stone::Type::Null)
+    end
+
+    it "returns self for record types" do
+      record = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
+      expect(record.non_null_type).to eq(record)
+    end
+
+    it "returns self for function types" do
+      func = Stone::Type.function(param_types: [Stone::Type::Int], return_type: Stone::Type::Int)
+      expect(func.non_null_type).to eq(func)
+    end
+  end
+
+  describe "#compatible_with?" do
+    let(:int_type) { Stone::Type::Int }
+    let(:bool_type) { Stone::Type::Bool }
+    let(:string_type) { Stone::Type::String }
+    let(:null_type) { Stone::Type::Null }
+
+    context "with primitive types" do
+      it "returns true for same type" do
+        expect(int_type.compatible_with?(int_type)).to be true
+      end
+
+      it "returns false for different types" do
+        expect(int_type.compatible_with?(bool_type)).to be false
+      end
+
+      it "returns false for Null vs primitive" do
+        expect(null_type.compatible_with?(int_type)).to be false
+      end
+    end
+
+    context "with function types" do
+      it "returns true for identical function types" do
+        int_to_int = Stone::Type.function(param_types: [int_type], return_type: int_type)
+        other = Stone::Type.function(param_types: [int_type], return_type: int_type)
+        expect(int_to_int.compatible_with?(other)).to be true
+      end
+
+      it "returns false for different return types" do
+        int_to_int = Stone::Type.function(param_types: [int_type], return_type: int_type)
+        int_to_bool = Stone::Type.function(param_types: [int_type], return_type: bool_type)
+        expect(int_to_int.compatible_with?(int_to_bool)).to be false
+      end
+
+      it "returns false for different param types" do
+        int_to_int = Stone::Type.function(param_types: [int_type], return_type: int_type)
+        bool_to_int = Stone::Type.function(param_types: [bool_type], return_type: int_type)
+        expect(int_to_int.compatible_with?(bool_to_int)).to be false
+      end
+
+      it "returns false when compared with primitive" do
+        int_to_int = Stone::Type.function(param_types: [int_type], return_type: int_type)
+        expect(int_to_int.compatible_with?(int_type)).to be false
+      end
+    end
+
+    context "with union types" do
+      it "returns true when value type is one of the alternatives" do
+        int_or_string = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(int_or_string.compatible_with?(int_type)).to be true
+        expect(int_or_string.compatible_with?(string_type)).to be true
+      end
+
+      it "returns false when value type is not an alternative" do
+        int_or_string = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(int_or_string.compatible_with?(bool_type)).to be false
+      end
+
+      it "returns true for Null when union includes Null" do
+        int_or_null = Stone::Type.union(alternatives: [int_type, null_type])
+        expect(int_or_null.compatible_with?(null_type)).to be true
+      end
+
+      it "returns false for Null when union does not include Null" do
+        int_or_string = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(int_or_string.compatible_with?(null_type)).to be false
+      end
+
+      it "returns true when both unions have compatible alternatives" do
+        int_or_string = Stone::Type.union(alternatives: [int_type, string_type])
+        other_union = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(int_or_string.compatible_with?(other_union)).to be true
+      end
+
+      it "returns false when unions have incompatible alternatives" do
+        int_or_string = Stone::Type.union(alternatives: [int_type, string_type])
+        bool_or_null = Stone::Type.union(alternatives: [bool_type, null_type])
+        expect(int_or_string.compatible_with?(bool_or_null)).to be false
+      end
+    end
+  end
+
+  describe ".union" do
+    let(:int_type) { Stone::Type::Int }
+    let(:bool_type) { Stone::Type::Bool }
+    let(:string_type) { Stone::Type::String }
+    let(:null_type) { Stone::Type::Null }
+
+    it "creates a union type with alternatives" do
+      union = Stone::Type.union(alternatives: [int_type, string_type])
+      expect(union.alternatives).to contain_exactly(int_type, string_type)
+    end
+
+    it "raises error for empty alternatives" do
+      expect { Stone::Type.union(alternatives: []) }.to raise_error(ArgumentError, /at least one alternative/)
+    end
+
+    it "normalizes single-element union to the element itself" do
+      result = Stone::Type.union(alternatives: [int_type])
+      expect(result).to eq(int_type)
+      expect(result.union?).to be false
+    end
+
+    it "generates name from alternatives (sorted alphabetically)" do
+      union = Stone::Type.union(alternatives: [int_type, string_type])
+      expect(union.name).to eq("Int | String")
+    end
+
+    it "handles three or more alternatives (sorted alphabetically)" do
+      union = Stone::Type.union(alternatives: [int_type, string_type, bool_type])
+      expect(union.name).to eq("Bool | Int | String")
+    end
+
+    it "is not primitive" do
+      union = Stone::Type.union(alternatives: [int_type, string_type])
+      expect(union.primitive?).to be false
+    end
+
+    it "is not a record" do
+      union = Stone::Type.union(alternatives: [int_type, string_type])
+      expect(union.record?).to be false
+    end
+
+    it "is not a function" do
+      union = Stone::Type.union(alternatives: [int_type, string_type])
+      expect(union.function?).to be false
+    end
+
+    it "is a union" do
+      union = Stone::Type.union(alternatives: [int_type, string_type])
+      expect(union.union?).to be true
+    end
+
+    it "primitives are not unions" do
+      expect(int_type.union?).to be false
+    end
+
+    describe "#nullable?" do
+      it "returns true when Null is an alternative" do
+        union = Stone::Type.union(alternatives: [int_type, null_type])
+        expect(union.nullable?).to be true
+      end
+
+      it "returns false when Null is not an alternative" do
+        union = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(union.nullable?).to be false
+      end
+    end
+
+    describe "#non_null_type" do
+      it "returns the single non-null type when union has two alternatives" do
+        union = Stone::Type.union(alternatives: [int_type, null_type])
+        expect(union.non_null_type).to eq(int_type)
+      end
+
+      it "returns a union of remaining types when more than two alternatives" do
+        union = Stone::Type.union(alternatives: [int_type, string_type, null_type])
+        non_null = union.non_null_type
+        expect(non_null).to be_a(Stone::Type)
+        expect(non_null.union?).to be true
+        expect(non_null.alternatives).to contain_exactly(int_type, string_type)
+      end
+    end
+
+    describe "flattening" do
+      it "flattens nested unions" do
+        inner = Stone::Type.union(alternatives: [int_type, string_type])
+        outer = Stone::Type.union(alternatives: [inner, bool_type])
+        expect(outer.alternatives).to contain_exactly(int_type, string_type, bool_type)
+      end
+    end
+
+    describe "deduplication" do
+      it "removes duplicate types (normalizing single-element to the type itself)" do
+        result = Stone::Type.union(alternatives: [int_type, int_type])
+        expect(result).to eq(int_type)
+        expect(result.union?).to be false
+      end
+
+      it "removes duplicates from multiple occurrences" do
+        union = Stone::Type.union(alternatives: [int_type, string_type, int_type])
+        expect(union.alternatives).to contain_exactly(int_type, string_type)
+      end
+    end
+
+    describe "#==" do
+      it "returns true for unions with same alternatives" do
+        union1 = Stone::Type.union(alternatives: [int_type, string_type])
+        union2 = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(union1).to eq(union2)
+      end
+
+      it "returns true regardless of alternative order" do
+        union1 = Stone::Type.union(alternatives: [int_type, string_type])
+        union2 = Stone::Type.union(alternatives: [string_type, int_type])
+        expect(union1).to eq(union2)
+      end
+
+      it "returns false for unions with different alternatives" do
+        union1 = Stone::Type.union(alternatives: [int_type, string_type])
+        union2 = Stone::Type.union(alternatives: [int_type, bool_type])
+        expect(union1).not_to eq(union2)
+      end
+
+      it "returns false when compared with non-union" do
+        union = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(union).not_to eq(int_type)
+      end
+    end
+
+    describe "#to_s" do
+      it "returns the union name" do
+        union = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(union.to_s).to eq("Int | String")
+      end
+    end
+  end
+
 end

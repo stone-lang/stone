@@ -36,6 +36,8 @@ Naming/AsciiIdentifiers:
 # Some of our classes are going to be long.
 Metrics/ClassLength:
   Max: 250
+  Exclude:
+    - lib/stone/transform.rb
 
 # Sometimes we need to pass a block down recursively, so allow expressing that.
 Performance/RedundantBlockCall:

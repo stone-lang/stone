@@ -32,10 +32,13 @@ module Stone
     # Both can chain: 1 < 2 < 3 desugars to <(1, 2, 3)
     rule(:expression) { type_declaration | comparison_operation | boolean_operation }
     rule(:type_declaration) { identifier + ws! + str("::") + ws! + type_annotation }
-    rule(:type_annotation) { type_function | type_name }
+    rule(:type_annotation) { type_union }
+    rule(:type_union) { type_term + (ws? + str("|") + ws? + type_term)[0..] }
+    rule(:type_term) { type_function | parens(type_annotation) | type_name }
     rule(:type_function) { type_params + ws? + str("->") + ws? + type_return }
     rule(:type_params) { parens(comma_separated(type_annotation, allow_trailing: false)) }
-    rule(:type_return) { type_name | parens(type_function) }
+    rule(:type_return) { type_return_union | parens(type_annotation) }
+    rule(:type_return_union) { type_name + (ws? + str("|") + ws? + type_name)[0..] }
     rule(:type_name) { identifier }
     rule(:comparison_operation) { boolean_operation + (ws! + comparison_operator + ws! + boolean_operation)[1..] }
     rule(:boolean_operation) { postfix_expression + (ws! + boolean_operator + ws! + postfix_expression)[0..] }

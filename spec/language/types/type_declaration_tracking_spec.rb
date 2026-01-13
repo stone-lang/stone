@@ -47,7 +47,8 @@ RSpec.describe "Type Declaration Tracking" do
       STONE
       result, scope = Stone.eval_with_scope(code)
       expect(result).to eq(42)
-      expect(scope.declared_type("answer")).to eq("Int")
+      expect(scope.declared_type("answer")).to be_a(Stone::Type)
+      expect(scope.declared_type("answer").to_s).to eq("Int")
     end
 
     it "handles multiple type declarations" do
@@ -59,8 +60,8 @@ RSpec.describe "Type Declaration Tracking" do
         x
       STONE
       _result, scope = Stone.eval_with_scope(code)
-      expect(scope.declared_type("x")).to eq("Int")
-      expect(scope.declared_type("y")).to eq("Bool")
+      expect(scope.declared_type("x").to_s).to eq("Int")
+      expect(scope.declared_type("y").to_s).to eq("Bool")
     end
 
     it "retains source location in scope" do
@@ -86,7 +87,7 @@ RSpec.describe "Type Declaration Tracking" do
       result, scope = Stone.eval_with_scope(code)
       expect(result).to eq(42)
       # Type declaration should be available even though it appears after definition
-      expect(scope.declared_type("x")).to eq("Int")
+      expect(scope.declared_type("x").to_s).to eq("Int")
     end
   end
 
@@ -98,7 +99,7 @@ RSpec.describe "Type Declaration Tracking" do
         Point
       STONE
       _result, scope = Stone.eval_with_scope(code)
-      expect(scope.declared_type("Point")).to eq("Type")
+      expect(scope.declared_type("Point").to_s).to eq("Type")
     end
 
     it "does not register record field declarations in scope" do

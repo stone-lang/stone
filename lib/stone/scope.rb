@@ -16,8 +16,8 @@ module Stone
       @definitions[name] = {value:, location:}
     end
 
-    def declare_type(name, type_annotation:, location: nil)
-      @type_declarations[name] = {type_annotation:, location:}
+    def declare_type(name, type:, location: nil)
+      @type_declarations[name] = {type:, location:}
     end
 
     def lookup(name)
@@ -42,7 +42,7 @@ module Stone
 
     def declared_type(name)
       decl = lookup_type_declaration(name)
-      decl&.dig(:type_annotation)
+      decl&.dig(:type)
     end
 
     def type_declaration_location(name)

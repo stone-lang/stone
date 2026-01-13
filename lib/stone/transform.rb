@@ -7,6 +7,7 @@ require "stone/ast/reference"
 require "stone/ast/type_reference"
 require "stone/ast/type_of_expression"
 require "stone/ast/type_annotation"
+require "stone/ast/function_type_annotation"
 require "stone/ast/type_declaration"
 require "stone/ast/function_call"
 require "stone/ast/property_access"
@@ -205,15 +206,15 @@ module Stone
 
     transform(:type_declaration) do |node|
       identifier = extract_field_name(node)
-      type_name = extract_type_name(node)
       location = extract_location(node)
-      type_annotation = Stone::AST::TypeAnnotation.new(type_name)
+      type_annotation_node = node.find_child(:type_annotation)
+      type_annotation = transform_type_annotation(type_annotation_node)
 
       Stone::AST::TypeDeclaration.new(identifier, type_annotation, location:)
     end
 
     transform(:record_definition) do |node|
-      type_declarations = node.children.select { |c| c.respond_to?(:name) && c.name == :type_declaration }
+      type_declarations = node.children.select { |child| child.respond_to?(:name) && child.name == :type_declaration }
 
       fields = type_declarations.map { |type_decl|
         extract_field_info(type_decl)
@@ -307,7 +308,7 @@ module Stone
 
     private def extract_location(node)
       # Find the first Match child to get the start location
-      first_match = node.children.find { |c| c.is_a?(Grammy::Match) }
+      first_match = node.children.find { |child| child.is_a?(Grammy::Match) }
       return nil unless first_match
       return nil unless first_match.respond_to?(:start_location)
 
@@ -315,9 +316,54 @@ module Stone
       {line: loc.line, column: loc.column}
     end
 
+    private def transform_type_annotation(node)
+      return nil unless node
+      return transform_type_function(node.find_child(:type_function)) if node.find_child(:type_function)
+
+      Stone::AST::TypeAnnotation.new(extract_identifier_from(node.find_child(:type_name)))
+    end
+
+    private def transform_type_function(node)
+      return nil unless node
+      Stone::AST::FunctionTypeAnnotation.new(
+        extract_type_params(node.find_child(:type_params)),
+        transform_type_return(node.find_child(:type_return))
+      )
+    end
+
+    private def transform_type_return(node)
+      return nil unless node
+      return Stone::AST::TypeAnnotation.new(extract_identifier_from(node.find_child(:type_name))) if node.find_child(:type_name)
+
+      transform_type_function(node.find_child(:type_function))
+    end
+
+    private def extract_type_params(params_node)
+      return [] unless params_node
+
+      type_annotation_nodes = params_node.children.select { |child|
+        child.respond_to?(:name) && child.name == :type_annotation
+      }
+      type_annotation_nodes.map { |node| transform_type_annotation(node) }
+    end
+
+    private def extract_identifier_from(node)
+      return nil unless node
+
+      # Find the identifier Match within the node
+      if node.is_a?(Grammy::Match)
+        node.text
+      else
+        match = node.children.find { |child| child.is_a?(Grammy::Match) }
+        match&.text
+      end
+    end
+
     private def extract_field_info(type_decl)
       # type_declaration: identifier + ws! + str("::") + ws! + type_annotation
-      {name: extract_field_name(type_decl), type: extract_type_name(type_decl)}
+      type_annotation_node = type_decl.find_child(:type_annotation)
+      type_annotation = transform_type_annotation(type_annotation_node)
+      {name: extract_field_name(type_decl), type: type_annotation&.to_s}
     end
 
     private def extract_field_name(type_decl)
@@ -326,16 +372,6 @@ module Stone
         return child.text if child.is_a?(Grammy::Match) && child.text && !child.text.strip.empty? && child.text != "::"
       end
       nil
-    end
-
-    private def extract_type_name(type_decl)
-      # Find the type_annotation node - it contains the type as a Match
-      type_annotation_node = type_decl.find_child(:type_annotation)
-      return nil unless type_annotation_node
-
-      # The type_annotation has a Match child with the type name
-      type_match = type_annotation_node.children.find { |c| c.is_a?(Grammy::Match) }
-      type_match&.text
     end
 
   end

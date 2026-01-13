@@ -1,4 +1,5 @@
 require "stone/ast/type_declaration"
+require "stone/type_registry"
 
 module Stone
   class AST
@@ -10,8 +11,10 @@ module Stone
     module TwoPhaseProcessing
 
       private def register_type_declarations(scope)
+        registry = Stone::TypeRegistry.instance
         type_declarations.each do |td|
-          scope.declare_type(td.identifier, type_annotation: td.type_annotation.to_s, location: td.location)
+          stone_type = td.type_annotation.to_type(registry)
+          scope.declare_type(td.identifier, type: stone_type, location: td.location)
         end
       end
 

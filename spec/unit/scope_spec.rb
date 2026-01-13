@@ -1,4 +1,5 @@
 require "stone/scope"
+require "stone/types"
 
 
 RSpec.describe Stone::Scope do
@@ -129,29 +130,29 @@ RSpec.describe Stone::Scope do
     it "declares and looks up types" do
       scope = described_class.new
       location = {line: 1, column: 1}
-      scope.declare_type("x", type_annotation: "Int", location: location)
+      scope.declare_type("x", type: Stone::Type::Int, location: location)
 
-      expect(scope.declared_type("x")).to eq("Int")
+      expect(scope.declared_type("x")).to eq(Stone::Type::Int)
       expect(scope.type_declaration_location("x")).to eq(location)
     end
 
     it "looks up type declarations through parent chain" do
       parent = described_class.new
-      parent.declare_type("x", type_annotation: "Int")
+      parent.declare_type("x", type: Stone::Type::Int)
 
       child = parent.child
-      expect(child.declared_type("x")).to eq("Int")
+      expect(child.declared_type("x")).to eq(Stone::Type::Int)
     end
 
     it "shadows parent type declarations" do
       parent = described_class.new
-      parent.declare_type("x", type_annotation: "Int")
+      parent.declare_type("x", type: Stone::Type::Int)
 
       child = parent.child
-      child.declare_type("x", type_annotation: "String")
+      child.declare_type("x", type: Stone::Type::String)
 
-      expect(child.declared_type("x")).to eq("String")
-      expect(parent.declared_type("x")).to eq("Int")
+      expect(child.declared_type("x")).to eq(Stone::Type::String)
+      expect(parent.declared_type("x")).to eq(Stone::Type::Int)
     end
 
     it "returns nil for undeclared types" do
@@ -162,7 +163,7 @@ RSpec.describe Stone::Scope do
 
     it "checks if type is declared locally" do
       parent = described_class.new
-      parent.declare_type("x", type_annotation: "Int")
+      parent.declare_type("x", type: Stone::Type::Int)
 
       child = parent.child
 
@@ -188,7 +189,7 @@ RSpec.describe Stone::Scope do
 
     it "finds types through type declarations" do
       scope = described_class.new
-      scope.declare_type("MyType", type_annotation: "Int")
+      scope.declare_type("MyType", type: Stone::Type::Int)
       expect(scope.lookup_type("MyType")).to eq("MyType")
     end
 

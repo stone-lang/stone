@@ -82,6 +82,12 @@ RSpec.describe Stone::Type do
       expect(type.name).to eq("() -> Int")
     end
 
+    it "wraps function return type in parentheses" do
+      inner = described_class.function(param_types: [int_type], return_type: int_type)
+      outer = described_class.function(param_types: [int_type], return_type: inner)
+      expect(outer.name).to eq("(Int) -> ((Int) -> Int)")
+    end
+
     it "is not primitive" do
       type = described_class.function(param_types: [int_type], return_type: int_type)
       expect(type.primitive?).to be false

@@ -4,8 +4,8 @@ require "llvm/core"
 # Extensions to LLVM::Module to support Stone-specific features
 #
 # NOTE: Many of these registries are now duplicated in Stone::Scope for lexical scoping:
-# - string_constants: types also stored via scope.declare_type(name, type_annotation: "String")
-# - record_instances: types also stored via scope.declare_type(name, type_annotation: record_type_name)
+# - string_constants: types also stored via scope.declare_type(name, type: Stone::Type::String)
+# - record_instances: types also stored via scope.declare_type(name, type: record_type)
 # - function_aliases: values also stored via scope.define(name, value: function)
 #
 # The module registries remain necessary for:

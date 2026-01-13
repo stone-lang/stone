@@ -75,7 +75,8 @@ module Stone
 
     def self.function(param_types:, return_type:)
       param_names = param_types.map(&:name).join(", ")
-      name = "(#{param_names}) -> #{return_type.name}"
+      return_name = return_type.function? ? "(#{return_type.name})" : return_type.name
+      name = "(#{param_names}) -> #{return_name}"
       new(name:, llvm_type: nil, param_types:, return_type:)
     end
 

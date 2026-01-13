@@ -16,6 +16,11 @@ module Stone
         type_name
       end
 
+      # Convert to Stone::Type for type checking
+      def to_type(registry)
+        registry.lookup(type_name)
+      end
+
     end
   end
 end

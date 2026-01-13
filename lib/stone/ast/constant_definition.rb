@@ -60,7 +60,7 @@ module Stone
       private def handle_value_expression(mod, scope)
         if value_expression.is_a?(Stone::AST::StringLiteral)
           mod.register_string_constant(identifier, value_expression)
-          scope.declare_type(identifier, type_annotation: "String")
+          scope.declare_type(identifier, type: Stone::Type::String)
         end
         register_record_instance(mod, scope)
       end
@@ -102,7 +102,8 @@ module Stone
         return unless type_name
 
         mod.register_record_instance(identifier, type_name)
-        scope.declare_type(identifier, type_annotation: type_name)
+        record_type = Stone::TypeRegistry.instance.lookup(type_name)
+        scope.declare_type(identifier, type: record_type) if record_type
       end
 
       private def record_type_name(mod)

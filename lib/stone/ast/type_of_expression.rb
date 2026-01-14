@@ -1,5 +1,6 @@
 require "stone/ast/expression"
 require "stone/type_context"
+require "stone/rtti"
 
 
 module Stone
@@ -14,35 +15,19 @@ module Stone
       end
 
       def type(_context = nil)
-        # Type.of() returns the Type metatype
         Stone::Type::Type
       end
 
       def to_llir(_builder, mod, _scope = Stone::Scope.top_level)
-        # At compile time, determine the type of the inner expression
-        # For now, create a TypeContext from the module
         context = Stone::TypeContext.new(mod)
         result_type = @inner_expression.type(context)
 
-        # Return a reference to the type object
-        # For now, we'll represent types as integers (a simple encoding)
-        # This is a placeholder until we have proper type objects at runtime
-        type_id = type_to_id(result_type)
-        LLVM::Int64.from_i(type_id)
+        # Return pointer to the type constant
+        Stone::RTTI.type_constant_for(mod, result_type)
       end
 
       def to_s
         "Type.of(#{@inner_expression})"
-      end
-
-      private def type_to_id(type)
-        case type
-        when Stone::Type::Int then 1
-        when Stone::Type::Bool then 2
-        when Stone::Type::String then 3
-        when Stone::Type::Type then 4
-        else 0 # Unknown
-        end
       end
 
     end

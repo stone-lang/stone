@@ -1,5 +1,6 @@
 require "llvm/core"
 require "stone/types"
+require "stone/rtti"
 
 
 module Stone
@@ -11,9 +12,14 @@ module Stone
     end
 
     def setup
+      setup_rtti
       define_predefined_constants
       define_builtin_functions
       register_builtin_function_types
+    end
+
+    private def setup_rtti
+      Stone::RTTI.new(@mod).setup
     end
 
     private def define_predefined_constants

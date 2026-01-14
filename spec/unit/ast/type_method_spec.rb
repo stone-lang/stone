@@ -68,9 +68,9 @@ RSpec.describe "AST node type() method" do
       expect(node.type(context)).to eq(registry.int)
     end
 
-    it "raises TypeError for unknown variable" do
+    it "returns nil for unknown variable (allows fallback to module lookup)" do
       node = Stone::AST::Reference.new("unknown")
-      expect { node.type(context) }.to raise_error(Stone::TypeError, /Unknown identifier: unknown/)
+      expect(node.type(context)).to be_nil
     end
 
     it "returns nil when no context is provided" do

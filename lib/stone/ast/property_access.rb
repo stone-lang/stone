@@ -1,10 +1,14 @@
 require "stone/ast/expression"
 require "stone/error/property_error"
+require "stone/rtti"
 
 
 module Stone
   class AST
     class PropertyAccess < Stone::AST::Expression
+
+      TYPE_PROPERTIES = %w[as_String record? primitive? kind size fields].freeze
+      FIELD_LIST_PROPERTIES = %w[first name type rest].freeze
 
       attr_reader :receiver, :property
 
@@ -32,16 +36,147 @@ module Stone
         receiver_type = resolve_node_type(@receiver, mod)
 
         # Try different property access strategies
-        handle_type_as_string(builder, mod, receiver_type) ||
+        handle_type_property(builder, mod, scope, receiver_type) ||
+          handle_field_list_property(builder, mod, scope, receiver_type) ||
           handle_byte_count(mod) ||
           handle_computed_property(builder, mod, scope, receiver_type) ||
           fail_property_not_found(receiver_type)
       end
 
-      private def handle_type_as_string(builder, mod, receiver_type)
-        return nil unless @property == "as_String" && receiver_type == Stone::Type::Type
+      private def handle_type_property(builder, mod, scope, receiver_type)
+        return nil unless TYPE_PROPERTIES.include?(@property)
+        return nil unless type_receiver?(receiver_type)
 
-        generate_type_name_string(builder, mod)
+        type_ptr = @receiver.to_llir(builder, mod, scope)
+        generate_type_property(builder, mod, type_ptr)
+      end
+
+      private def type_receiver?(receiver_type)
+        # Direct type match
+        return true if receiver_type == Stone::Type::Type
+
+        # Check if receiver is a property access that returns Type
+        # (handles cases like fields.first.type)
+        if @receiver.is_a?(PropertyAccess)
+          receiver_property = @receiver.property
+          return true if receiver_property == "type"
+        end
+
+        false
+      end
+
+      TYPE_PROPERTY_GENERATORS = {
+        "as_String" => :generate_type_as_string, "size" => :generate_type_size,
+        "kind" => :generate_type_kind, "record?" => :generate_type_record_check,
+        "primitive?" => :generate_type_primitive_check, "fields" => :generate_type_fields
+      }.freeze
+
+      private def generate_type_property(builder, _mod, type_ptr)
+        method_name = TYPE_PROPERTY_GENERATORS[@property]
+        __send__(method_name, builder, Stone::RTTI.type_struct_type, type_ptr)
+      end
+
+      private def generate_type_as_string(builder, type_struct, type_ptr)
+        # Load the name pointer from the type struct (field 0)
+        name_ptr_ptr = builder.struct_gep2(type_struct, type_ptr, 0, "name_ptr_ptr")
+        name_ptr = builder.load2(LLVM::Type.pointer, name_ptr_ptr, "name_ptr")
+        # Convert pointer to i64 for Stone's string representation
+        builder.ptr2int(name_ptr, LLVM::Int64.type, "name_as_i64")
+      end
+
+      private def generate_type_size(builder, type_struct, type_ptr)
+        # Load the size field (field 1)
+        size_ptr = builder.struct_gep2(type_struct, type_ptr, 1, "size_ptr")
+        builder.load2(LLVM::Int64.type, size_ptr, "type_size")
+      end
+
+      private def generate_type_kind(builder, type_struct, type_ptr)
+        # Load the kind field (field 2) and extend to i64
+        kind_ptr = builder.struct_gep2(type_struct, type_ptr, 2, "kind_ptr")
+        kind_i8 = builder.load2(LLVM::Int8.type, kind_ptr, "kind_i8")
+        builder.zext(kind_i8, LLVM::Int64.type, "type_kind")
+      end
+
+      private def generate_type_record_check(builder, type_struct, type_ptr)
+        # Check if kind == 1 (record)
+        kind_ptr = builder.struct_gep2(type_struct, type_ptr, 2, "kind_ptr")
+        kind_i8 = builder.load2(LLVM::Int8.type, kind_ptr, "kind_i8")
+        builder.icmp(:eq, kind_i8, LLVM::Int8.from_i(Stone::RTTI::KIND_RECORD), "is_record")
+      end
+
+      private def generate_type_primitive_check(builder, type_struct, type_ptr)
+        # Check if kind == 0 (primitive)
+        kind_ptr = builder.struct_gep2(type_struct, type_ptr, 2, "kind_ptr")
+        kind_i8 = builder.load2(LLVM::Int8.type, kind_ptr, "kind_i8")
+        builder.icmp(:eq, kind_i8, LLVM::Int8.from_i(Stone::RTTI::KIND_PRIMITIVE), "is_primitive")
+      end
+
+      private def generate_type_fields(builder, type_struct, type_ptr)
+        fields_ptr_ptr = builder.struct_gep2(type_struct, type_ptr, 3, "fields_ptr_ptr")
+        builder.load2(LLVM::Type.pointer, fields_ptr_ptr, "fields_ptr")
+      end
+
+      private def handle_field_list_property(builder, mod, scope, receiver_type)
+        # Check if receiver type is FieldList or if we can infer it from expression structure
+        return nil unless FIELD_LIST_PROPERTIES.include?(@property)
+        return nil unless field_list_receiver?(receiver_type)
+
+        field_list_ptr = @receiver.to_llir(builder, mod, scope)
+        generate_field_list_property(builder, field_list_ptr)
+      end
+
+      private def field_list_receiver?(receiver_type)
+        # Direct type match
+        return true if receiver_type == Stone::Type::FieldList
+
+        # Check if receiver is a property access that returns FieldList
+        # (handles cases like type.fields, fields.first, fields.rest)
+        if @receiver.is_a?(PropertyAccess)
+          receiver_property = @receiver.property
+          return true if receiver_property == "fields" || FIELD_LIST_PROPERTIES.include?(receiver_property)
+        end
+
+        # For Reference receivers, we can't easily determine type at compile time
+        # Check if any ancestor in property chain indicates FieldList context
+        return receiver_references_field_list? if @receiver.is_a?(Reference)
+
+        false
+      end
+
+      # Heuristic: if the variable name suggests it's a FieldList value
+      # This is a workaround for incomplete type inference
+      private def receiver_references_field_list?
+        # Common variable names for field lists
+        identifier = @receiver.identifier
+        identifier.include?("field") || identifier.include?("Field")
+      end
+
+      FIELD_LIST_PROPERTY_GENERATORS = {
+        "name" => :generate_field_list_name, "type" => :generate_field_list_type,
+        "rest" => :generate_field_list_rest
+      }.freeze
+
+      private def generate_field_list_property(builder, field_list_ptr)
+        return field_list_ptr if @property == "first" # .first returns the FieldList itself
+
+        method_name = FIELD_LIST_PROPERTY_GENERATORS[@property]
+        __send__(method_name, builder, Stone::RTTI.field_list_struct_type, field_list_ptr)
+      end
+
+      private def generate_field_list_name(builder, field_list_struct, field_list_ptr)
+        name_ptr_ptr = builder.struct_gep2(field_list_struct, field_list_ptr, 0, "field_name_ptr_ptr")
+        name_ptr = builder.load2(LLVM::Type.pointer, name_ptr_ptr, "field_name_ptr")
+        builder.ptr2int(name_ptr, LLVM::Int64.type, "field_name_as_i64")
+      end
+
+      private def generate_field_list_type(builder, field_list_struct, field_list_ptr)
+        type_ptr_ptr = builder.struct_gep2(field_list_struct, field_list_ptr, 1, "field_type_ptr_ptr")
+        builder.load2(LLVM::Type.pointer, type_ptr_ptr, "field_type_ptr")
+      end
+
+      private def generate_field_list_rest(builder, field_list_struct, field_list_ptr)
+        rest_ptr_ptr = builder.struct_gep2(field_list_struct, field_list_ptr, 2, "field_rest_ptr_ptr")
+        builder.load2(LLVM::Type.pointer, rest_ptr_ptr, "field_rest_ptr")
       end
 
       private def handle_byte_count(mod)
@@ -68,33 +203,6 @@ module Stone
       private def fail_property_not_found(receiver_type)
         type_name = receiver_type&.name || "Unknown"
         fail Stone::PropertyError, "Property '#{@property}' not found for type '#{type_name}'"
-      end
-
-      private def generate_type_name_string(builder, mod)
-        # Determine the actual type name from the receiver
-        type_name = determine_type_name_from_receiver(mod)
-
-        # Create a string literal and get its pointer
-        string_literal = Stone::AST::StringLiteral.new(type_name)
-        string_literal.to_llir(builder, mod)
-      end
-
-      private def determine_type_name_from_receiver(mod)
-        case @receiver
-        when TypeReference
-          "Type"
-        when TypeOfExpression
-          # Determine the type of the inner expression
-          determine_type_of_expression_result(@receiver, mod)
-        else
-          "Unknown"
-        end
-      end
-
-      private def determine_type_of_expression_result(type_of_expr, mod)
-        inner = type_of_expr.inner_expression
-        inner_type = resolve_node_type(inner, mod)
-        inner_type&.name || "Unknown"
       end
 
       private def get_string_literal(mod)

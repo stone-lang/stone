@@ -125,7 +125,19 @@ module Stone
       private def string_property_access?(node)
         return false unless node.is_a?(Stone::AST::PropertyAccess)
         return true if node.property == "as_String" # as_String always returns a string
+        return true if field_list_name_property?(node) # FieldList.name returns a string
         node.returns_string_field?(module_ref)
+      end
+
+      private def field_list_name_property?(node)
+        return false unless node.property == "name"
+
+        # Check if receiver is likely a FieldList (from .fields, .first, or .rest)
+        receiver = node.receiver
+        return true if receiver.is_a?(Stone::AST::PropertyAccess) &&
+                       %w[fields first rest].include?(receiver.property)
+
+        false
       end
 
       private def resolve_node_type(node)

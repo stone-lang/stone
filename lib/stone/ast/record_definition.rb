@@ -1,5 +1,6 @@
 require "stone/ast/expression"
 require "stone/error/type_error"
+require "stone/rtti"
 
 
 module Stone
@@ -25,8 +26,34 @@ module Stone
       def to_llir(_builder, mod, scope = Stone::Scope.top_level)
         # Validate all field types resolve in current scope
         validate_field_types(scope, mod)
+        # Generate the type constant for this record
+        generate_type_constant(mod, scope) if @assigned_name
         # Generate and return a constructor function that creates instances of this record
         generate_constructor_function(mod, scope)
+      end
+
+      private def generate_type_constant(mod, scope)
+        struct_type = llvm_type(mod, scope)
+        size_bytes = calculate_struct_size(struct_type)
+        Stone::RTTI.generate_record_type_constant(mod, @assigned_name, size_bytes, @fields)
+      end
+
+      private def calculate_struct_size(struct_type)
+        # Calculate size based on field types (simplified - assumes packed alignment)
+        total = 0
+        struct_type.element_types.each do |elem_type|
+          total += element_type_size(elem_type)
+        end
+        total
+      end
+
+      private def element_type_size(llvm_type)
+        case llvm_type.kind
+        when :integer then (llvm_type.width + 7) / 8  # Round up to bytes
+        when :pointer then 8  # 64-bit pointers
+        when :struct then llvm_type.element_types.sum { |t| element_type_size(t) }
+        else 8  # Default to 8 bytes
+        end
       end
 
       private def validate_field_types(scope, mod)

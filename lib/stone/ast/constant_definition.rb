@@ -14,7 +14,7 @@ module Stone
       end
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
-        return register_record_type(mod) if value_expression.is_a?(Stone::AST::RecordDefinition)
+        return register_record_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::RecordDefinition)
 
         llvm_value = value_expression.to_llir(builder, mod, scope)
 
@@ -65,9 +65,11 @@ module Stone
         register_record_instance(mod, scope)
       end
 
-      # Register a record type definition
-      private def register_record_type(mod)
+      # Register a record type definition and generate its type constant
+      private def register_record_type(mod, builder = nil, scope = Stone::Scope.top_level)
         mod.register_record_type(identifier, value_expression)
+        # Generate constructor function and type constant
+        value_expression.to_llir(builder, mod, scope) if builder
         nil
       end
 

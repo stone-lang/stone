@@ -27,8 +27,11 @@ module Stone
         int: Stone::Type.primitive(name: "Int", llvm_type: LLVM::Int64.type, min: INT_MIN, max: INT_MAX),
         bool: Stone::Type.primitive(name: "Bool", llvm_type: LLVM::Int1.type),
         string: Stone::Type.primitive(name: "String", llvm_type: LLVM::Int64.type),
-        type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Int64.type),
-        null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Type.ptr)
+        type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Type.pointer),
+        null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Type.ptr),
+        # FieldList is a list-like type for record field metadata
+        # TODO: Replace with List(Field) once generics are available
+        field_list: Stone::Type.primitive(name: "FieldList", llvm_type: LLVM::Type.pointer)
       }
     end
 
@@ -41,7 +44,28 @@ module Stone
       setup_int_properties(types)
       setup_bool_properties(types)
       setup_string_properties(types)
-      types[:type].property_types["as_String"] = types[:string]
+      setup_type_properties(types)
+      setup_field_list_properties(types)
+    end
+
+    def setup_type_properties(types)
+      types[:type].property_types.merge!(
+        "as_String" => types[:string],
+        "record?" => types[:bool],
+        "primitive?" => types[:bool],
+        "kind" => types[:int],
+        "size" => types[:int],
+        "fields" => types[:field_list]
+      )
+    end
+
+    def setup_field_list_properties(types)
+      types[:field_list].property_types.merge!(
+        "first" => types[:field_list],  # .first returns the FieldList itself (list-like access)
+        "name" => types[:string],       # Field name
+        "type" => types[:type],         # Type of the field
+        "rest" => types[:field_list]    # Next FieldList or NULL
+      )
     end
 
     def setup_int_properties(types)

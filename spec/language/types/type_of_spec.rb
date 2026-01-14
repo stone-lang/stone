@@ -15,6 +15,10 @@ RSpec.describe "Type.of() special form" do
     it "returns String type name for string literals" do
       expect(Stone.eval('Type.of("hello").as_String')).to eq("String")
     end
+
+    it "returns Null type name for NULL literal" do
+      expect(Stone.eval("Type.of(NULL).as_String")).to eq("Null")
+    end
   end
 
   describe "with expressions" do

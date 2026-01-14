@@ -24,15 +24,15 @@ module Stone
       private def type_from_context(context)
         return nil unless context.is_a?(Stone::TypeContext)
 
-        result = context.lookup(@identifier)
-        fail Stone::TypeError, "Unknown identifier: #{@identifier}" unless result
-
-        result
+        context.lookup(@identifier)
       end
 
       private def type_from_module(context)
         # Fallback to old module-based lookup for backwards compatibility during migration
-        type_from_record_instance(context) || type_from_parameter(context) || type_from_string_constant(context) || type_from_global(context)
+        mod = context.is_a?(Stone::TypeContext) ? context.llvm_module : context
+        return nil unless mod
+
+        type_from_record_instance(mod) || type_from_parameter(mod) || type_from_string_constant(mod) || type_from_global(mod)
       end
 
       def record_instance?(mod)

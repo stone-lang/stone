@@ -248,7 +248,7 @@ module Stone
         val1 = builder.extract_value(records[0], index, "field1_#{field[:name]}")
         val2 = builder.extract_value(records[1], index, "field2_#{field[:name]}")
 
-        compare_field_values(builder, val1, val2, field[:type], mod)
+        compare_field_values(builder, val1, val2, field[:type_name], mod)
       end
 
       private def compare_field_values(builder, val1, val2, type_name, mod)

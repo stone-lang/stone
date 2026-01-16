@@ -395,7 +395,7 @@ module Stone
       # type_declaration: identifier + ws! + str("::") + ws! + type_annotation
       type_annotation_node = type_decl.find_child(:type_annotation)
       type_annotation = transform_type_annotation(type_annotation_node)
-      {name: extract_field_name(type_decl), type: type_annotation&.to_s}
+      {name: extract_field_name(type_decl), type: type_annotation, type_name: type_annotation&.to_s}
     end
 
     private def extract_field_name(type_decl)

@@ -29,7 +29,7 @@ module Stone
       field = @fields.find { |f| f[:name] == field_name }
       return nil unless field
 
-      Stone::Type::Registry.lookup(field[:type])
+      Stone::AST::FieldHelpers.resolve_field_type(field)
     end
 
     def primitive?
@@ -119,11 +119,17 @@ module Stone
     class Union < Type
       attr_reader :alternatives
 
+      # Tagged union struct: { type_tag (ptr to Type constant), payload (i64) }
+      # Cached at class level since all union types share the same LLVM representation.
+      def self.tagged_union_struct_type
+        @tagged_union_struct_type ||= LLVM::Type.struct([LLVM::Type.pointer, LLVM::Int64.type], false)
+      end
+
       def initialize(alternatives:)
         @alternatives = flatten_and_dedupe(alternatives)
         fail ::ArgumentError, "Union type requires at least one alternative" if @alternatives.empty?
 
-        super(name: generate_name, llvm_type: nil)
+        super(name: generate_name, llvm_type: self.class.tagged_union_struct_type)
       end
 
       def union?

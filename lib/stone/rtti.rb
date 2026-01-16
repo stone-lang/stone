@@ -135,13 +135,13 @@ module Stone
 
     private def generate_field_list_entry(record_name, field, index, rest_ptr)
       name_global = create_field_name_string(record_name, field[:name])
-      type_ptr = field_type_constant(field[:type])
+      type_ptr = field_type_constant(field)
       values = [name_global, type_ptr, rest_ptr]
       add_field_list_global("Stone.Field.#{record_name}.#{index}.#{field[:name]}", values)
     end
 
-    private def field_type_constant(field_type_name)
-      field_type = Stone::Type::Registry.lookup(field_type_name) || Stone::Type::Int
+    private def field_type_constant(field)
+      field_type = Stone::AST::FieldHelpers.resolve_field_type(field) || Stone::Type::Int
       self.class.type_constant_for(@mod, field_type)
     end
 

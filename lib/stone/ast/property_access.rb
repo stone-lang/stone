@@ -249,10 +249,49 @@ module Stone
         return nil unless record_def
 
         field = record_def.fields.find { |f| f[:name] == @receiver.property }
-        field&.dig(:type)
+        field&.dig(:type_name)
       end
 
       private def access_record_field(builder, mod, scope)
+        record_def = lookup_record_definition(mod, get_record_type_name(mod))
+        receiver_value = load_receiver_struct(builder, mod, scope, record_def)
+        field_index = get_field_index(record_def, record_def.assigned_name)
+        field_value = builder.extract_value(receiver_value, field_index, "#{@property}_value")
+        maybe_extract_union_payload(builder, field_value, record_def)
+      end
+
+      private def load_receiver_struct(builder, mod, scope, record_def)
+        receiver_value = @receiver.to_llir(builder, mod, scope)
+        return receiver_value unless receiver_value.type.kind == :pointer
+
+        builder.load2(record_def.llvm_type(mod), receiver_value, "loaded_struct")
+      end
+
+      private def maybe_extract_union_payload(builder, field_value, record_def)
+        annotation = record_def.field_type_annotation(@property)
+        return extract_union_payload(builder, field_value) if Stone::AST::FieldHelpers.union_annotation?(annotation)
+
+        field_value
+      end
+
+      private def extract_union_payload(builder, union_value)
+        builder.extract_value(union_value, 1, "union_payload")
+      end
+
+      # Check if this property access is on a union-typed field (for Type.of() support)
+      def union_field_access?(mod)
+        return false unless record_field_access?(mod)
+
+        record_type_name = get_record_type_name(mod)
+        record_def = mod.record_types[record_type_name]
+        return false unless record_def
+
+        field_annotation = record_def.field_type_annotation(@property)
+        Stone::AST::FieldHelpers.union_annotation?(field_annotation)
+      end
+
+      # Extract the type tag from a union field (for Type.of() support)
+      def extract_union_type_tag(builder, mod, scope)
         record_type_name = get_record_type_name(mod)
         record_def = lookup_record_definition(mod, record_type_name)
         field_index = get_field_index(record_def, record_type_name)
@@ -266,8 +305,11 @@ module Stone
           receiver_value = builder.load2(struct_type, receiver_value, "loaded_struct")
         end
 
-        # Extract the field value from the struct
-        builder.extract_value(receiver_value, field_index, "#{@property}_value")
+        # Extract the union struct from the record
+        union_value = builder.extract_value(receiver_value, field_index, "#{@property}_union")
+
+        # Extract the type tag (index 0) from the union struct
+        builder.extract_value(union_value, 0, "union_type_tag")
       end
 
       def returns_string_field?(mod)
@@ -278,7 +320,7 @@ module Stone
         return false unless record_def
 
         field_def = record_def.fields.find { |f| f[:name] == @property }
-        field_def && field_def[:type] == "String"
+        field_def && field_def[:type_name] == "String"
       end
 
       def get_record_type_name(mod)

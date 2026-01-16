@@ -18,16 +18,22 @@ module Stone
         Stone::Type::Type
       end
 
-      def to_llir(_builder, mod, _scope = Stone::Scope.top_level)
+      def to_llir(builder, mod, scope = Stone::Scope.top_level)
+        # Union field access: extract type tag at runtime
+        return @inner_expression.extract_union_type_tag(builder, mod, scope) if union_field_access?(mod)
+
+        # Default: return compile-time type constant
         context = Stone::TypeContext.new(mod)
         result_type = @inner_expression.type(context)
-
-        # Return pointer to the type constant
         Stone::RTTI.type_constant_for(mod, result_type)
       end
 
       def to_s
         "Type.of(#{@inner_expression})"
+      end
+
+      private def union_field_access?(mod)
+        @inner_expression.is_a?(PropertyAccess) && @inner_expression.union_field_access?(mod)
       end
 
     end

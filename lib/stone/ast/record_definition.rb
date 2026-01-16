@@ -57,14 +57,20 @@ module Stone
       end
 
       private def validate_field_types(scope, mod)
-        @fields.each do |field|
-          type_name = field[:type]
-          next if type_name == @assigned_name # Self-reference is OK
-          next if mod&.record_type?(type_name) # Record types are OK
-          next if scope.lookup_type(type_name) # Scope resolution
+        @fields.each { |field| validate_field_type(field, scope, mod) }
+      end
 
-          fail Stone::TypeError, "Unknown type: #{type_name}"
-        end
+      private def validate_field_type(field, scope, mod)
+        return if Stone::AST::FieldHelpers.union_annotation?(field[:type])
+
+        type_name = Stone::AST::FieldHelpers.field_type_name(field)
+        return if known_type?(type_name, scope, mod)
+
+        fail Stone::TypeError, "Unknown type: #{type_name}"
+      end
+
+      private def known_type?(type_name, scope, mod)
+        type_name == @assigned_name || mod&.record_type?(type_name) || scope.lookup_type(type_name)
       end
 
       def field_names
@@ -72,7 +78,12 @@ module Stone
       end
 
       def field_types
-        @fields.map { |f| f[:type] }
+        @fields.map { |f| Stone::AST::FieldHelpers.field_type_name(f) }
+      end
+
+      def field_type_annotation(field_name)
+        field = @fields.find { |f| f[:name] == field_name }
+        field&.dig(:type)
       end
 
       def field_index(field_name)
@@ -81,12 +92,12 @@ module Stone
 
       def llvm_type(mod = nil, scope = Stone::Scope.top_level)
         # Convert field types to LLVM types
-        llvm_field_types = @fields.map { |field| llvm_type_for_field(field[:type], mod, scope) }
+        llvm_field_types = @fields.map { |field| llvm_type_for_field(field, mod, scope) }
         LLVM::Type.struct(llvm_field_types, false)
       end
 
       def to_s
-        field_strs = @fields.map { |f| "#{f[:name]} :: #{f[:type]}" }
+        field_strs = @fields.map { |f| "#{f[:name]} :: #{f[:type_name]}" }
         "Record(#{field_strs.join(', ')})"
       end
 
@@ -96,31 +107,43 @@ module Stone
         record_type = Stone::Type::Registry.lookup(@assigned_name)
         return nil unless record_type
 
-        param_types = @fields.map { |f| Stone::Type::Registry.lookup(f[:type]) }
+        param_types = @fields.map { |f| resolve_field_stone_type(f) }
         return nil if param_types.any?(&:nil?)
 
         Stone::Type.function(param_types:, return_type: record_type)
       end
 
-      # Returns the LLVM type for a field type name.
-      # Uses Stone's type system for primitives, and ptr for record types.
-      # Type parameters (from lambda scope) are treated as generic (ptr).
-      private def llvm_type_for_field(type_name, mod, scope)
-        # Check for self-reference (recursive type)
-        return LLVM::Type.ptr if type_name == @assigned_name
+      private def resolve_field_stone_type(field)
+        Stone::AST::FieldHelpers.resolve_field_type(field)
+      end
 
-        # Check for reference to another record type
-        return LLVM::Type.ptr if mod&.record_type?(type_name)
+      # Returns the LLVM type for a field. Handles union types, primitives, and record types.
+      private def llvm_type_for_field(field, mod, scope)
+        return llvm_type_for_union(field[:type]) if Stone::AST::FieldHelpers.union_annotation?(field[:type])
 
-        # Look up primitive types from Stone's type system
-        stone_type = Stone::Type::Registry.lookup(type_name)
-        return stone_type.llvm_type if stone_type
+        type_name = Stone::AST::FieldHelpers.field_type_name(field)
+        resolve_simple_llvm_type(type_name, mod, scope)
+      end
 
-        # Check if type is defined in scope (e.g., type parameter from lambda)
-        # Type parameters are treated as generic (ptr) at the LLVM level
+      private def resolve_simple_llvm_type(type_name, mod, scope)
+        return LLVM::Type.ptr if record_reference?(type_name, mod)
+        return Stone::Type::Registry.lookup(type_name).llvm_type if primitive_type?(type_name)
         return LLVM::Type.ptr if scope.lookup_type(type_name)
 
         fail Stone::TypeError, "Unknown type: #{type_name}"
+      end
+
+      private def record_reference?(type_name, mod)
+        type_name == @assigned_name || mod&.record_type?(type_name)
+      end
+
+      private def primitive_type?(type_name)
+        Stone::Type::Registry.lookup(type_name)
+      end
+
+      private def llvm_type_for_union(annotation)
+        stone_type = annotation.to_type(Stone::Type::Registry)
+        stone_type.llvm_type
       end
 
       private def generate_constructor_function(mod, scope)
@@ -134,7 +157,7 @@ module Stone
 
       private def constructor_function_type(mod, scope)
         # Constructor function signature: (field_types...) -> struct_type
-        field_llvm_types = @fields.map { |field| llvm_type_for_field(field[:type], mod, scope) }
+        field_llvm_types = @fields.map { |field| llvm_type_for_field(field, mod, scope) }
         LLVM::Type.function(field_llvm_types, llvm_type(mod, scope))
       end
 

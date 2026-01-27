@@ -196,13 +196,24 @@ module Stone
 
       def common_llvm_result_type
         # Determine best common type for phi merge without int2ptr/ptr2int conversions.
-        # Use pointer only if ALL non-null alternatives are pointer types.
-        # Otherwise use i64 (integers can be widened, Null becomes 0).
+        # - If ALL non-null alternatives are pointers, use pointer
+        # - If ALL non-null alternatives are integers, use i64
+        # - For MIXED types, return nil (caller should not extract, return union as-is)
         non_null_alts = @alternatives.reject { |alt| alt.name == "Null" }
         return LLVM::Int64.type if non_null_alts.empty?
 
         all_pointers = non_null_alts.all?(&:pointer_type?)
-        all_pointers ? LLVM::Type.pointer : LLVM::Int64.type
+        all_integers = non_null_alts.all? { |alt| %w[Int Bool].include?(alt.name) }
+
+        return LLVM::Type.pointer if all_pointers
+        return LLVM::Int64.type if all_integers
+
+        nil # Mixed types - don't extract
+      end
+
+      def homogeneous?
+        # Returns true if all non-null alternatives have compatible LLVM types
+        !common_llvm_result_type.nil?
       end
 
       private def create_variable_sized_llvm_type

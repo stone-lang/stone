@@ -17,34 +17,127 @@ module Stone
 
         def generate(mod, scope = Stone::Scope.top_level)
           @mod = mod
-          # Register type declarations first so they're available for record type resolution
+          @scope = scope
+          register_all_types(mod, scope)
+          mod.functions.add("__top__", function_type) { |func| build_function_body(func, mod, scope) }
+        end
+
+        private def register_all_types(mod, scope)
           register_type_declarations(scope)
-          # Pre-register types for type checking
           register_record_types(mod, scope)
           register_function_types
-          mod.functions.add("__top__", function_type) do |func|
-            func.basic_blocks.append("entry").build do |builder|
-              compiled = compile_children(builder, mod, scope)
-              build_return(builder, compiled&.last)
-            end
+        end
+
+        private def build_function_body(func, mod, scope)
+          func.basic_blocks.append("entry").build do |builder|
+            compiled = compile_children(builder, mod, scope)
+            build_return(builder, compiled&.last)
           end
         end
 
         private def function_type
-          # All values (ints, bools, strings) are returned as i64
-          # Strings are null-terminated, so length doesn't need to be returned
-          LLVM::Type.function([], LLVM::Type.i(64), varargs: false)
+          # Return type is determined at compile time based on the last expression
+          # - Pointers are returned as-is (CHERI-safe, no ptr2int)
+          # - Integers and bools are returned as i64
+          LLVM::Type.function([], compute_return_type, varargs: false)
+        end
+
+        private def compute_return_type
+          last_child = other_statements.last
+          return LLVM::Int64.type unless last_child
+
+          # Check if the result will be a pointer
+          return LLVM::Type.pointer if returns_pointer?(last_child)
+
+          LLVM::Int64.type
+        end
+
+        private def returns_pointer?(node)
+          # Mixed union field access now returns i64 (payload extracted directly)
+          # so it does NOT return a pointer
+
+          # String literals return pointers
+          return true if node.is_a?(Stone::AST::StringLiteral)
+
+          # References to string constants return pointers
+          return true if reference_to_string_constant?(node)
+
+          # Certain PropertyAccess patterns return string pointers
+          return true if string_returning_property?(node)
+
+          # Check Stone type system for other cases
+          # Rescue errors since some types (computed properties, etc.) aren't registered yet
+          stone_type = safe_get_type(node)
+          return true if stone_type == Stone::Type::String
+
+          # Record instances return pointers
+          return true if stone_type&.record?
+
+          false
+        end
+
+        # PropertyAccess patterns that return string pointers
+        private def string_returning_property?(node)
+          return false unless node.is_a?(Stone::AST::PropertyAccess)
+
+          property = node.property
+          # Type.as_String returns a string pointer
+          return true if property == "as_String"
+          # FieldList.name returns a string pointer
+          return true if property == "name"
+
+          false
+        end
+
+        private def safe_get_type(node)
+          node.type(@mod)
+        rescue Stone::PropertyError, Stone::TypeError
+          # Type couldn't be determined at this stage - default to non-pointer (i64)
+          nil
+        end
+
+        private def reference_to_string_constant?(node)
+          return false unless node.is_a?(Stone::AST::Reference)
+
+          # Look in children for a constant definition with this name that has a string value
+          find_string_constant_value(node.identifier)&.is_a?(Stone::AST::StringLiteral)
+        end
+
+        private def mixed_union_field_access?(node)
+          return false unless node.is_a?(Stone::AST::PropertyAccess)
+          return false unless node.respond_to?(:union_field_access?)
+          return false unless node.union_field_access?(@mod)
+
+          union_type = get_union_type_for(node)
+          union_type && !union_type.homogeneous?
+        end
+
+        private def get_union_type_for(property_access)
+          record_type_name = property_access.get_record_type_name(@mod)
+          return nil unless record_type_name
+
+          record_def = @mod.record_types[record_type_name]
+          return nil unless record_def
+
+          annotation = record_def.field_type_annotation(property_access.property)
+          return nil unless Stone::AST::FieldHelpers.union_annotation?(annotation)
+
+          Stone::AST::FieldHelpers.resolve_field_type({type: annotation})
         end
 
         private def build_return(builder, last_value)
           builder.ret(return_value_for(builder, last_value))
         end
 
+        # Convert return value based on target return type.
+        # - No ptr2int conversions (CHERI-safe)
+        # - Integers/bools return as i64
+        # - Pointers return as-is
         private def return_value_for(builder, value)
           return LLVM::Int64.from_i(0) if value.nil?
           return builder.zext(value, LLVM::Int64.type, "bool_to_i64") if value.type.to_s == "i1"
-          return builder.ptr2int(value, LLVM::Int64.type, "ptr_to_i64") if value.type.kind == :pointer
 
+          # Pointers stay as pointers - no ptr2int
           value
         end
 

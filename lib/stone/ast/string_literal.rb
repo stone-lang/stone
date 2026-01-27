@@ -35,16 +35,13 @@ module Stone
 
         # Get pointer to the string data (GEP to first element)
         # Array size is bytesize + 1 for null terminator
-        string_ptr = builder.gep2(
+        builder.gep2(
           LLVM::Type.array(LLVM::Int8, @value.bytesize + 1),
           string_global,
           [LLVM::Int64.from_i(0), LLVM::Int64.from_i(0)],
           "string_ptr"
         )
-
-        # Convert pointer to i64 so it can be returned via JIT
-        # (FFI/JIT can't handle struct or pointer returns properly)
-        builder.ptr2int(string_ptr, LLVM::Int64, "ptr_as_int")
+        # Return pointer directly - no ptr2int (CHERI-safe)
       end
 
       private def create_global_string(mod)

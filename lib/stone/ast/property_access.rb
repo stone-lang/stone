@@ -79,9 +79,8 @@ module Stone
       private def generate_type_as_string(builder, type_struct, type_ptr)
         # Load the name pointer from the type struct (field 0)
         name_ptr_ptr = builder.struct_gep2(type_struct, type_ptr, 0, "name_ptr_ptr")
-        name_ptr = builder.load2(LLVM::Type.pointer, name_ptr_ptr, "name_ptr")
-        # Convert pointer to i64 for Stone's string representation
-        builder.ptr2int(name_ptr, LLVM::Int64.type, "name_as_i64")
+        # Return pointer directly - no ptr2int (CHERI-safe)
+        builder.load2(LLVM::Type.pointer, name_ptr_ptr, "name_ptr")
       end
 
       private def generate_type_size(builder, type_struct, type_ptr)
@@ -165,8 +164,8 @@ module Stone
 
       private def generate_field_list_name(builder, field_list_struct, field_list_ptr)
         name_ptr_ptr = builder.struct_gep2(field_list_struct, field_list_ptr, 0, "field_name_ptr_ptr")
-        name_ptr = builder.load2(LLVM::Type.pointer, name_ptr_ptr, "field_name_ptr")
-        builder.ptr2int(name_ptr, LLVM::Int64.type, "field_name_as_i64")
+        # Return pointer directly - no ptr2int (CHERI-safe)
+        builder.load2(LLVM::Type.pointer, name_ptr_ptr, "field_name_ptr")
       end
 
       private def generate_field_list_type(builder, field_list_struct, field_list_ptr)
@@ -276,6 +275,28 @@ module Stone
       end
 
       private def extract_union_payload(builder, mod, union_value, union_type)
+        # For homogeneous unions, extract the payload with phi merge
+        return extract_homogeneous_union(builder, mod, union_value, union_type) if union_type.homogeneous?
+
+        # For mixed-type unions (e.g., Int | String), extract payload as i64.
+        # Both Int (8 bytes) and String pointers (8 bytes) fit in i64.
+        # Ruby-side conversion uses the type tag to interpret the value correctly.
+        extract_mixed_union_payload(builder, mod, union_value, union_type)
+      end
+
+      private def extract_mixed_union_payload(builder, _mod, union_value, union_type)
+        # Allocate union on stack to get pointer for GEP
+        union_ptr = builder.alloca(union_type.llvm_type, "mixed_union_for_extract")
+        builder.store(union_value, union_ptr)
+
+        # Get payload pointer (index 1 in the {ptr, [N x i8]} struct)
+        payload_ptr = builder.struct_gep2(union_type.llvm_type, union_ptr, 1, "mixed_payload_ptr")
+
+        # Load payload as i64 (works for both Int values and pointer addresses)
+        builder.load2(LLVM::Int64.type, payload_ptr, "mixed_payload_i64")
+      end
+
+      private def extract_homogeneous_union(builder, mod, union_value, union_type)
         # Allocate union on stack to get pointer for GEP
         union_ptr = builder.alloca(union_type.llvm_type, "union_for_extract")
         builder.store(union_value, union_ptr)
@@ -342,9 +363,9 @@ module Stone
         end
 
         # Convert value to match @result_type for phi merge.
-        # With the new common_llvm_result_type logic:
+        # Only called for homogeneous unions where all alternatives have compatible types.
         # - If result is i64: integers get widened, Null returns i64(0)
-        # - If result is ptr: all non-null alts are pointers, Null returns null ptr
+        # - If result is ptr: all values are already pointers
         # No int2ptr or ptr2int conversions needed (CHERI-safe).
         private def convert_to_result_type(value)
           return value if value.type == @result_type

@@ -152,9 +152,7 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to eq(42)
       end
 
-      # Multi-type unions (without Null) require runtime type checking to know
-      # which alternative was stored and how to interpret the payload.
-      it "allows Int | String field with String value", pending: "requires runtime type dispatch for multi-type unions" do
+      it "allows Int | String field with String value" do
         code = <<~STONE
           Box := Record(value :: Int | String)
           b := Box("hello")
@@ -379,8 +377,7 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to eq(124)
       end
 
-      # Multi-type unions require runtime type checking to distinguish alternatives.
-      it "extracts String from Int | String union", pending: "requires runtime type dispatch for multi-type unions" do
+      it "extracts String from Int | String union" do
         code = <<~STONE
           Box := Record(value :: Int | String)
           b := Box("world")

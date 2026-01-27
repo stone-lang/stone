@@ -28,53 +28,118 @@ module Stone
 
       private def run_function(func)
         result = jit_engine.run_function(func)
-        result_type = result_type(func.function_type.return_type)
-        [result, result_type]
+        [result, last_expression_type]
       end
 
-      private def result_type(llvm_type)
-        case llvm_type.to_s
-        when "i64" then resolve_i64_type
-        when "i1" then :boolean
-        when "ptr" then resolve_pointer_type
-        else llvm_type
+      # Determine the Stone type of the last expression for proper Ruby conversion
+      # Must match the logic in TopFunction#compute_return_type
+      private def last_expression_type
+        last_child = children&.last
+        return :null unless last_child
+
+        # Check for mixed union field access first (PropertyAccess on mixed union field)
+        # Mixed unions now return i64 (payload extracted directly)
+        return :mixed_union_value if mixed_union_field_access?(last_child)
+
+        # Check for homogeneous union field access
+        return :union_value if union_field_access?(last_child)
+
+        # Check for string-returning properties (Type.as_String, FieldList.name)
+        return :string if string_returning_property?(last_child)
+
+        # Use the Stone type system for everything else
+        # Rescue errors since computed properties may not be registered in type system
+        stone_type = safe_get_type(last_child)
+        stone_type_to_result_type(stone_type)
+      end
+
+      private def lookup_type_declaration(identifier)
+        type_decl = children&.find { |c|
+          c.is_a?(Stone::AST::TypeDeclaration) && c.identifier == identifier
+        }
+        return nil unless type_decl
+
+        type_decl.type_annotation.to_type(Stone::TypeRegistry.instance)
+      end
+
+      private def safe_get_type(node)
+        node.type(module_ref)
+      rescue Stone::PropertyError, Stone::TypeError
+        # Type couldn't be determined (computed properties, etc.) - default to nil (becomes i64)
+        nil
+      end
+
+      # PropertyAccess patterns that return string pointers
+      private def string_returning_property?(node)
+        return false unless node.is_a?(Stone::AST::PropertyAccess)
+
+        property = node.property
+        # Type.as_String returns a string pointer
+        return true if property == "as_String"
+        # FieldList.name returns a string pointer
+        return true if property == "name"
+
+        false
+      end
+
+      private def stone_type_to_result_type(stone_type)
+        # Default to i64 for unknown types (matches original behavior where all values were i64)
+        return :i64 unless stone_type
+
+        # Handle union types
+        return union_result_type(stone_type) if stone_type.is_a?(Stone::Type::Union)
+
+        case stone_type.name
+        when "Null" then :null
+        when "Bool" then :boolean
+        when "Int" then :i64
+        when "String" then :string
+        else :pointer  # Records and other pointer types
         end
       end
 
-      private def resolve_i64_type
-        return :null if last_child_is_null?
-        return :string if last_child_is_string?
-        return :boolean if last_child_is_boolean?
-        return :union_value if last_child_is_union_field_access?
-
-        :i64
+      private def union_result_type(_union_type)
+        # All union variables return the union struct, which is extracted by MixedUnionExtractor
+        :mixed_union_ptr
       end
 
-      private def resolve_pointer_type
-        # Pointers can be strings, records, or null
-        # Check based on AST context
-        return :string if last_child_is_string?
-        return :union_value if last_child_is_union_field_access?
+      private def mixed_union_field_access?(node)
+        return false unless node.is_a?(Stone::AST::PropertyAccess)
+        return false unless node.union_field_access?(module_ref)
 
-        :pointer
+        union_type = get_union_type_for_property_access(node)
+        union_type && !union_type.homogeneous?
       end
 
-      private def last_child_is_union_field_access?
-        last_child = children&.last
-        return false unless last_child.is_a?(Stone::AST::PropertyAccess)
+      private def union_field_access?(node)
+        return false unless node.is_a?(Stone::AST::PropertyAccess)
 
-        last_child.union_field_access?(module_ref)
+        node.union_field_access?(module_ref)
       end
 
+      RESULT_CONVERTERS = {
+        "i64" => ->(r, _) { r.to_i },
+        "boolean" => ->(r, _) { r.to_i != 0 },
+        "null" => ->(_r, _) { nil },
+        "pointer" => ->(r, _) { r.to_value_ptr.to_i }
+      }.freeze
+
+      # Convert JIT result to Ruby value based on result type.
+      # - i64 results use result.to_i
+      # - ptr results use result.to_value_ptr (not to_ptr!)
       private def convert_to_ruby(result, result_type)
+        converter = RESULT_CONVERTERS[result_type.to_s]
+        return converter.call(result, self) if converter
+
+        convert_complex_result(result, result_type)
+      end
+
+      private def convert_complex_result(result, result_type)
         case result_type.to_s
-        when "i64" then result.to_i
-        when "i1", "boolean" then result.to_i != 0
-        when "string" then read_string_from_pointer(result.to_i)
-        when "null" then nil
-        when "ptr", "pointer" then result.to_i  # Raw pointer value
+        when "string" then read_string_from_pointer(result.to_value_ptr.to_i)
         when "union_value" then convert_union_value_to_ruby(result.to_i)
-        else fail "Don't know how to convert LLVM type to Ruby: #{result_type}"
+        when "mixed_union_value" then convert_mixed_union_value(result.to_i)
+        else fail "Don't know how to convert result type to Ruby: #{result_type}"
         end
       end
 
@@ -87,6 +152,24 @@ module Stone
         return value unless union_type
 
         convert_based_on_union_type(value, union_type)
+      end
+
+      private def convert_mixed_union_value(value)
+        last_child = children&.last
+        union_type = get_union_type_for_last_child(last_child)
+        return value unless union_type
+
+        MixedUnionValueConverter.new(value, union_type).convert
+      end
+
+      private def get_union_type_for_last_child(node)
+        case node
+        when Stone::AST::PropertyAccess
+          get_union_type_for_property_access(node)
+        when Stone::AST::Reference
+          # For References, look up the type declaration
+          lookup_type_declaration(node.identifier)
+        end
       end
 
       private def get_union_type_for_property_access(property_access)
@@ -146,6 +229,56 @@ module Stone
         end
       end
 
+      # Converts raw i64 payload values from mixed unions to Ruby values.
+      # For mixed unions (e.g., Int | String), the payload is extracted as i64.
+      # Without runtime type tag access, we use heuristics based on the alternatives:
+      # - If Int is an alternative, and value looks like a valid Int, return as Int
+      # - If String is an alternative, and value looks like a pointer, read as String
+      # NOTE: This has limitations - we can't distinguish Int(0) from NULL, or
+      # a small Int that happens to look like a valid pointer address.
+      class MixedUnionValueConverter
+        def initialize(value, union_type)
+          @value = value
+          @alternatives = union_type.alternatives
+        end
+
+        def convert
+          return nil if null_value?
+          return convert_int_or_string if has?("Int") && has?("String")
+
+          convert_single_type
+        end
+
+        private def null_value? = @value.zero? && has?("Null")
+
+        private def convert_int_or_string
+          looks_like_pointer? ? read_string : @value
+        end
+
+        private def convert_single_type
+          return @value if has?("Int")
+          return @value != 0 if has?("Bool")
+          return read_string if has?("String")
+
+          @value
+        end
+
+        private def has?(name) = @alternatives.any? { |alt| alt.name == name }
+
+        private def looks_like_pointer?
+          # Heuristic: heap pointers are typically large addresses, aligned to 8 bytes
+          # Small values (< 0x1000) are likely integers
+          # This is imperfect but works for common cases
+          @value > 0x1000 && (@value % 8).zero?
+        end
+
+        private def read_string
+          return "" if @value.zero?
+
+          FFI::Pointer.new(@value).read_string.force_encoding(Encoding::UTF_8)
+        end
+      end
+
       private def read_string_from_pointer(ptr_addr)
         return "" if ptr_addr.zero?
 
@@ -158,78 +291,6 @@ module Stone
 
       private def global_function(function_name)
         module_ref.functions[function_name]
-      end
-
-      private def last_child_is_string?
-        last_child = children&.last
-        return false unless last_child
-
-        last_child.is_a?(Stone::AST::StringLiteral) ||
-          string_constant_reference?(last_child) ||
-          string_property_access?(last_child)
-      end
-
-      private def last_child_is_boolean?
-        last_child = children&.last
-        return false unless last_child
-
-        last_child.is_a?(Stone::AST::BooleanLiteral) ||
-          boolean_function_call?(last_child) ||
-          boolean_property_access?(last_child)
-      end
-
-      private def last_child_is_null?
-        last_child = children&.last
-        return false unless last_child
-
-        last_child.is_a?(Stone::AST::NullLiteral) ||
-          null_constant_reference?(last_child)
-      end
-
-      private def null_constant_reference?(node)
-        return false unless node.is_a?(Stone::AST::Reference)
-
-        node.type(module_ref) == Stone::Type::Null
-      end
-
-      private def boolean_function_call?(node)
-        return false unless node.is_a?(Stone::AST::FunctionCall)
-        func = module_ref.functions[node.function_name]
-        func&.function_type&.return_type&.to_s == "i1"
-      end
-
-      private def boolean_property_access?(node)
-        return false unless node.is_a?(Stone::AST::PropertyAccess)
-
-        resolve_node_type(node) == Stone::Type::Bool
-      end
-
-      private def string_constant_reference?(node)
-        return false unless node.is_a?(Stone::AST::Reference)
-
-        node.type(module_ref) == Stone::Type::String
-      end
-
-      private def string_property_access?(node)
-        return false unless node.is_a?(Stone::AST::PropertyAccess)
-        return true if node.property == "as_String" # as_String always returns a string
-        return true if field_list_name_property?(node) # FieldList.name returns a string
-        node.returns_string_field?(module_ref)
-      end
-
-      private def field_list_name_property?(node)
-        return false unless node.property == "name"
-
-        # Check if receiver is likely a FieldList (from .fields, .first, or .rest)
-        receiver = node.receiver
-        return true if receiver.is_a?(Stone::AST::PropertyAccess) &&
-                       %w[fields first rest].include?(receiver.property)
-
-        false
-      end
-
-      private def resolve_node_type(node)
-        Stone::AST::TypeResolver.resolve_node_type(node, module_ref)
       end
 
       private def module_ref

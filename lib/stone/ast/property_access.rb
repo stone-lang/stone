@@ -32,6 +32,9 @@ module Stone
         # 1. Check if this is a record field access (highest priority)
         return access_record_field(builder, mod, scope) if record_field_access?(mod)
 
+        # 2. Check if receiver is a union containing record(s) - enables chained access like o.value.x
+        return access_field_on_union_record(builder, mod, scope) if receiver_is_union_with_record?(mod)
+
         # Resolve the receiver type for subsequent checks
         receiver_type = resolve_node_type(@receiver, mod)
 
@@ -234,6 +237,55 @@ module Stone
       private def receiver_property_returns_record?(mod)
         field_type = get_receiver_field_type(mod)
         field_type && mod.record_type?(field_type)
+      end
+
+      # Check if receiver returns a union type that contains record(s)
+      # This enables chained access like o.value.x where value is Point | Null
+      private def receiver_is_union_with_record?(mod)
+        receiver_type = safe_get_receiver_type(mod)
+        return false unless receiver_type&.union?
+
+        # Check if any non-null alternative is a record with this property
+        receiver_type.alternatives.any? do |alt|
+          next false if alt.name == "Null"
+
+          alt.record? && alt.property_return_type(@property)
+        end
+      end
+
+      # Safely get the receiver's type, returning nil if type resolution fails.
+      # This prevents errors during speculative checks like receiver_is_union_with_record?.
+      private def safe_get_receiver_type(mod)
+        @receiver.type(mod)
+      rescue Stone::PropertyError, Stone::TypeError
+        nil
+      end
+
+      # Access a field on a record extracted from a union type
+      # For o.value.x where value is Point | Null:
+      # The receiver (o.value) already extracts the record pointer from the union
+      # via extract_homogeneous_union, so we just use that pointer directly.
+      private def access_field_on_union_record(builder, mod, scope)
+        receiver_type = @receiver.type(mod)
+        record_type = find_record_type_in_union(receiver_type, mod)
+        record_def = mod.record_types[record_type.name]
+
+        # Get the already-extracted record pointer from the receiver
+        # (receiver.to_llir already handles union extraction)
+        record_ptr = @receiver.to_llir(builder, mod, scope)
+
+        # Load the record struct and access the field
+        record_struct = builder.load2(record_def.llvm_type(mod), record_ptr, "record_from_union")
+        field_index = record_def.field_index(@property)
+        builder.extract_value(record_struct, field_index, "#{@property}_value")
+      end
+
+      private def find_record_type_in_union(union_type, _mod)
+        union_type.alternatives.find do |alt|
+          next false if alt.name == "Null"
+
+          alt.record? && alt.property_return_type(@property)
+        end
       end
 
       private def get_receiver_field_type(mod)

@@ -241,6 +241,26 @@ module Stone
         @alternatives.any? { |t| null_type?(t) }
       end
 
+      # Look through non-null alternatives for a property.
+      # Returns the property type if ALL non-null alternatives have it with the same type.
+      # This enables chained access like `o.value.x` where `value` is `Point | Null`.
+      def property_return_type(property_name)
+        non_null_alts = @alternatives.reject { |alt| null_type?(alt) }
+        return nil if non_null_alts.empty?
+
+        # Get property type from each non-null alternative
+        prop_types = non_null_alts.map { |alt| alt.property_return_type(property_name) }
+
+        # All alternatives must have this property
+        return nil if prop_types.any?(&:nil?)
+
+        # For now, require all alternatives to return the same type
+        # (Future: could return a union of the return types)
+        return nil unless prop_types.uniq.length == 1
+
+        prop_types.first
+      end
+
       def non_null_type
         remaining = @alternatives.reject { |t| null_type?(t) }
         return remaining.first if remaining.length == 1

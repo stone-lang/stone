@@ -132,7 +132,7 @@ RSpec.describe "Union Types" do
 
       # Chained access on union fields requires runtime type dispatch to extract
       # the underlying record from the union before accessing its properties.
-      it "allows recursive type with NULL terminator", pending: "requires chained property access on union fields" do
+      it "allows recursive type with NULL terminator" do
         code = <<~STONE
           IntList := Record(first :: Int, rest :: IntList | Null)
           list := IntList(1, IntList(2, NULL))
@@ -205,7 +205,7 @@ RSpec.describe "Union Types" do
     describe "nested records with union types" do
       # Chained access on union fields requires runtime type dispatch to extract
       # the underlying record from the union before accessing its properties.
-      it "allows Record field with union type", pending: "requires chained property access on union fields" do
+      it "allows Record field with union type" do
         code = <<~STONE
           Inner := Record(x :: Int)
           Outer := Record(inner :: Inner | Null)
@@ -217,7 +217,7 @@ RSpec.describe "Union Types" do
       end
 
       # Chained access on union fields requires runtime type dispatch.
-      it "allows union of record types", pending: "requires chained property access on union fields" do
+      it "allows union of record types" do
         code = <<~STONE
           Circle := Record(radius :: Int)
           Square := Record(side :: Int)
@@ -356,7 +356,7 @@ RSpec.describe "Union Types" do
       end
 
       # Chained access on union fields requires runtime type dispatch.
-      it "stores and retrieves record pointers correctly", pending: "requires chained property access on union fields" do
+      it "stores and retrieves record pointers correctly" do
         code = <<~STONE
           Inner := Record(x :: Int)
           Outer := Record(value :: Inner | Null)
@@ -430,7 +430,7 @@ RSpec.describe "Union Types" do
     describe "chained access through union fields" do
       # Chained access on union fields requires runtime type dispatch to extract
       # the underlying record from the union before accessing its properties.
-      it "accesses properties on record from union field", pending: "requires chained property access on union fields" do
+      it "accesses properties on record from union field" do
         code = <<~STONE
           Point := Record(x :: Int, y :: Int)
           Box := Record(point :: Point | Null)
@@ -441,7 +441,7 @@ RSpec.describe "Union Types" do
       end
 
       # Chained access on union fields requires runtime type dispatch.
-      it "accesses second property on record from union field", pending: "requires chained property access on union fields" do
+      it "accesses second property on record from union field" do
         code = <<~STONE
           Point := Record(x :: Int, y :: Int)
           Box := Record(point :: Point | Null)

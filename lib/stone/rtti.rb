@@ -162,29 +162,20 @@ module Stone
     private_class_method def self.create_type_constant(mod, type)
       rtti = new(mod)
       rtti.__send__(:define_type_struct)
-      size, kind = type_size_and_kind(type)
+      size = type.size_bytes
+      kind = type_kind(type)
       rtti.__send__(:generate_type_constant, type.name, size, kind)
       mod.globals[type_constant_name(type)]
     end
 
-    private_class_method def self.type_size_and_kind(type)
-      return [primitive_size(type), KIND_PRIMITIVE] if type.primitive?
-      return [0, KIND_RECORD] if type.record?
-      return [0, KIND_UNION] if type.union?
-      return [8, KIND_FUNCTION] if type.function?
-      return [8, KIND_TYPE] if type == Stone::Type::Type
+    private_class_method def self.type_kind(type)
+      return KIND_PRIMITIVE if type.primitive?
+      return KIND_RECORD if type.record?
+      return KIND_UNION if type.union?
+      return KIND_FUNCTION if type.function?
+      return KIND_TYPE if type == Stone::Type::Type
 
-      [0, KIND_PRIMITIVE]
-    end
-
-    private_class_method def self.primitive_size(type)
-      case type.name
-      when "Int" then 8
-      when "Bool" then 1
-      when "String" then 8
-      when "Null" then 0
-      else 0
-      end
+      KIND_PRIMITIVE
     end
 
   end

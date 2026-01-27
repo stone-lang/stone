@@ -38,6 +38,7 @@ Metrics/ClassLength:
   Max: 250
   Exclude:
     - lib/stone/transform.rb
+    - lib/stone/ast/property_access.rb
 
 # Sometimes we need to pass a block down recursively, so allow expressing that.
 Performance/RedundantBlockCall:

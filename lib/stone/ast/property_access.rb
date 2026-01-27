@@ -257,7 +257,7 @@ module Stone
         receiver_value = load_receiver_struct(builder, mod, scope, record_def)
         field_index = get_field_index(record_def, record_def.assigned_name)
         field_value = builder.extract_value(receiver_value, field_index, "#{@property}_value")
-        maybe_extract_union_payload(builder, field_value, record_def)
+        maybe_extract_union_payload(builder, mod, field_value, record_def)
       end
 
       private def load_receiver_struct(builder, mod, scope, record_def)
@@ -267,15 +267,104 @@ module Stone
         builder.load2(record_def.llvm_type(mod), receiver_value, "loaded_struct")
       end
 
-      private def maybe_extract_union_payload(builder, field_value, record_def)
+      private def maybe_extract_union_payload(builder, mod, field_value, record_def)
         annotation = record_def.field_type_annotation(@property)
-        return extract_union_payload(builder, field_value) if Stone::AST::FieldHelpers.union_annotation?(annotation)
+        return field_value unless Stone::AST::FieldHelpers.union_annotation?(annotation)
 
-        field_value
+        union_type = Stone::AST::FieldHelpers.resolve_field_type({type: annotation})
+        extract_union_payload(builder, mod, field_value, union_type)
       end
 
-      private def extract_union_payload(builder, union_value)
-        builder.extract_value(union_value, 1, "union_payload")
+      private def extract_union_payload(builder, mod, union_value, union_type)
+        # Allocate union on stack to get pointer for GEP
+        union_ptr = builder.alloca(union_type.llvm_type, "union_for_extract")
+        builder.store(union_value, union_ptr)
+
+        # Get type tag to determine how to interpret payload
+        tag_ptr = builder.struct_gep2(union_type.llvm_type, union_ptr, 0, "extract_tag_ptr")
+        type_tag = builder.load2(LLVM::Type.pointer, tag_ptr, "type_tag")
+
+        # Get payload pointer
+        payload_ptr = builder.struct_gep2(union_type.llvm_type, union_ptr, 1, "extract_payload_ptr")
+
+        # Generate runtime type dispatch to extract payload correctly
+        extract_with_type_dispatch(builder, mod, type_tag, payload_ptr, union_type)
+      end
+
+      private def extract_with_type_dispatch(builder, mod, type_tag, payload_ptr, union_type)
+        dispatch = TypeDispatchBuilder.new(builder, mod, union_type)
+        result_type = union_type.common_llvm_result_type
+        dispatch.build_switch(type_tag)
+        phi_incoming = dispatch.build_extraction_blocks(payload_ptr) { |alt| load_payload_as_type(builder, payload_ptr, alt, result_type) }
+        dispatch.build_merge_phi(phi_incoming)
+      end
+
+      # Builds LLVM switch/phi dispatch for union type extraction
+      class TypeDispatchBuilder
+        def initialize(builder, mod, union_type)
+          @builder = builder
+          @mod = mod
+          @union_type = union_type
+          @alternatives = union_type.alternatives
+          @result_type = union_type.common_llvm_result_type
+          create_basic_blocks
+        end
+
+        def build_switch(type_tag)
+          cases = @alternatives.each_with_index.to_h { |alt, i| [Stone::RTTI.type_constant_for(@mod, alt), @alt_blocks[i]] }
+          @builder.switch(type_tag, default_block, cases)
+        end
+
+        def build_extraction_blocks(_payload_ptr)
+          @alternatives.each_with_index.to_h do |alt, index|
+            @builder.position_at_end(@alt_blocks[index])
+            raw_value = yield(alt)
+            converted = convert_to_result_type(raw_value)
+            @builder.br(@merge_block)
+            [@alt_blocks[index], converted]
+          end
+        end
+
+        def build_merge_phi(phi_incoming)
+          @builder.position_at_end(@merge_block)
+          @builder.phi(@result_type, phi_incoming, "extracted_payload")
+        end
+
+        private def create_basic_blocks
+          current_func = @builder.insert_block.parent
+          @alt_blocks = @alternatives.map { |alt| current_func.basic_blocks.append("extract_#{alt.name.downcase}") }
+          @merge_block = current_func.basic_blocks.append("extract_merge")
+        end
+
+        private def default_block
+          null_idx = @alternatives.index { |alt| alt.name == "Null" }
+          null_idx ? @alt_blocks[null_idx] : @alt_blocks.first
+        end
+
+        # Convert value to match @result_type for phi merge.
+        # With the new common_llvm_result_type logic:
+        # - If result is i64: integers get widened, Null returns i64(0)
+        # - If result is ptr: all non-null alts are pointers, Null returns null ptr
+        # No int2ptr or ptr2int conversions needed (CHERI-safe).
+        private def convert_to_result_type(value)
+          return value if value.type == @result_type
+          return widen_int(value) if value.type.kind == :integer && @result_type.kind == :integer
+
+          value
+        end
+
+        private def widen_int(value)
+          value.type.width < 64 ? @builder.zext(value, LLVM::Int64.type, "zext_to_i64") : value
+        end
+      end
+
+      private def load_payload_as_type(builder, payload_ptr, type, result_type)
+        if type.name == "Null"
+          # Return appropriate zero value based on result type
+          return result_type.kind == :pointer ? LLVM::Type.pointer.null_pointer : LLVM::Int64.from_i(0)
+        end
+
+        builder.load2(type.payload_llvm_type, payload_ptr, "#{type.name.downcase}_payload")
       end
 
       # Check if this property access is on a union-typed field (for Type.of() support)

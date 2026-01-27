@@ -112,9 +112,7 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to eq(42)
       end
 
-      # NOTE: NULL returns 0 (the payload) because runtime type checking is needed
-      # to distinguish NULL from Int(0). Future work: pattern matching or Type.of() check.
-      it "allows nullable field with NULL value", pending: "requires runtime NULL detection" do
+      it "allows nullable field with NULL value" do
         code = <<~STONE
           Box := Record(value :: Int | Null)
           b := Box(NULL)
@@ -132,10 +130,9 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to eq(42)
       end
 
-      # NOTE: Chained property access on union fields requires runtime type dispatch.
-      # The union payload (record pointer as i64) can't be directly accessed.
-      # Future work: pattern matching or type-aware property access.
-      it "allows recursive type with NULL terminator", pending: "requires runtime type dispatch for chained access" do
+      # Chained access on union fields requires runtime type dispatch to extract
+      # the underlying record from the union before accessing its properties.
+      it "allows recursive type with NULL terminator", pending: "requires chained property access on union fields" do
         code = <<~STONE
           IntList := Record(first :: Int, rest :: IntList | Null)
           list := IntList(1, IntList(2, NULL))
@@ -155,9 +152,9 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to eq(42)
       end
 
-      # NOTE: String payload is stored as i64 (pointer). Ruby-side needs to know
-      # this is a string to read it correctly. Future work: runtime type dispatch.
-      it "allows Int | String field with String value", pending: "requires runtime type dispatch for string conversion" do
+      # Multi-type unions (without Null) require runtime type checking to know
+      # which alternative was stored and how to interpret the payload.
+      it "allows Int | String field with String value", pending: "requires runtime type dispatch for multi-type unions" do
         code = <<~STONE
           Box := Record(value :: Int | String)
           b := Box("hello")
@@ -208,10 +205,9 @@ RSpec.describe "Union Types" do
     end
 
     describe "nested records with union types" do
-      # NOTE: Accessing properties on union field results requires runtime type dispatch.
-      # The payload (record pointer as i64) can't be directly accessed as a record.
-      # Future work: pattern matching or type-aware property access.
-      it "allows Record field with union type", pending: "requires runtime type dispatch for record access" do
+      # Chained access on union fields requires runtime type dispatch to extract
+      # the underlying record from the union before accessing its properties.
+      it "allows Record field with union type", pending: "requires chained property access on union fields" do
         code = <<~STONE
           Inner := Record(x :: Int)
           Outer := Record(inner :: Inner | Null)
@@ -222,7 +218,8 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to eq(42)
       end
 
-      it "allows union of record types", pending: "requires runtime type dispatch for record access" do
+      # Chained access on union fields requires runtime type dispatch.
+      it "allows union of record types", pending: "requires chained property access on union fields" do
         code = <<~STONE
           Circle := Record(radius :: Int)
           Square := Record(side :: Int)
@@ -236,9 +233,7 @@ RSpec.describe "Union Types" do
     end
 
     describe "Bool in union fields" do
-      # NOTE: Bool payload is zero-extended to i64. Ruby-side needs runtime type info
-      # to know to interpret it as boolean. Returns 1/0 instead of true/false/nil.
-      it "allows Bool | Null field with Bool value", pending: "requires runtime type dispatch for boolean conversion" do
+      it "allows Bool | Null field with Bool value" do
         code = <<~STONE
           MaybeBool := Record(value :: Bool | Null)
           b := MaybeBool(TRUE)
@@ -247,7 +242,7 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to be true
       end
 
-      it "allows Bool | Null field with NULL value", pending: "requires runtime NULL detection" do
+      it "allows Bool | Null field with NULL value" do
         code = <<~STONE
           MaybeBool := Record(value :: Bool | Null)
           b := MaybeBool(NULL)
@@ -339,6 +334,125 @@ RSpec.describe "Union Types" do
       expect(decl.function?).to be true
       expect(decl.return_type.union?).to be true
       expect(decl.return_type.to_s).to eq("Int | Null")
+    end
+  end
+
+  describe "variable-sized union payloads" do
+    describe "payload storage without ptr2int" do
+      it "stores and retrieves Int values correctly" do
+        code = <<~STONE
+          Box := Record(value :: Int | Null)
+          b := Box(42)
+          b.value
+        STONE
+        expect(Stone.eval(code)).to eq(42)
+      end
+
+      it "stores and retrieves String pointers correctly" do
+        code = <<~STONE
+          Box := Record(value :: String | Null)
+          b := Box("hello")
+          b.value
+        STONE
+        expect(Stone.eval(code)).to eq("hello")
+      end
+
+      # Chained access on union fields requires runtime type dispatch.
+      it "stores and retrieves record pointers correctly", pending: "requires chained property access on union fields" do
+        code = <<~STONE
+          Inner := Record(x :: Int)
+          Outer := Record(value :: Inner | Null)
+          o := Outer(Inner(42))
+          o.value.x
+        STONE
+        expect(Stone.eval(code)).to eq(42)
+      end
+    end
+
+    describe "type-aware payload extraction" do
+      it "extracts Int from Int | String union" do
+        code = <<~STONE
+          Box := Record(value :: Int | String)
+          b := Box(123)
+          sum(b.value, 1)
+        STONE
+        expect(Stone.eval(code)).to eq(124)
+      end
+
+      # Multi-type unions require runtime type checking to distinguish alternatives.
+      it "extracts String from Int | String union", pending: "requires runtime type dispatch for multi-type unions" do
+        code = <<~STONE
+          Box := Record(value :: Int | String)
+          b := Box("world")
+          b.value
+        STONE
+        expect(Stone.eval(code)).to eq("world")
+      end
+
+      # Multi-type unions require runtime type checking to distinguish alternatives.
+      it "extracts Bool from Bool | Int union", pending: "requires runtime type dispatch for multi-type unions" do
+        code = <<~STONE
+          Box := Record(value :: Bool | Int)
+          b := Box(TRUE)
+          b.value
+        STONE
+        expect(Stone.eval(code)).to be true
+      end
+    end
+
+    describe "NULL handling" do
+      it "returns nil for NULL in Int | Null" do
+        code = <<~STONE
+          Box := Record(value :: Int | Null)
+          b := Box(NULL)
+          b.value
+        STONE
+        expect(Stone.eval(code)).to be_nil
+      end
+
+      it "returns nil for NULL in String | Null" do
+        code = <<~STONE
+          Box := Record(value :: String | Null)
+          b := Box(NULL)
+          b.value
+        STONE
+        expect(Stone.eval(code)).to be_nil
+      end
+
+      it "returns nil for NULL in Record | Null" do
+        code = <<~STONE
+          Inner := Record(x :: Int)
+          Outer := Record(value :: Inner | Null)
+          o := Outer(NULL)
+          o.value
+        STONE
+        expect(Stone.eval(code)).to be_nil
+      end
+    end
+
+    describe "chained access through union fields" do
+      # Chained access on union fields requires runtime type dispatch to extract
+      # the underlying record from the union before accessing its properties.
+      it "accesses properties on record from union field", pending: "requires chained property access on union fields" do
+        code = <<~STONE
+          Point := Record(x :: Int, y :: Int)
+          Box := Record(point :: Point | Null)
+          b := Box(Point(10, 20))
+          b.point.x
+        STONE
+        expect(Stone.eval(code)).to eq(10)
+      end
+
+      # Chained access on union fields requires runtime type dispatch.
+      it "accesses second property on record from union field", pending: "requires chained property access on union fields" do
+        code = <<~STONE
+          Point := Record(x :: Int, y :: Int)
+          Box := Record(point :: Point | Null)
+          b := Box(Point(10, 20))
+          b.point.y
+        STONE
+        expect(Stone.eval(code)).to eq(20)
+      end
     end
   end
 

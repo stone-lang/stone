@@ -241,6 +241,94 @@ RSpec.describe Stone::Type do
     end
   end
 
+  describe "#size_bytes" do
+    it "returns 8 for Int" do
+      expect(Stone::Type::Int.size_bytes).to eq(8)
+    end
+
+    it "returns 1 for Bool" do
+      expect(Stone::Type::Bool.size_bytes).to eq(1)
+    end
+
+    it "returns 8 for String (pointer size)" do
+      expect(Stone::Type::String.size_bytes).to eq(8)
+    end
+
+    it "returns 0 for Null" do
+      expect(Stone::Type::Null.size_bytes).to eq(0)
+    end
+
+    it "returns 8 for Type (pointer size)" do
+      expect(Stone::Type::Type.size_bytes).to eq(8)
+    end
+
+    context "with union types" do
+      it "returns tag size plus payload size for Int | Null" do
+        union = Stone::Type.union(alternatives: [Stone::Type::Int, Stone::Type::Null])
+        # 8 bytes for tag pointer + 8 bytes for payload (max of Int=8, Null=0)
+        expect(union.size_bytes).to eq(16)
+      end
+
+      it "returns tag size plus payload size for Bool | Null" do
+        union = Stone::Type.union(alternatives: [Stone::Type::Bool, Stone::Type::Null])
+        # 8 bytes for tag pointer + 1 byte for payload (max of Bool=1, Null=0)
+        expect(union.size_bytes).to eq(9)
+      end
+
+      it "returns tag size plus max alternative size for Int | String" do
+        union = Stone::Type.union(alternatives: [Stone::Type::Int, Stone::Type::String])
+        # 8 bytes for tag pointer + 8 bytes for payload (max of Int=8, String=8)
+        expect(union.size_bytes).to eq(16)
+      end
+    end
+  end
+
+  describe "#alignment" do
+    it "returns 8 for Int" do
+      expect(Stone::Type::Int.alignment).to eq(8)
+    end
+
+    it "returns 1 for Bool" do
+      expect(Stone::Type::Bool.alignment).to eq(1)
+    end
+
+    it "returns 8 for String (pointer alignment)" do
+      expect(Stone::Type::String.alignment).to eq(8)
+    end
+
+    it "returns 1 for Null" do
+      expect(Stone::Type::Null.alignment).to eq(1)
+    end
+
+    it "returns 8 for Type (pointer alignment)" do
+      expect(Stone::Type::Type.alignment).to eq(8)
+    end
+
+    context "with union types" do
+      it "returns 8 for Int | Null (pointer alignment for tag)" do
+        union = Stone::Type.union(alternatives: [Stone::Type::Int, Stone::Type::Null])
+        expect(union.alignment).to eq(8)
+      end
+    end
+  end
+
+  describe "#payload_size (Union)" do
+    it "returns max of alternative sizes" do
+      union = Stone::Type.union(alternatives: [Stone::Type::Int, Stone::Type::Null])
+      expect(union.payload_size).to eq(8)  # max(8, 0)
+    end
+
+    it "returns 1 for Bool | Null" do
+      union = Stone::Type.union(alternatives: [Stone::Type::Bool, Stone::Type::Null])
+      expect(union.payload_size).to eq(1)  # max(1, 0)
+    end
+
+    it "returns 8 for Int | String" do
+      union = Stone::Type.union(alternatives: [Stone::Type::Int, Stone::Type::String])
+      expect(union.payload_size).to eq(8)  # max(8, 8)
+    end
+  end
+
   describe "#nullable?" do
     it "returns false for primitive types" do
       expect(Stone::Type::Int.nullable?).to be false

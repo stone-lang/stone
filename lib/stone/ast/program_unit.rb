@@ -36,6 +36,7 @@ module Stone
         case llvm_type.to_s
         when "i64" then resolve_i64_type
         when "i1" then :boolean
+        when "ptr" then resolve_pointer_type
         else llvm_type
         end
       end
@@ -44,8 +45,25 @@ module Stone
         return :null if last_child_is_null?
         return :string if last_child_is_string?
         return :boolean if last_child_is_boolean?
+        return :union_value if last_child_is_union_field_access?
 
         :i64
+      end
+
+      private def resolve_pointer_type
+        # Pointers can be strings, records, or null
+        # Check based on AST context
+        return :string if last_child_is_string?
+        return :union_value if last_child_is_union_field_access?
+
+        :pointer
+      end
+
+      private def last_child_is_union_field_access?
+        last_child = children&.last
+        return false unless last_child.is_a?(Stone::AST::PropertyAccess)
+
+        last_child.union_field_access?(module_ref)
       end
 
       private def convert_to_ruby(result, result_type)
@@ -54,7 +72,77 @@ module Stone
         when "i1", "boolean" then result.to_i != 0
         when "string" then read_string_from_pointer(result.to_i)
         when "null" then nil
+        when "ptr", "pointer" then result.to_i  # Raw pointer value
+        when "union_value" then convert_union_value_to_ruby(result.to_i)
         else fail "Don't know how to convert LLVM type to Ruby: #{result_type}"
+        end
+      end
+
+      private def convert_union_value_to_ruby(value)
+        # Get the union type to determine how to interpret the value
+        last_child = children&.last
+        return value unless last_child.is_a?(Stone::AST::PropertyAccess)
+
+        union_type = get_union_type_for_property_access(last_child)
+        return value unless union_type
+
+        convert_based_on_union_type(value, union_type)
+      end
+
+      private def get_union_type_for_property_access(property_access)
+        record_type_name = property_access.get_record_type_name(module_ref)
+        return nil unless record_type_name
+
+        record_def = module_ref.record_types[record_type_name]
+        return nil unless record_def
+
+        annotation = record_def.field_type_annotation(property_access.property)
+        return nil unless Stone::AST::FieldHelpers.union_annotation?(annotation)
+
+        Stone::AST::FieldHelpers.resolve_field_type({type: annotation})
+      end
+
+      private def convert_based_on_union_type(value, union_type)
+        UnionValueConverter.new(value, union_type).convert
+      end
+
+      # Converts raw i64 values from LLVM to Ruby values based on union type alternatives.
+      # NOTE: This is a temporary solution until proper runtime type dispatch is implemented.
+      # The limitation is that Int(0) in Int | Null will return nil, not 0.
+      class UnionValueConverter
+        def initialize(value, union_type)
+          @value = value
+          @alternatives = union_type.alternatives
+        end
+
+        def convert
+          return nil if null_value?
+          return convert_string if string_only?
+          return convert_record if record_only?
+          return @value if has?("Int")
+          return @value != 0 if has?("Bool")
+
+          @value
+        end
+
+        private def null_value? = @value.zero? && has?("Null")
+        private def string_only? = has?("String") && !has?("Int") && !has?("Bool") && !any_record?
+        private def record_only? = any_record? && !has?("Int") && !has?("Bool") && !has?("String")
+        private def has?(name) = @alternatives.any? { |alt| alt.name == name }
+        private def any_record? = @alternatives.any?(&:record?)
+
+        private def convert_string
+          return "" if @value.zero?
+
+          FFI::Pointer.new(@value).read_string.force_encoding(Encoding::UTF_8)
+        end
+
+        private def convert_record
+          return nil if @value.zero?
+
+          # Returns raw pointer value. Chained property access (e.g., o.value.x)
+          # requires compile-time handling in PropertyAccess, not Ruby conversion.
+          @value
         end
       end
 

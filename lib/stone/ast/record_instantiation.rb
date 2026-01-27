@@ -77,7 +77,10 @@ module Stone
       end
 
       private def convert_field_value(builder, mod, field, value, index)
-        return wrap_in_tagged_union(builder, mod, value, @field_values[index]) if Stone::AST::FieldHelpers.union_annotation?(field[:type])
+        if Stone::AST::FieldHelpers.union_annotation?(field[:type])
+          union_type = Stone::AST::FieldHelpers.resolve_field_type(field)
+          return wrap_in_tagged_union(builder, mod, value, @field_values[index], union_type)
+        end
         return allocate_and_store(builder, value) if needs_pointer_conversion?(field, mod, value)
 
         value
@@ -87,34 +90,28 @@ module Stone
         field_expects_pointer?(field[:type_name], mod) && value.type.kind == :struct
       end
 
-      private def wrap_in_tagged_union(builder, mod, llvm_value, ast_value)
+      private def wrap_in_tagged_union(builder, mod, llvm_value, ast_value, union_type)
         value_type = ast_value.type(Stone::TypeContext.new(mod))
         type_constant = Stone::RTTI.type_constant_for(mod, value_type)
-        union_struct_type = Stone::Type::Union.tagged_union_struct_type
-        union_value = union_struct_type.null
-        union_value = builder.insert_value(union_value, type_constant, 0, "union_with_tag")
-        payload = value_to_payload(builder, llvm_value)
-        builder.insert_value(union_value, payload, 1, "union_with_payload")
+
+        # Allocate union on stack
+        union_ptr = builder.alloca(union_type.llvm_type, "union_alloca")
+
+        # Store type tag (field 0)
+        tag_ptr = builder.struct_gep2(union_type.llvm_type, union_ptr, 0, "tag_ptr")
+        builder.store(type_constant, tag_ptr)
+
+        # Store payload (field 1) - no ptr2int needed
+        payload_ptr = builder.struct_gep2(union_type.llvm_type, union_ptr, 1, "payload_ptr")
+        store_payload(builder, payload_ptr, llvm_value, value_type)
+
+        # Load and return the union value
+        builder.load2(union_type.llvm_type, union_ptr, "union_value")
       end
 
-      private def value_to_payload(builder, llvm_value)
-        case llvm_value.type.kind
-        when :integer then integer_to_payload(builder, llvm_value)
-        when :pointer then builder.ptr2int(llvm_value, LLVM::Int64.type, "payload_ptr2int")
-        when :struct then struct_to_payload(builder, llvm_value)
-        else llvm_value
-        end
-      end
-
-      private def integer_to_payload(builder, llvm_value)
-        return llvm_value if llvm_value.type.width == 64
-
-        builder.zext(llvm_value, LLVM::Int64.type, "payload_zext")
-      end
-
-      private def struct_to_payload(builder, llvm_value)
-        ptr = allocate_and_store(builder, llvm_value)
-        builder.ptr2int(ptr, LLVM::Int64.type, "payload_struct_ptr")
+      private def store_payload(builder, payload_ptr, llvm_value, _value_type)
+        value_to_store = llvm_value.type.kind == :struct ? allocate_and_store(builder, llvm_value) : llvm_value
+        builder.store(value_to_store, payload_ptr)
       end
 
       private def field_expects_pointer?(field_type_name, mod)

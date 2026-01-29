@@ -45,6 +45,18 @@ RSpec.describe Stone::Type do
     end
   end
 
+  describe "#generic_for" do
+    it "returns the generic category when set" do
+      type = described_class.primitive(name: "Record", llvm_type: :mock, generic_for: :record)
+      expect(type.generic_for).to eq(:record)
+    end
+
+    it "returns nil when not set" do
+      type = described_class.primitive(name: "Int", llvm_type: :mock)
+      expect(type.generic_for).to be_nil
+    end
+  end
+
   describe ".record" do
     it "creates a record type" do
       fields = [{name: "x", type: "Int"}, {name: "y", type: "Int"}]
@@ -417,6 +429,40 @@ RSpec.describe Stone::Type do
       end
     end
 
+    context "with generic types" do
+      it "generic Record is compatible with any record type" do
+        generic_record = Stone::Type.primitive(name: "Record", llvm_type: :mock, generic_for: :record)
+        point = Stone::Type.record(name: "Point", fields: [{name: "x", type: "Int"}], llvm_type: :mock)
+        expect(generic_record.compatible_with?(point)).to be true
+      end
+
+      it "generic Record is not compatible with Int" do
+        generic_record = Stone::Type.primitive(name: "Record", llvm_type: :mock, generic_for: :record)
+        expect(generic_record.compatible_with?(int_type)).to be false
+      end
+
+      it "generic Record is compatible with itself" do
+        generic_record = Stone::Type.primitive(name: "Record", llvm_type: :mock, generic_for: :record)
+        expect(generic_record.compatible_with?(generic_record)).to be true
+      end
+
+      it "generic Function is compatible with any function type" do
+        generic_fn = Stone::Type.primitive(name: "Function", llvm_type: :mock, generic_for: :function)
+        int_to_int = Stone::Type.function(param_types: [int_type], return_type: int_type)
+        expect(generic_fn.compatible_with?(int_to_int)).to be true
+      end
+
+      it "generic Function is not compatible with Int" do
+        generic_fn = Stone::Type.primitive(name: "Function", llvm_type: :mock, generic_for: :function)
+        expect(generic_fn.compatible_with?(int_type)).to be false
+      end
+
+      it "generic Function is compatible with itself" do
+        generic_fn = Stone::Type.primitive(name: "Function", llvm_type: :mock, generic_for: :function)
+        expect(generic_fn.compatible_with?(generic_fn)).to be true
+      end
+    end
+
     context "with union types" do
       it "returns true when value type is one of the alternatives" do
         int_or_string = Stone::Type.union(alternatives: [int_type, string_type])
@@ -477,6 +523,30 @@ RSpec.describe Stone::Type do
     it "generates name from alternatives (sorted alphabetically)" do
       union = Stone::Type.union(alternatives: [int_type, string_type])
       expect(union.name).to eq("Int | String")
+    end
+
+    context "with name override" do
+      it "uses the provided name instead of auto-generating" do
+        union = Stone::Type.union(alternatives: [int_type, string_type], name: "Foo")
+        expect(union.name).to eq("Foo")
+      end
+
+      it "auto-generates name when no override is given" do
+        union = Stone::Type.union(alternatives: [int_type, string_type])
+        expect(union.name).to eq("Int | String")
+      end
+
+      it "preserves single-alternative union when name is given" do
+        union = Stone::Type.union(alternatives: [int_type], name: "SingleAlias")
+        expect(union.union?).to be true
+        expect(union.name).to eq("SingleAlias")
+      end
+
+      it "still collapses single-alternative union without name override" do
+        result = Stone::Type.union(alternatives: [int_type])
+        expect(result).to eq(int_type)
+        expect(result.union?).to be false
+      end
     end
 
     it "handles three or more alternatives (sorted alphabetically)" do

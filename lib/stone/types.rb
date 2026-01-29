@@ -18,7 +18,9 @@ module Stone
       types = create_primitive_types
       register_all_types(types)
       setup_property_types(types)
-      setup_type_constants(types)
+      aliases = create_type_aliases(types)
+      register_all_types(aliases)
+      setup_type_constants(types.merge(aliases))
       Stone::TypeRegistry.instance
     end
 
@@ -29,9 +31,10 @@ module Stone
         string: Stone::Type.primitive(name: "String", llvm_type: LLVM::Int64.type),
         type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Type.pointer),
         null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Type.ptr),
+        record: Stone::Type.primitive(name: "Record", llvm_type: LLVM::Type.pointer, generic_for: :record),
+        function: Stone::Type.primitive(name: "Function", llvm_type: LLVM::Type.pointer, generic_for: :function),
         # FieldList is a list-like type for record field metadata
         # TODO: Replace with List(Field) once generics are available
-        function: Stone::Type.primitive(name: "Function", llvm_type: LLVM::Type.pointer),
         field_list: Stone::Type.primitive(name: "FieldList", llvm_type: LLVM::Type.pointer)
       }
     end
@@ -39,6 +42,19 @@ module Stone
     def register_all_types(types)
       registry = Stone::TypeRegistry.instance
       types.each_value { |type| registry.register(type) }
+    end
+
+    def create_type_aliases(types)
+      primitive = Stone::Type.union(
+        alternatives: [types[:null], types[:bool], types[:int], types[:string]],
+        name: "Primitive"
+      )
+      # TODO: Add Collection, Process, Error to Any when available
+      any = Stone::Type.union(
+        alternatives: [primitive, types[:record], types[:function], types[:type]],
+        name: "Any"
+      )
+      {primitive: primitive, any: any}
     end
 
     def setup_property_types(types)

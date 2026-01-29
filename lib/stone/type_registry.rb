@@ -32,7 +32,7 @@ module Stone
       type = @types[name]
       return false unless type
 
-      !type.primitive?
+      type.record?
     end
 
     def all
@@ -44,7 +44,7 @@ module Stone
     end
 
     def records
-      @types.values.reject(&:primitive?)
+      @types.values.select(&:record?)
     end
 
     # Convenience accessors for built-in types

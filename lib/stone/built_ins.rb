@@ -301,6 +301,13 @@ module Stone
       # not(Bool) -> Bool
       Stone::Type::Registry.register_as("not", Stone::Type.function(param_types: [bool], return_type: bool))
 
+      # Equality operators: equals?(Any, Any) -> Bool
+      any = Stone::Type::Any
+      equality_type = Stone::Type.function(param_types: [any, any], return_type: bool)
+      %w[equals? == != ≠].each do |name|
+        Stone::Type::Registry.register_as(name, equality_type)
+      end
+
       # Unicode operator aliases
       Stone::Type::Registry.register_as("∧", Stone::Type.function(param_types: [bool, bool], return_type: bool))
       Stone::Type::Registry.register_as("∨", Stone::Type.function(param_types: [bool, bool], return_type: bool))

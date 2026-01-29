@@ -26,7 +26,7 @@ module Stone
       "FieldList" => 8  # pointer alignment
     }.freeze
 
-    attr_reader :name, :llvm_type, :fields, :min, :max, :param_types, :return_type
+    attr_reader :name, :llvm_type, :fields, :min, :max, :param_types, :return_type, :generic_for
     attr_accessor :property_types
 
     def initialize(name:, llvm_type:, property_types: {}, fields: nil, **options)
@@ -39,6 +39,7 @@ module Stone
       @max = options[:max]
       @param_types = options[:param_types]
       @return_type = options[:return_type]
+      @generic_for = options[:generic_for]
     end
 
     def property_return_type(property_name)
@@ -111,9 +112,14 @@ module Stone
 
     def compatible_with?(other)
       return true if self == other
+      return true if covers_category?(other)
       return other.alternatives.any? { |alt| compatible_with?(alt) } if other.union?
 
       function? && function_compatible_with?(other)
+    end
+
+    private def covers_category?(other)
+      (@generic_for == :record && other.record?) || (@generic_for == :function && other.function?)
     end
 
     private def function_compatible_with?(other)
@@ -148,8 +154,8 @@ module Stone
       "#<Stone::Type:#{name}>"
     end
 
-    def self.primitive(name:, llvm_type:, property_types: {}, min: nil, max: nil)
-      new(name:, llvm_type:, property_types:, primitive: true, min:, max:)
+    def self.primitive(name:, llvm_type:, property_types: {}, **options)
+      new(name:, llvm_type:, property_types:, primitive: true, **options)
     end
 
     def self.record(name:, fields:, llvm_type:)
@@ -163,8 +169,9 @@ module Stone
       new(name:, llvm_type: nil, param_types:, return_type:)
     end
 
-    def self.union(alternatives:)
-      union = Union.new(alternatives:)
+    def self.union(alternatives:, name: nil)
+      union = Union.new(alternatives:, name:)
+      return union if name
       union.alternatives.length == 1 ? union.alternatives.first : union
     end
 
@@ -172,11 +179,11 @@ module Stone
     class Union < Type
       attr_reader :alternatives
 
-      def initialize(alternatives:)
+      def initialize(alternatives:, name: nil)
         @alternatives = flatten_and_dedupe(alternatives)
         fail ::ArgumentError, "Union type requires at least one alternative" if @alternatives.empty?
 
-        super(name: generate_name, llvm_type: create_variable_sized_llvm_type)
+        super(name: name || generate_name, llvm_type: create_variable_sized_llvm_type)
       end
 
       def size_bytes

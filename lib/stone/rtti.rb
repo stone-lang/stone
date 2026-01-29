@@ -312,9 +312,8 @@ module Stone
     def self.type_kind(type)
       return KIND_TYPE if type == Stone::Type::Type
       return KIND_FUNCTION if type.function? || type == Stone::Type::Function
-      return KIND_RECORD if type.record?
+      return KIND_RECORD if type.record? || type == Stone::Type::Record
       return KIND_UNION if type.union?
-      return KIND_PRIMITIVE if type.primitive?
 
       KIND_PRIMITIVE
     end

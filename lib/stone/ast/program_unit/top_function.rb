@@ -53,27 +53,25 @@ module Stone
         end
 
         private def returns_pointer?(node)
-          # Mixed union field access now returns i64 (payload extracted directly)
-          # so it does NOT return a pointer
+          heap_allocated_union_field_access?(node) ||
+            node.is_a?(Stone::AST::StringLiteral) ||
+            reference_to_string_constant?(node) ||
+            string_returning_property?(node) ||
+            returns_pointer_by_type?(node)
+        end
 
-          # String literals return pointers
-          return true if node.is_a?(Stone::AST::StringLiteral)
+        private def heap_allocated_union_field_access?(node)
+          return false unless node.is_a?(Stone::AST::PropertyAccess)
+          return false unless node.respond_to?(:union_field_access?)
+          return false unless node.union_field_access?(@mod)
 
-          # References to string constants return pointers
-          return true if reference_to_string_constant?(node)
+          union_type = get_union_type_for(node)
+          union_type&.needs_runtime_type_tag?
+        end
 
-          # Certain PropertyAccess patterns return string pointers
-          return true if string_returning_property?(node)
-
-          # Check Stone type system for other cases
-          # Rescue errors since some types (computed properties, etc.) aren't registered yet
+        private def returns_pointer_by_type?(node)
           stone_type = safe_get_type(node)
-          return true if stone_type == Stone::Type::String
-
-          # Record instances return pointers
-          return true if stone_type&.record?
-
-          false
+          stone_type == Stone::Type::String || stone_type&.record?
         end
 
         # PropertyAccess patterns that return string pointers

@@ -37,7 +37,11 @@ module Stone
         last_child = children&.last
         return :null unless last_child
 
-        # Check for mixed union field access first (PropertyAccess on mixed union field)
+        # Check for heap-allocated union field access first (e.g., Bool | Int)
+        # These return a pointer to heap memory containing the union struct
+        return :heap_union_ptr if heap_union_field_access?(last_child)
+
+        # Check for mixed union field access (PropertyAccess on mixed union field)
         # Mixed unions now return i64 (payload extracted directly)
         return :mixed_union_value if mixed_union_field_access?(last_child)
 
@@ -103,6 +107,14 @@ module Stone
         :mixed_union_ptr
       end
 
+      private def heap_union_field_access?(node)
+        return false unless node.is_a?(Stone::AST::PropertyAccess)
+        return false unless node.union_field_access?(module_ref)
+
+        union_type = get_union_type_for_property_access(node)
+        union_type&.needs_runtime_type_tag?
+      end
+
       private def mixed_union_field_access?(node)
         return false unless node.is_a?(Stone::AST::PropertyAccess)
         return false unless node.union_field_access?(module_ref)
@@ -139,8 +151,19 @@ module Stone
         when "string" then read_string_from_pointer(result.to_value_ptr.to_i)
         when "union_value" then convert_union_value_to_ruby(result.to_i)
         when "mixed_union_value" then convert_mixed_union_value(result.to_i)
+        when "heap_union_ptr" then convert_heap_union_ptr(result.to_value_ptr.to_i)
         else fail "Don't know how to convert result type to Ruby: #{result_type}"
         end
+      end
+
+      private def convert_heap_union_ptr(ptr_addr)
+        return nil if ptr_addr.zero?
+
+        last_child = children&.last
+        union_type = get_union_type_for_property_access(last_child)
+        return nil unless union_type
+
+        HeapUnionConverter.new(ptr_addr, union_type).convert
       end
 
       private def convert_union_value_to_ruby(value)
@@ -187,6 +210,64 @@ module Stone
 
       private def convert_based_on_union_type(value, union_type)
         UnionValueConverter.new(value, union_type).convert
+      end
+
+      # Converts heap-allocated union structs to Ruby values using the runtime type tag.
+      # The union struct layout is: { ptr type_tag, [N x i8] payload }
+      # The type_tag is a pointer to a Stone::Type constant. We read the type name from it.
+      class HeapUnionConverter
+        TYPE_TAG_SIZE = 8  # Size of the type tag pointer (first field in union struct)
+
+        def initialize(union_ptr_addr, union_type)
+          @union_ptr = FFI::Pointer.new(union_ptr_addr)
+          @union_type = union_type
+        end
+
+        def convert
+          type_name = read_type_name_from_tag
+          read_and_convert_payload(type_name)
+        end
+
+        private def read_type_tag_ptr
+          # Type tag is at offset 0, it's a pointer to Stone::Type struct
+          @union_ptr.read_pointer
+        end
+
+        private def payload_ptr
+          @union_ptr + TYPE_TAG_SIZE
+        end
+
+        # Read the type name string from the type tag struct.
+        # Stone::Type struct layout: { ptr name, i64 size, i8 kind, ptr fields }
+        # The name field (offset 0) is a pointer to a null-terminated string.
+        private def read_type_name_from_tag
+          type_tag_ptr = read_type_tag_ptr
+          return "Null" if type_tag_ptr.null?
+
+          # Read the name pointer (first field of Stone::Type struct)
+          name_ptr = type_tag_ptr.read_pointer
+          return "Unknown" if name_ptr.null?
+
+          # Read the null-terminated string
+          name_ptr.read_string
+        end
+
+        # Read payload with the correct size based on type, then convert to Ruby
+        private def read_and_convert_payload(type_name)
+          case type_name
+          when "Null" then nil
+          when "Bool" then payload_ptr.read_uint8 != 0
+          when "Int" then payload_ptr.read_int64
+          when "String" then read_string(payload_ptr.read_pointer.to_i)
+          else payload_ptr.read_int64  # Records and other pointer types
+          end
+        end
+
+        private def read_string(ptr_addr)
+          return "" if ptr_addr.zero?
+
+          FFI::Pointer.new(ptr_addr).read_string.force_encoding(Encoding::UTF_8)
+        end
       end
 
       # Converts raw i64 values from LLVM to Ruby values based on union type alternatives.

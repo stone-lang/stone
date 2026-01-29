@@ -216,6 +216,14 @@ module Stone
         !common_llvm_result_type.nil?
       end
 
+      # Returns true if the union contains types that cannot be distinguished by value alone.
+      # For example, Bool | Int - both are integers, and Bool(1) looks like Int(1).
+      # Such unions require returning the runtime type tag to Ruby for proper interpretation.
+      def needs_runtime_type_tag?
+        non_null_names = @alternatives.reject { |alt| alt.name == "Null" }.map(&:name)
+        non_null_names.include?("Bool") && non_null_names.include?("Int")
+      end
+
       private def create_variable_sized_llvm_type
         payload_array = LLVM::Type.array(LLVM::Int8.type, payload_size)
         LLVM::Type.struct([LLVM::Type.pointer, payload_array], false)

@@ -327,6 +327,10 @@ module Stone
       end
 
       private def extract_union_payload(builder, mod, union_value, union_type)
+        # For unions that need runtime type tag (e.g., Bool | Int), allocate on heap and return pointer.
+        # Ruby reads type tag and payload from heap memory to interpret correctly.
+        return heap_allocate_union(builder, mod, union_value, union_type) if union_type.needs_runtime_type_tag?
+
         # For homogeneous unions, extract the payload with phi merge
         return extract_homogeneous_union(builder, mod, union_value, union_type) if union_type.homogeneous?
 
@@ -334,6 +338,29 @@ module Stone
         # Both Int (8 bytes) and String pointers (8 bytes) fit in i64.
         # Ruby-side conversion uses the type tag to interpret the value correctly.
         extract_mixed_union_payload(builder, mod, union_value, union_type)
+      end
+
+      # Allocate union on heap using malloc, store the value, return pointer.
+      # Ruby can read the type tag and payload from this memory.
+      # NOTE: This memory is never freed, but since it only happens at the end of
+      # program evaluation (returning values to Ruby), the leak is acceptable.
+      private def heap_allocate_union(builder, mod, union_value, union_type)
+        # Get or declare malloc
+        malloc_func = mod.functions["malloc"] || declare_malloc(mod)
+
+        # Allocate memory for the union struct (16 bytes: 8 for ptr, 8 for payload)
+        size = LLVM::Int64.from_i(union_type.size_bytes)
+        heap_ptr = builder.call(malloc_func, size, "union_heap_ptr")
+
+        # Store the union value to heap memory
+        builder.store(union_value, heap_ptr)
+
+        heap_ptr
+      end
+
+      private def declare_malloc(mod)
+        malloc_type = LLVM::Type.function([LLVM::Int64.type], LLVM::Type.pointer, varargs: false)
+        mod.functions.add("malloc", malloc_type)
       end
 
       private def extract_mixed_union_payload(builder, _mod, union_value, union_type)

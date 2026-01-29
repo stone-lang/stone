@@ -386,14 +386,40 @@ RSpec.describe "Union Types" do
         expect(Stone.eval(code)).to eq("world")
       end
 
-      # Multi-type unions require runtime type checking to distinguish alternatives.
-      it "extracts Bool from Bool | Int union", pending: "requires runtime type dispatch for multi-type unions" do
+      it "extracts Bool TRUE from Bool | Int union" do
         code = <<~STONE
           Box := Record(value :: Bool | Int)
           b := Box(TRUE)
           b.value
         STONE
         expect(Stone.eval(code)).to be true
+      end
+
+      it "extracts Bool FALSE from Bool | Int union" do
+        code = <<~STONE
+          Box := Record(value :: Bool | Int)
+          b := Box(FALSE)
+          b.value
+        STONE
+        expect(Stone.eval(code)).to be false
+      end
+
+      it "extracts Int 0 from Bool | Int union (not false)" do
+        code = <<~STONE
+          Box := Record(value :: Bool | Int)
+          b := Box(0)
+          b.value
+        STONE
+        expect(Stone.eval(code)).to eq(0)
+      end
+
+      it "extracts Int 1 from Bool | Int union (not true)" do
+        code = <<~STONE
+          Box := Record(value :: Bool | Int)
+          b := Box(1)
+          b.value
+        STONE
+        expect(Stone.eval(code)).to eq(1)
       end
     end
 

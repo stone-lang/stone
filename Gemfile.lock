@@ -1,4 +1,15 @@
 GIT
+  remote: https://github.com/boochtek/rubocop-boochtek.git
+  revision: 548dfa36318e74ad5bce9eae538598f647c6900c
+  branch: main
+  specs:
+    rubocop-boochtek (0.2.1)
+      lint_roller (~> 1.1)
+      rubocop (~> 1.72)
+      rubocop-performance (~> 1.20)
+      rubocop-rspec (~> 3.0)
+
+GIT
   remote: https://github.com/ruby/reline.git
   revision: 7eef150d6e3c7e85836b1a6da40a15f06a3c487e
   branch: master
@@ -51,13 +62,13 @@ GEM
       iniparse (~> 1.4)
       rexml (>= 3.3.9)
     parallel (1.27.0)
-    parser (3.3.10.0)
+    parser (3.3.10.1)
       ast (~> 2.4.1)
       racc
     pp (0.6.3)
       prettyprint
     prettyprint (0.2.0)
-    prism (1.7.0)
+    prism (1.8.0)
     pry (0.15.2)
       coderay (~> 1.1)
       method_source (~> 1.0)
@@ -102,16 +113,11 @@ GEM
     rubocop-ast (1.49.0)
       parser (>= 3.3.7.2)
       prism (~> 1.7)
-    rubocop-boochtek (0.2.0)
-      lint_roller (~> 1.1)
-      rubocop (~> 1.72)
-      rubocop-performance (~> 1.20)
-      rubocop-rspec (~> 3.0)
     rubocop-performance (1.26.1)
       lint_roller (~> 1.1)
       rubocop (>= 1.75.0, < 2.0)
       rubocop-ast (>= 1.47.1, < 2.0)
-    rubocop-rspec (3.8.0)
+    rubocop-rspec (3.9.0)
       lint_roller (~> 1.1)
       rubocop (~> 1.81)
     ruby-debug-ide (0.7.5)
@@ -150,7 +156,7 @@ DEPENDENCIES
   reline!
   rspec
   rubocop
-  rubocop-boochtek (~> 0.2)
+  rubocop-boochtek!
   ruby-debug-ide
   ruby-llvm (>= 21)
   ruby-lsp

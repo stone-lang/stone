@@ -30,6 +30,6 @@ gem "binding_of_caller", require: false
 # Building
 gem "overcommit"
 gem "rubocop", require: false
-gem "rubocop-boochtek", "~> 0.2", require: false
+gem "rubocop-boochtek", github: "boochtek/rubocop-boochtek", branch: "main", require: false
 gem "ruby-lsp", require: false
 gem "ruby-lsp-rspec", require: false

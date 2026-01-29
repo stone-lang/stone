@@ -9,9 +9,9 @@ This file provides guidance to AI agents (such as Claude Code) when working with
 1. **Working Directory**: Sessions should run from `~/Work/Code/stone` (the main repository, NOT a worktree)
 2. **Default Branch**: `0.10` (current development branch)
 3. **Session Verification**: At session start, check:
-   - Current directory: `pwd` (should be `~/Work/Code/stone`)
-   - Current branch: `git --no-pager branch --show-current` (should be `0.10`)
-   - Uncommitted changes: `git --no-pager status --short`
+    - Current directory: `pwd` (should be `~/Work/Code/stone`)
+    - Current branch: `git --no-pager branch --show-current` (should be `0.10`)
+    - Uncommitted changes: `git --no-pager status --short`
 
 **If you find yourself in a worktree directory** (like `~/.claude-worktrees/stone/*`):
 
@@ -77,11 +77,13 @@ When the tests pass, check to see if there are any refactoring opportunities. I'
 
 Double-check to ensure the code is following security best practices, coding best practices. Make sure `make specs` and `make lint` are passing before considering the task complete. Do not disable any linting checks without permission; in most cases, you will need to fix the issue.
 
-Once that's done, give yourself a code review - 4 of them, in sequence (after fixing what as found in previous review). Delegate to subagents, whenever possible and reasonable. Consider using different models. Correct any issues identified. Look for edge cases or any other cases that we don't handle well. Look for security issues. Refactor more than you think you should. ;P
+- When the user says "proceed through to commit," batch the reviews and lint fixes more aggressively — aim for one CI run after all reviews rather than re-running between each.
+
+Once that's done, give yourself a code review - 4 of them, in sequence (after fixing what as found in previous review). Delegate to subagents, whenever possible and reasonable. Consider using different models. Correct any issues identified. Look for edge cases or any other cases that we don't handle well. Look for security issues. Refactor more than you think you should. ;P There's no need to check linting in the reviews; we can do that once the reviews have all been completed.
 
 Ensure that the code is readable, maintainable, flexible (easily changed), and as simple as possible.
 
-Then suggest a concise commit message, following the directions below. Suggest multiple commits if it's appropriate to keep small atomic commits. I want to be able to use `git bisect` without worries, and I want atomic commits to make rollbacks safer and easier. Have the commit(s) and commit message(s) approved before making the commits. TODO: Please help me figure out how to trust allowing the AI agent to make commits, then PRs. I can always squash or interactively rebase to clean things up after the fact. Especially with AI's help. Especially if I do code reviews.
+Then suggest a concise commit message, following the directions below. Suggest multiple commits if it's appropriate to keep small atomic commits. I want to be able to use `git bisect` without worries, and I want atomic commits to make rollbacks safer and easier. Have the commit(s) and commit message(s) approved before making the commits, unless I have previously told you to continue through to the commit.
 
 Please ask me questions, challenge my assumptions, and make suggestions at any time. Suggest any improvements to the approach, the code structure, or organization. Suggest things you learned that would be good to add to the AGENTS.md or CLAUDE.md file, or some other file.
 
@@ -296,10 +298,10 @@ When you have multiple uncommitted changes:
 
 1. Run `make ci` first to ensure everything passes
 2. Group related changes logically:
-   - Infrastructure/build changes together
-   - Related refactorings together (consider amending if recent)
-   - Documentation updates together
-   - Feature additions separately
+    - Infrastructure/build changes together
+    - Related refactorings together (consider amending if recent)
+    - Documentation updates together
+    - Feature additions separately
 3. Use `git add <specific-files>` to stage related changes
 4. Consider whether refactorings can be squashed into recent related commits
 5. Create atomic commits that can pass CI independently
@@ -360,6 +362,9 @@ The `stone` binary (not yet implemented) will support:
 - Exceptions for RSpec and grammar/transform rules (use {} for `rule`, `let`, `expect`)
 - Non-ASCII identifiers and comments are allowed
 - Use inline `private def` instead of having a `private` section
+- RuboCop ClassLength counts code lines only
+    - Comments and blank lines are excluded
+    - To reduce class length, remove dead code, inline small methods, and extract helper classes into other files (in that order)
 
 ### Testing with RSpec
 
@@ -373,16 +378,16 @@ The `stone` binary (not yet implemented) will support:
 Specs are organized into unit tests, language specification tests, and CLI tests:
 
 1. **spec/unit/** - Unit tests for individual components
-   - `unit/parser/` - Parser/grammar tests (parse tree structure)
-   - `unit/ast/` - AST node tests (node behavior, LLVM IR generation)
-   - `unit/transform/` - Transformation tests (parse tree → AST)
-   - `unit/api/` - Stone module API tests (Stone.parse, Stone.eval, etc.)
+    - `unit/parser/` - Parser/grammar tests (parse tree structure)
+    - `unit/ast/` - AST node tests (node behavior, LLVM IR generation)
+    - `unit/transform/` - Transformation tests (parse tree → AST)
+    - `unit/api/` - Stone module API tests (Stone.parse, Stone.eval, etc.)
 
 2. **spec/language/** - Language specification tests
-   - Tests complete parse → transform → compile → evaluate flow
-     - But not the CLI code
-   - Documents language semantics with executable examples
-   - Serves as both spec and documentation
+    - Tests complete parse → transform → compile → evaluate flow
+        - But not the CLI code
+    - Documents language semantics with executable examples
+    - Serves as both spec and documentation
 
 3. **spec/cli/** - End-to-end tests that include CLI commands
 
@@ -461,10 +466,13 @@ When spawning subagents (via Task tool):
 
 1. **Clarify workflow upfront** - Tell subagents whether they need approval checkpoints or can proceed continuously
 2. **Include CI requirements** - Remind subagents that `make ci` must pass before reporting completion
+    - Don't trust "mostly passes" - verify exact CI output before accepting
 3. **Be specific about deliverables** - "Write tests only" vs "Implement the feature"
 4. **Consolidate when possible** - Avoid multiple agent invocations for the same logical task
-5. **Verify before accepting** - Don't trust "mostly passes" - check exact CI output
-6. **Big picture** - Ensure subagents understand the overall project goals and context
+5. **Big picture** - Ensure subagents understand the overall project goals and context
+6. **Temp files** - When writing to temp files, use Bash with `cat <<EOF > /tmp/file.md` instead of the Write tool
+    - The Write tool requires reading before writing, which we don't need for temp files
+    - Make sure the temp file doesn't already exist first
 
 Subagents should report their high-level actions, along with a list of files created/modified/deleted.
 

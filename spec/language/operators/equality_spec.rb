@@ -254,6 +254,66 @@ RSpec.describe "Universal equality" do
     end
   end
 
+  describe "Function equality (reference)" do
+    it "same function reference is equal" do
+      code = <<~STONE
+        f := λ(x) { x }
+        f == f
+      STONE
+      expect(Stone.eval(code)).to be(true)
+    end
+
+    it "different lambdas with same body are not equal" do
+      code = <<~STONE
+        f := λ(x) { x }
+        g := λ(x) { x }
+        f == g
+      STONE
+      expect(Stone.eval(code)).to be(false)
+    end
+
+    it "function vs Int returns false" do
+      code = <<~STONE
+        f := λ(x) { x }
+        f == 42
+      STONE
+      expect(Stone.eval(code)).to be(false)
+    end
+
+    it "function vs String returns false" do
+      code = <<~STONE
+        f := λ(x) { x }
+        f == "hello"
+      STONE
+      expect(Stone.eval(code)).to be(false)
+    end
+
+    it "function vs Bool returns false" do
+      code = <<~STONE
+        f := λ(x) { x }
+        f == TRUE
+      STONE
+      expect(Stone.eval(code)).to be(false)
+    end
+
+    it "function vs NULL returns false" do
+      code = <<~STONE
+        f := λ(x) { x }
+        f == NULL
+      STONE
+      expect(Stone.eval(code)).to be(false)
+    end
+
+    it "!= returns true for different lambdas" do
+      code = <<~STONE
+        f := λ(x) { x }
+        g := λ(x) { x }
+        f != g
+      STONE
+      expect(Stone.eval(code)).to be(true)
+    end
+  end
+
   describe "!= as logical negation of ==" do
     it "is false when == is true for Int" do
       expect(Stone.eval("5 != 5")).to be(false)

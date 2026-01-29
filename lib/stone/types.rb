@@ -31,6 +31,7 @@ module Stone
         null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Type.ptr),
         # FieldList is a list-like type for record field metadata
         # TODO: Replace with List(Field) once generics are available
+        function: Stone::Type.primitive(name: "Function", llvm_type: LLVM::Type.pointer),
         field_list: Stone::Type.primitive(name: "FieldList", llvm_type: LLVM::Type.pointer)
       }
     end

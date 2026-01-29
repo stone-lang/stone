@@ -92,10 +92,14 @@ module Stone
         rescue Stone::PropertyError, Stone::TypeError
           nil
         end
+        # Use the generic Function primitive for equality (pointer comparison, not structural)
+        result = Stone::Type::Function if result&.function?
         result || type_from_llvm_value(llvm_value)
       end
 
       private def type_from_llvm_value(llvm_value)
+        return Stone::Type::Function if llvm_function?(llvm_value)
+
         case llvm_value.type.kind
         when :integer then llvm_value.type.width == 1 ? Stone::Type::Bool : Stone::Type::Int
         else Stone::Type::Null
@@ -113,9 +117,16 @@ module Stone
       end
 
       private def box_value(builder, llvm_value)
-        alloca = builder.alloca(llvm_value.type, "eq_box")
+        box_type = llvm_function?(llvm_value) ? LLVM::Type.pointer : llvm_value.type
+        alloca = builder.alloca(box_type, "eq_box")
         builder.store(llvm_value, alloca)
         alloca
+      end
+
+      # LLVM::Function values have type kind :function, not :pointer or :integer,
+      # so they need special handling in type inference and boxing.
+      private def llvm_function?(llvm_value)
+        llvm_value.is_a?(LLVM::Function)
       end
 
       private def equality_operator?

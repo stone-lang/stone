@@ -11,6 +11,7 @@ module Stone
       "String" => 8,  # pointer size
       "Null" => 0,
       "Type" => 8,    # pointer size
+      "Function" => 8,  # pointer size
       "FieldList" => 8  # pointer size
     }.freeze
 
@@ -21,6 +22,7 @@ module Stone
       "String" => 8,  # pointer alignment
       "Null" => 1,
       "Type" => 8,    # pointer alignment
+      "Function" => 8,  # pointer alignment
       "FieldList" => 8  # pointer alignment
     }.freeze
 

@@ -93,16 +93,13 @@ module Stone
       builder.load2(LLVM::Type.pointer, fn_ptr_ptr, "fn_ptr")
     end
 
-    private def type_struct
-      @type_struct ||= self.class.type_struct_type
-    end
-
     private def define_primitive_equals_functions
       @int_equals_fn = define_icmp_equals("__Int_equals__", LLVM::Int64.type)
       @bool_equals_fn = define_icmp_equals("__Bool_equals__", LLVM::Int1.type)
       @string_equals_fn = define_string_equals
       @null_equals_fn = define_null_equals
       @type_equals_fn = define_icmp_equals("__Type_equals__", LLVM::Type.pointer)
+      @function_equals_fn = define_icmp_equals("__Function_equals__", LLVM::Type.pointer)
     end
 
     private def define_icmp_equals(name, load_type)
@@ -187,7 +184,7 @@ module Stone
     # All other types (primitives, metatypes) store values directly, so they use prim_path.
     private def build_union_kind_dispatch(blocks, func)
       blocks[:check_kind].build do |b|
-        kind_ptr = b.struct_gep2(type_struct, func.params[0], TYPE_STRUCT_KIND_INDEX, "kind_ptr")
+        kind_ptr = b.struct_gep2(self.class.type_struct_type, func.params[0], TYPE_STRUCT_KIND_INDEX, "kind_ptr")
         kind = b.load2(LLVM::Int8.type, kind_ptr, "kind")
         is_record = b.icmp(:eq, kind, LLVM::Int8.from_i(KIND_RECORD), "is_record")
         b.cond(is_record, blocks[:record_path], blocks[:prim_path])
@@ -224,6 +221,7 @@ module Stone
       generate_type_constant("String", 8, KIND_PRIMITIVE, nil, @string_equals_fn)
       generate_type_constant("Null", 0, KIND_PRIMITIVE, nil, @null_equals_fn)
       generate_type_constant("Type", 8, KIND_TYPE, nil, @type_equals_fn)
+      generate_type_constant("Function", 8, KIND_FUNCTION, nil, @function_equals_fn)
     end
 
     private def generate_type_constant(name, size, kind, fields_ptr = nil, equals_fn_ptr = nil)
@@ -235,8 +233,8 @@ module Stone
     end
 
     private def add_type_global(constant_name, values)
-      @mod.globals.add(type_struct, constant_name).tap do |global|
-        global.initializer = LLVM::ConstantStruct.named_const(type_struct, values)
+      @mod.globals.add(self.class.type_struct_type, constant_name).tap do |global|
+        global.initializer = LLVM::ConstantStruct.named_const(self.class.type_struct_type, values)
         global.linkage = :internal
         global.global_constant = true
       end
@@ -312,11 +310,11 @@ module Stone
     end
 
     def self.type_kind(type)
-      return KIND_PRIMITIVE if type.primitive?
+      return KIND_TYPE if type == Stone::Type::Type
+      return KIND_FUNCTION if type.function? || type == Stone::Type::Function
       return KIND_RECORD if type.record?
       return KIND_UNION if type.union?
-      return KIND_FUNCTION if type.function?
-      return KIND_TYPE if type == Stone::Type::Type
+      return KIND_PRIMITIVE if type.primitive?
 
       KIND_PRIMITIVE
     end

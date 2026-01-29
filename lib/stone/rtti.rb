@@ -20,7 +20,9 @@ module Stone
     KIND_FUNCTION = 3
     KIND_TYPE = 4
 
-    EQUALS_FN_INDEX = 4
+    # Struct field indices within %Stone.Type
+    TYPE_STRUCT_KIND_INDEX = 2
+    TYPE_STRUCT_EQUALS_FN_INDEX = 4
 
     def initialize(mod)
       @mod = mod
@@ -28,6 +30,7 @@ module Stone
 
     def setup
       define_primitive_equals_functions
+      define_union_equals_function
       generate_primitive_type_constants
     end
 
@@ -44,10 +47,6 @@ module Stone
     # Cache the struct type at the class level since it's the same for all modules
     def self.type_struct_type
       @type_struct_type ||= create_type_struct_type
-    end
-
-    def self.reset_type_struct_cache!
-      @type_struct_type = nil
     end
 
     def self.create_type_struct_type
@@ -78,6 +77,20 @@ module Stone
         [LLVM::Type.pointer, LLVM::Type.pointer],
         LLVM::Int1.type
       )
+    end
+
+    # Tagged equality signature: (tag_a, value_a, tag_b, value_b) -> i1
+    def self.tagged_equals_fn_type
+      @tagged_equals_fn_type ||= LLVM::Type.function(
+        [LLVM::Type.pointer, LLVM::Type.pointer, LLVM::Type.pointer, LLVM::Type.pointer],
+        LLVM::Int1.type
+      )
+    end
+
+    # Load the equals_fn pointer from an RTTI type tag struct
+    def self.load_equals_fn(builder, type_tag_ptr)
+      fn_ptr_ptr = builder.struct_gep2(type_struct_type, type_tag_ptr, TYPE_STRUCT_EQUALS_FN_INDEX, "fn_ptr_ptr")
+      builder.load2(LLVM::Type.pointer, fn_ptr_ptr, "fn_ptr")
     end
 
     private def type_struct
@@ -124,6 +137,85 @@ module Stone
           b.ret(LLVM::TRUE) # Both are Null type, always equal
         end
       end
+    end
+
+    # Union equality: compare type tags, then dispatch to type-specific equals_fn.
+    # For record types, loads heap pointers from payloads before dispatch.
+    private def define_union_equals_function
+      @mod.functions.add("__union_equals__", self.class.tagged_equals_fn_type).tap do |func|
+        build_union_equals_body(func)
+      end
+    end
+
+    private def build_union_equals_body(func)
+      blocks = create_union_equals_blocks(func)
+      build_union_tag_compare(blocks, func)
+      build_union_null_fn_guard(blocks, func)
+      build_union_kind_dispatch(blocks, func)
+      build_union_prim_dispatch(blocks, func)
+      build_union_record_dispatch(blocks, func)
+      blocks[:not_equal].build { |b| b.ret(LLVM::FALSE) }
+    end
+
+    private def create_union_equals_blocks(func)
+      {
+        entry: func.basic_blocks.append("entry"),
+        same_type: func.basic_blocks.append("same_type"),
+        check_kind: func.basic_blocks.append("check_kind"),
+        prim_path: func.basic_blocks.append("prim_path"),
+        record_path: func.basic_blocks.append("record_path"),
+        not_equal: func.basic_blocks.append("not_equal")
+      }
+    end
+
+    private def build_union_tag_compare(blocks, func)
+      blocks[:entry].build do |b|
+        tags_eq = b.icmp(:eq, func.params[0], func.params[2], "tags_eq")
+        b.cond(tags_eq, blocks[:same_type], blocks[:not_equal])
+      end
+    end
+
+    private def build_union_null_fn_guard(blocks, func)
+      blocks[:same_type].build do |b|
+        fn_ptr = self.class.load_equals_fn(b, func.params[0])
+        fn_is_null = b.icmp(:eq, fn_ptr, LLVM::Type.ptr.null, "fn_is_null")
+        b.cond(fn_is_null, blocks[:not_equal], blocks[:check_kind])
+      end
+    end
+
+    # Records store heap pointers in union payloads, requiring an extra load indirection.
+    # All other types (primitives, metatypes) store values directly, so they use prim_path.
+    private def build_union_kind_dispatch(blocks, func)
+      blocks[:check_kind].build do |b|
+        kind_ptr = b.struct_gep2(type_struct, func.params[0], TYPE_STRUCT_KIND_INDEX, "kind_ptr")
+        kind = b.load2(LLVM::Int8.type, kind_ptr, "kind")
+        is_record = b.icmp(:eq, kind, LLVM::Int8.from_i(KIND_RECORD), "is_record")
+        b.cond(is_record, blocks[:record_path], blocks[:prim_path])
+      end
+    end
+
+    private def build_union_prim_dispatch(blocks, func)
+      blocks[:prim_path].build do |b|
+        fn_ptr = self.class.load_equals_fn(b, func.params[0])
+        result = b.call2(self.class.equals_fn_type, fn_ptr, func.params[1], func.params[3], "prim_eq")
+        b.ret(result)
+      end
+    end
+
+    private def build_union_record_dispatch(blocks, func)
+      blocks[:record_path].build do |b|
+        fn_ptr = self.class.load_equals_fn(b, func.params[0])
+        rec_a, rec_b = load_record_pointers(b, func)
+        result = b.call2(self.class.equals_fn_type, fn_ptr, rec_a, rec_b, "rec_eq")
+        b.ret(result)
+      end
+    end
+
+    private def load_record_pointers(builder, func)
+      [
+        builder.load2(LLVM::Type.pointer, func.params[1], "rec_a"),
+        builder.load2(LLVM::Type.pointer, func.params[3], "rec_b")
+      ]
     end
 
     private def generate_primitive_type_constants

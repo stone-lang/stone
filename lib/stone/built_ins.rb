@@ -60,19 +60,15 @@ module Stone
     end
 
     private def define_equals_function
-      @mod.functions.add("equals?", equality_function_type).tap { |func| build_equals_body(func) }
+      @mod.functions.add("equals?", tagged_equals_fn_type).tap { |func| build_equals_body(func) }
     end
 
     private def define_not_equals_function(equals_fn)
-      @mod.functions.add("!=", equality_function_type).tap { |func| build_not_equals_body(func, equals_fn) }
+      @mod.functions.add("!=", tagged_equals_fn_type).tap { |func| build_not_equals_body(func, equals_fn) }
     end
 
-    # Equality signature: (lhs_type_tag, lhs_value_ptr, rhs_type_tag, rhs_value_ptr) -> i1
-    private def equality_function_type
-      @equality_function_type ||= LLVM::Type.function(
-        [LLVM::Type.pointer, LLVM::Type.pointer, LLVM::Type.pointer, LLVM::Type.pointer],
-        LLVM::Int1.type
-      )
+    private def tagged_equals_fn_type
+      Stone::RTTI.tagged_equals_fn_type
     end
 
     private def build_equals_body(func)
@@ -105,7 +101,7 @@ module Stone
 
     private def build_equals_null_check(blocks, func)
       blocks[:same_type].build do |b|
-        fn_ptr = load_equals_fn_from_type(b, func.params[0])
+        fn_ptr = Stone::RTTI.load_equals_fn(b, func.params[0])
         fn_is_null = b.icmp(:eq, fn_ptr, LLVM::Type.ptr.null, "fn_is_null")
         b.cond(fn_is_null, blocks[:different_type], blocks[:call_equals])
       end
@@ -113,16 +109,10 @@ module Stone
 
     private def build_equals_dispatch(block, func)
       block.build do |b|
-        fn_ptr = load_equals_fn_from_type(b, func.params[0])
+        fn_ptr = Stone::RTTI.load_equals_fn(b, func.params[0])
         result = b.call2(Stone::RTTI.equals_fn_type, fn_ptr, func.params[1], func.params[3], "eq_result")
         b.ret(result)
       end
-    end
-
-    private def load_equals_fn_from_type(builder, type_tag_ptr)
-      type_struct = Stone::RTTI.type_struct_type
-      fn_ptr_ptr = builder.struct_gep2(type_struct, type_tag_ptr, Stone::RTTI::EQUALS_FN_INDEX, "fn_ptr_ptr")
-      builder.load2(LLVM::Type.pointer, fn_ptr_ptr, "fn_ptr")
     end
 
     private def build_equals_different_type(block)

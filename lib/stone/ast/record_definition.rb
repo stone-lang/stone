@@ -54,16 +54,50 @@ module Stone
       end
 
       private def compare_all_record_fields(builder, func, mod, struct_type)
-        comparable = @fields.reject { |f| Stone::AST::FieldHelpers.union_annotation?(f[:type]) }
         result = LLVM::TRUE
-        comparable.each do |field|
-          a_val, b_val = field_value_ptrs(builder, struct_type, field, func)
-          a_val, b_val = load_if_record_field(builder, field, mod, a_val, b_val)
-          fn = lookup_field_equals_fn(mod, field)
-          field_eq = builder.call2(Stone::RTTI.equals_fn_type, fn, a_val, b_val, "#{field[:name]}_eq")
+        @fields.each do |field|
+          field_eq = compare_field(builder, func, mod, struct_type, field)
           result = builder.and(result, field_eq, "and_#{field[:name]}")
         end
         result
+      end
+
+      private def compare_field(builder, func, mod, struct_type, field)
+        if Stone::AST::FieldHelpers.union_annotation?(field[:type])
+          compare_union_field(builder, func, mod, struct_type, field)
+        else
+          compare_simple_field(builder, func, mod, struct_type, field)
+        end
+      end
+
+      private def compare_simple_field(builder, func, mod, struct_type, field)
+        a_val, b_val = field_value_ptrs(builder, struct_type, field, func)
+        a_val, b_val = load_if_record_field(builder, field, mod, a_val, b_val)
+        fn = lookup_field_equals_fn(mod, field)
+        builder.call2(Stone::RTTI.equals_fn_type, fn, a_val, b_val, "#{field[:name]}_eq")
+      end
+
+      private def compare_union_field(builder, func, mod, struct_type, field)
+        a_tag, a_payload, b_tag, b_payload = extract_both_union_parts(builder, func, struct_type, field)
+        union_eq_fn = mod.functions["__union_equals__"] || fail("__union_equals__ not found; RTTI setup may not have run")
+        builder.call(union_eq_fn, a_tag, a_payload, b_tag, b_payload, "#{field[:name]}_eq")
+      end
+
+      private def extract_both_union_parts(builder, func, struct_type, field)
+        index = @fields.index(field)
+        union_type = struct_type.element_types[index]
+        a_union = builder.struct_gep2(struct_type, func.params[0], index, "a_#{field[:name]}")
+        b_union = builder.struct_gep2(struct_type, func.params[1], index, "b_#{field[:name]}")
+        a_tag, a_payload = extract_union_tag_and_payload(builder, union_type, a_union, "a")
+        b_tag, b_payload = extract_union_tag_and_payload(builder, union_type, b_union, "b")
+        [a_tag, a_payload, b_tag, b_payload]
+      end
+
+      private def extract_union_tag_and_payload(builder, union_type, union_ptr, prefix)
+        tag_ptr = builder.struct_gep2(union_type, union_ptr, 0, "#{prefix}_tag_ptr")
+        tag = builder.load2(LLVM::Type.pointer, tag_ptr, "#{prefix}_tag")
+        payload = builder.struct_gep2(union_type, union_ptr, 1, "#{prefix}_payload")
+        [tag, payload]
       end
 
       private def field_value_ptrs(builder, struct_type, field, func)

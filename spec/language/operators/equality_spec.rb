@@ -127,6 +127,133 @@ RSpec.describe "Universal equality" do
     end
   end
 
+  describe "union field equality" do
+    describe "nullable Int field (Int | Null)" do
+      it "equal when both have same Int value" do
+        code = <<~STONE
+          Foo := Record(x :: Int | Null)
+          Foo(42) == Foo(42)
+        STONE
+        expect(Stone.eval(code)).to be(true)
+      end
+
+      it "not equal when Int values differ" do
+        code = <<~STONE
+          Foo := Record(x :: Int | Null)
+          Foo(42) == Foo(99)
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+
+      it "equal when both are null" do
+        code = <<~STONE
+          Foo := Record(x :: Int | Null)
+          Foo(NULL) == Foo(NULL)
+        STONE
+        expect(Stone.eval(code)).to be(true)
+      end
+
+      it "not equal when one is null and other is not" do
+        code = <<~STONE
+          Foo := Record(x :: Int | Null)
+          Foo(42) == Foo(NULL)
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+    end
+
+    describe "nullable String field (String | Null)" do
+      it "equal when both have same String value" do
+        code = <<~STONE
+          Bar := Record(s :: String | Null)
+          Bar("hello") == Bar("hello")
+        STONE
+        expect(Stone.eval(code)).to be(true)
+      end
+
+      it "not equal when String values differ" do
+        code = <<~STONE
+          Bar := Record(s :: String | Null)
+          Bar("hello") == Bar("world")
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+    end
+
+    describe "nullable Record field (Record | Null)" do
+      it "equal when both have same record value" do
+        code = <<~STONE
+          Point := Record(x :: Int, y :: Int)
+          Box := Record(origin :: Point | Null)
+          Box(Point(1, 2)) == Box(Point(1, 2))
+        STONE
+        expect(Stone.eval(code)).to be(true)
+      end
+
+      it "not equal when record values differ" do
+        code = <<~STONE
+          Point := Record(x :: Int, y :: Int)
+          Box := Record(origin :: Point | Null)
+          Box(Point(1, 2)) == Box(Point(3, 4))
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+
+      it "not equal when one is null" do
+        code = <<~STONE
+          Point := Record(x :: Int, y :: Int)
+          Box := Record(origin :: Point | Null)
+          Box(Point(1, 2)) == Box(NULL)
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+    end
+
+    describe "mixed regular and union fields" do
+      it "compares both regular and union fields" do
+        code = <<~STONE
+          Foo := Record(name :: String, value :: Int | Null)
+          Foo("x", 42) == Foo("x", 42)
+        STONE
+        expect(Stone.eval(code)).to be(true)
+      end
+
+      it "not equal when regular field differs" do
+        code = <<~STONE
+          Foo := Record(name :: String, value :: Int | Null)
+          Foo("x", 42) == Foo("y", 42)
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+
+      it "not equal when union field differs" do
+        code = <<~STONE
+          Foo := Record(name :: String, value :: Int | Null)
+          Foo("x", 42) == Foo("x", NULL)
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+    end
+
+    describe "!= with union fields" do
+      it "returns true when union values differ" do
+        code = <<~STONE
+          Foo := Record(x :: Int | Null)
+          Foo(42) != Foo(NULL)
+        STONE
+        expect(Stone.eval(code)).to be(true)
+      end
+
+      it "returns false when union values are equal" do
+        code = <<~STONE
+          Foo := Record(x :: Int | Null)
+          Foo(42) != Foo(42)
+        STONE
+        expect(Stone.eval(code)).to be(false)
+      end
+    end
+  end
+
   describe "!= as logical negation of ==" do
     it "is false when == is true for Int" do
       expect(Stone.eval("5 != 5")).to be(false)

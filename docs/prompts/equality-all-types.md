@@ -223,81 +223,92 @@ if(Type.of(result) == Error.DivisionByZero,
 )
 ```
 
-## Implementation Considerations
+## As-Built Implementation
 
-As always, we do TDD and write test cases before we start coding.
+### Architecture
 
-### Type-Based Dispatch
+All equality operations use RTTI-based runtime dispatch:
 
-The equality operation needs to dispatch based on types (known at compile time or runtime):
+1. Each argument is boxed as `(type_tag_ptr, value_ptr)` at the call site
+2. `equals?` compares type tags first — different tags return FALSE
+3. Same-type dispatch loads the `equals_fn` from the RTTI type struct
+4. Type-specific equals function compares the actual values
 
-1. If types are different, return FALSE
-2. If both are primitives, compare values directly
-3. If both are records of the same type, compare fields recursively
-4. If both are functions, compare pointers
+### RTTI Type Struct
 
-### LLVM Implementation
+```llvm
+%Stone.Type = type { ptr, i64, i8, ptr, ptr }
+; Fields: name, size, kind, fields, equals_fn
+```
 
-For primitive types, use direct comparison:
+Kind enum: 0=primitive, 1=record, 2=union, 3=function, 4=type(metatype)
 
-- Int: `icmp eq i64 %a, %b`
-- Bool: `icmp eq i1 %a, %b`
+### Primitive Equality
 
-For Strings:
+- Int: `__Int_equals__` — loads i64 values, `icmp eq`
+- Bool: `__Bool_equals__` — loads i1 values, `icmp eq`
+- String: `__String_equals__` — loads string pointers, calls libc `strcmp`, checks result == 0
+- Null: `__Null_equals__` — always returns TRUE (both are Null)
+- Type: `__Type_equals__` — loads pointers, `icmp eq`
+- Function: `__Function_equals__` — loads pointers, `icmp eq` (reference equality)
 
-1. Check size first; 2 strings of different sized cannot be equal
-2. Check pointers (to C-style 0-terminated strings)
-3. Check hashed values of the 2 strings
-    - Will require adding `hashed` as a computed property of a String
-        - Let's use SHA256, unless you have a better idea
-4. Byte-by-byte comparison (probably optimized to use larger chunks than bytes)
+### Record Equality
 
-For Record types:
+- Records generate a `__RecordName_equals__` function at definition time
+- Compares all fields by AND-ing individual field comparisons
+- Record-typed fields use pointer indirection (heap-allocated)
+- Union-typed fields dispatch to `__union_equals__`
 
-1. Check pointers; pointers to the same memory location are equal (given their types are equal)
-2. Check hashed values of the 2 records
-    - Will require adding `hashed` as a computed property of Records
-        - Let's use SHA256, unless you have a better idea
-        - Hmm, how would we hash nested values? Looking for advice here.
-3. Compares each field recursively
+### Union Field Equality
 
-### Performance
+- `__union_equals__` takes `(tag_a, payload_a, tag_b, payload_b)`
+- Compares type tags first — different tags return FALSE
+- Guards against null `equals_fn` pointer
+- Runtime kind dispatch: records need extra load indirection, primitives pass payload directly
 
-- Primitive comparisons should probably be single LLVM instructions
-- Use hash values where appropriate to simplify/optimize comparisons
-- Nested records may require recursive comparison
-- Record comparisons are O(n) where n is the number of fields
-- Short-circuit evaluation for records (fail fast on first mismatch)
+### Operators
+
+- `equals?` — base tagged equality function
+- `==` — alias for `equals?`
+- `!=` — calls `equals?` and negates with `xor true`
+- `≠` — alias for `!=`
+
+### Not Yet Implemented (deferred)
+
+- Pointer shortcut for records (same address = equal without field comparison)
+- Hash-based comparison optimization for strings and records
+- Short-circuit on first field mismatch (currently ANDs all fields)
 
 ## Acceptance Criteria
 
-- [ ] `==` works for Int values
-- [ ] `==` works for Bool values
-- [ ] `==` works for String values
-- [ ] `==` works for NULL comparisons
-- [ ] `==` works for record types (structural equality)
-- [ ] `==` returns FALSE for different types (no error)
-- [ ] `!=` is the logical negation of `==` for all types
-- [ ] Nested record comparison works correctly
-- [ ] Function comparison uses reference equality
-- [ ] Union-typed values compare by their actual runtime values
-- [ ] All existing tests pass
-- [ ] `make test` passes
-- [ ] `make lint` passes
+- [x] `==` works for Int values
+- [x] `==` works for Bool values
+- [x] `==` works for String values
+- [x] `==` works for NULL comparisons
+- [x] `==` works for record types (structural equality)
+- [x] `==` returns FALSE for different types (no error)
+- [x] `!=` is the logical negation of `==` for all types
+- [x] Nested record comparison works correctly
+- [x] Function comparison uses reference equality
+- [x] Union-typed values compare by their actual runtime values
+- [x] All existing tests pass
+- [x] `make test` passes
+- [x] `make lint` passes
 
 ## Future Enhancements
 
+- Structural/semantic function equality (comparing ASTs or definitions)
+- Cross-type equality coercion (e.g., `1.0 == 1`) — see `docs/prompts/cross-type-equality.md`
+- Pointer shortcut for records (same address = equal without field comparison)
+- Hash-based comparison optimization for strings and records
+- Short-circuit record comparison (fail fast on first field mismatch)
 - Deep vs shallow equality options
 - Hashing that is consistent with equality (for hash maps/sets)
 - Pattern matching as cleaner syntax for type-based comparison
 - Custom equality methods (`Type@==`) for user-defined equality semantics
-- Memoization of computed properties will improve performance of hash comparisons
 
-## Wrap-Up
+## Implementation Commits
 
-Once you've completed the implementation:
-
-- Update this file with any as-built changes we made to the design
-- Include this updated file as part of the commit
-- Add any lessons learned to your "memory"
-- Run the `/retro` command
+- `615c9ba` — Implement universal equality with RTTI vtable dispatch
+- `c9f1604` — Implement equality comparison for union-typed record fields
+- `7766d9b` — Implement function reference equality (pointer comparison)

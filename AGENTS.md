@@ -6,10 +6,10 @@ This file provides guidance to AI agents (such as Claude Code) when working with
 
 **IMPORTANT**: When starting a new session, verify your environment first:
 
-1. **Working Directory**: Sessions should run from `~/Work/stone` (the main repository, NOT a worktree)
+1. **Working Directory**: Sessions should run from `~/Work/Code/stone` (the main repository, NOT a worktree)
 2. **Default Branch**: `0.10` (current development branch)
 3. **Session Verification**: At session start, check:
-   - Current directory: `pwd` (should be `~/Work/stone`)
+   - Current directory: `pwd` (should be `~/Work/Code/stone`)
    - Current branch: `git --no-pager branch --show-current` (should be `0.10`)
    - Uncommitted changes: `git --no-pager status --short`
 
@@ -20,7 +20,7 @@ This file provides guidance to AI agents (such as Claude Code) when working with
     - Continue in the worktree (for isolated feature work on that branch)
     - Switch context to the main repository (for work on the 0.10 branch)
 
-**Git worktrees**: This repository uses git worktrees for parallel branch work. The main repository is at `~/Work/stone` and worktrees are in `~/.claude-worktrees/stone/`. When working with git commands across repositories, use `--git-dir` and `--work-tree` flags to specify the target repository explicitly.
+**Git worktrees**: This repository uses git worktrees for parallel branch work. The main repository is at `~/Work/Code/stone` and worktrees are in `~/.claude-worktrees/stone/`. When working with git commands across repositories, use `--git-dir` and `--work-tree` flags to specify the target repository explicitly.
 
 ### Repository Dependencies
 
@@ -42,7 +42,7 @@ Stone is a multi-paradigm programming language combining object-oriented, functi
 
 I'm working on 2 repos simultaneously:
 
-- Stone (~/Work/stone)
+- Stone (~/Work/Code/stone)
 - Grammy (~/Work/Code/grammy)
 
 Grammy is a dependency of Stone. Stone is my primary project; Grammy is just a piece of Stone that could be used independently.
@@ -123,6 +123,13 @@ Follow Kent Beck's 4 Rules Of Simple Design:
 Write with empathy for future readers of the code we commit. Remember, that's mostly going to be *us*. The ability to make future changes is the key metric we should shoot for, even though that's very difficult to actually measure. We want to minimize anything that slows the pace of delivering future features.
 
 Use immutable values and pure functions whenever possible. They are easier to reason about, reducing potential for bugs.
+
+### Immutability Preference
+
+- Do NOT set instance variables after object instantiation
+- Exception: memoization (lazy initialization) is acceptable
+- Initialize all instance variables in the constructor
+- This makes objects easier to reason about and reduces bugs
 
 ### Simplicity First
 
@@ -216,7 +223,7 @@ git log -1 --format='%an %ae'
 **Working across repositories** (main repo and worktrees):
 
 ```bash
-git --git-dir=~/Work/stone/.git --work-tree=~/Work/stone <command>
+git --git-dir=~/Work/Code/stone/.git --work-tree=~/Work/Code/stone <command>
 ```
 
 ## Commits
@@ -226,6 +233,8 @@ Every non-WIP commit that we push to upstream should pass CI (all tests and lint
 When making a commit, commit **only** the files that you (the AI agent) have changed. Do **not** commit changes that were there before your changes were made, unless explicitly requested.
 
 Keep commit messages concise. Don't include details that can easily be inferred from the code changes.
+
+If working from a prompt file, be sure to commit the prompt file along with the code changes, so the context is preserved. Be sure to update the prompt file with any relevant clarifications/answers/instructions from the user.
 
 ### AI Attribution Trailers
 
@@ -308,18 +317,15 @@ When you have multiple uncommitted changes:
         - Each AST node defines `to_llir()` method for LLVM IR generation
         - Example: `IntegerLiteral` wraps integer values for compilation
 
-- **lib/literals/** - Support for Stone language literals (currently minimal)
-
 - **spec/** - Specifications that serve dual purpose:
     - Test suite (RSpec tests)
     - Language specification (executable documentation)
 
 ### Parser and Grammar
 
-Stone uses the Grammy parser generator (local dependency at ../Code/grammy). Parser extensions are in lib/extensions/parslet.rb:
+Stone uses the Grammy parser generator (local dependency at ../grammy).
 
-- `rule!` - Define grammar rules that output AST nodes
-- `parens()`, `curly_braces()` - Helper methods for bracketed expressions
+When exploring grammar changes, test parsing in isolation before running full spec suite.
 
 ### LLVM Integration
 

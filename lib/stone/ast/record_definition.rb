@@ -35,16 +35,67 @@ module Stone
       private def generate_type_constant(mod, scope)
         struct_type = llvm_type(mod, scope)
         size_bytes = calculate_struct_size(struct_type)
-        Stone::RTTI.generate_record_type_constant(mod, @assigned_name, size_bytes, @fields)
+        equals_fn = generate_record_equals_fn(mod, struct_type)
+        Stone::RTTI.generate_record_type_constant(mod, @assigned_name, size_bytes, @fields, equals_fn)
       end
 
-      private def calculate_struct_size(struct_type)
-        # Calculate size based on field types (simplified - assumes packed alignment)
-        total = 0
-        struct_type.element_types.each do |elem_type|
-          total += element_type_size(elem_type)
+      private def generate_record_equals_fn(mod, struct_type)
+        fn_name = "__#{@assigned_name}_equals__"
+        mod.functions.add(fn_name, Stone::RTTI.equals_fn_type).tap do |func|
+          build_record_equals_body(func, mod, struct_type)
         end
-        total
+      end
+
+      private def build_record_equals_body(func, mod, struct_type)
+        func.basic_blocks.append("entry").build do |builder|
+          result = compare_all_record_fields(builder, func, mod, struct_type)
+          builder.ret(result)
+        end
+      end
+
+      private def compare_all_record_fields(builder, func, mod, struct_type)
+        comparable = @fields.reject { |f| Stone::AST::FieldHelpers.union_annotation?(f[:type]) }
+        result = LLVM::TRUE
+        comparable.each do |field|
+          a_val, b_val = field_value_ptrs(builder, struct_type, field, func)
+          a_val, b_val = load_if_record_field(builder, field, mod, a_val, b_val)
+          fn = lookup_field_equals_fn(mod, field)
+          field_eq = builder.call2(Stone::RTTI.equals_fn_type, fn, a_val, b_val, "#{field[:name]}_eq")
+          result = builder.and(result, field_eq, "and_#{field[:name]}")
+        end
+        result
+      end
+
+      private def field_value_ptrs(builder, struct_type, field, func)
+        index = @fields.index(field)
+        a = builder.struct_gep2(struct_type, func.params[0], index, "a_#{field[:name]}")
+        b = builder.struct_gep2(struct_type, func.params[1], index, "b_#{field[:name]}")
+        [a, b]
+      end
+
+      private def load_if_record_field(builder, field, mod, a_val, b_val)
+        return [a_val, b_val] unless record_typed_field?(field, mod)
+
+        [
+          builder.load2(LLVM::Type.pointer, a_val, "a_#{field[:name]}_ptr"),
+          builder.load2(LLVM::Type.pointer, b_val, "b_#{field[:name]}_ptr")
+        ]
+      end
+
+      private def record_typed_field?(field, mod)
+        type_name = Stone::AST::FieldHelpers.field_type_name(field)
+        type_name == @assigned_name || mod.record_type?(type_name)
+      end
+
+      private def lookup_field_equals_fn(mod, field)
+        type_name = Stone::AST::FieldHelpers.field_type_name(field)
+        fn_name = "__#{type_name}_equals__"
+        mod.functions[fn_name] || fail("No equals function found for type: #{type_name}")
+      end
+
+      # Calculate size based on field types (simplified -- assumes packed alignment)
+      private def calculate_struct_size(struct_type)
+        struct_type.element_types.sum { |elem_type| element_type_size(elem_type) }
       end
 
       private def element_type_size(llvm_type)

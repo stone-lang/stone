@@ -31,6 +31,7 @@ module Stone
       define_if_function
       define_sum_function
       define_comparison_operators
+      define_equality_operators
       define_boolean_operators
     end
 
@@ -43,15 +44,96 @@ module Stone
     end
 
     private def define_comparison_operators
-      define_comparison("==", :eq)
-      define_comparison("!=", :ne)
-      define_comparison("≠", :ne)
       define_comparison("<", :slt)
       define_comparison("<=", :sle)
       define_comparison("≤", :sle)
       define_comparison(">", :sgt)
       define_comparison(">=", :sge)
       define_comparison("≥", :sge)
+    end
+
+    private def define_equality_operators
+      equals_fn = define_equals_function
+      @mod.register_function_alias("==", equals_fn)
+      not_equals_fn = define_not_equals_function(equals_fn)
+      @mod.register_function_alias("≠", not_equals_fn)
+    end
+
+    private def define_equals_function
+      @mod.functions.add("equals?", equality_function_type).tap { |func| build_equals_body(func) }
+    end
+
+    private def define_not_equals_function(equals_fn)
+      @mod.functions.add("!=", equality_function_type).tap { |func| build_not_equals_body(func, equals_fn) }
+    end
+
+    # Equality signature: (lhs_type_tag, lhs_value_ptr, rhs_type_tag, rhs_value_ptr) -> i1
+    private def equality_function_type
+      @equality_function_type ||= LLVM::Type.function(
+        [LLVM::Type.pointer, LLVM::Type.pointer, LLVM::Type.pointer, LLVM::Type.pointer],
+        LLVM::Int1.type
+      )
+    end
+
+    private def build_equals_body(func)
+      blocks = create_equals_basic_blocks(func)
+      build_equals_entry(blocks, func)
+      build_equals_same_type(blocks, func)
+      build_equals_different_type(blocks[:different_type])
+    end
+
+    private def create_equals_basic_blocks(func)
+      {
+        entry: func.basic_blocks.append("entry"),
+        same_type: func.basic_blocks.append("same_type"),
+        call_equals: func.basic_blocks.append("call_equals"),
+        different_type: func.basic_blocks.append("different_type")
+      }
+    end
+
+    private def build_equals_entry(blocks, func)
+      blocks[:entry].build do |b|
+        types_equal = b.icmp(:eq, func.params[0], func.params[2], "types_equal")
+        b.cond(types_equal, blocks[:same_type], blocks[:different_type])
+      end
+    end
+
+    private def build_equals_same_type(blocks, func)
+      build_equals_null_check(blocks, func)
+      build_equals_dispatch(blocks[:call_equals], func)
+    end
+
+    private def build_equals_null_check(blocks, func)
+      blocks[:same_type].build do |b|
+        fn_ptr = load_equals_fn_from_type(b, func.params[0])
+        fn_is_null = b.icmp(:eq, fn_ptr, LLVM::Type.ptr.null, "fn_is_null")
+        b.cond(fn_is_null, blocks[:different_type], blocks[:call_equals])
+      end
+    end
+
+    private def build_equals_dispatch(block, func)
+      block.build do |b|
+        fn_ptr = load_equals_fn_from_type(b, func.params[0])
+        result = b.call2(Stone::RTTI.equals_fn_type, fn_ptr, func.params[1], func.params[3], "eq_result")
+        b.ret(result)
+      end
+    end
+
+    private def load_equals_fn_from_type(builder, type_tag_ptr)
+      type_struct = Stone::RTTI.type_struct_type
+      fn_ptr_ptr = builder.struct_gep2(type_struct, type_tag_ptr, Stone::RTTI::EQUALS_FN_INDEX, "fn_ptr_ptr")
+      builder.load2(LLVM::Type.pointer, fn_ptr_ptr, "fn_ptr")
+    end
+
+    private def build_equals_different_type(block)
+      block.build { |b| b.ret(LLVM::FALSE) }
+    end
+
+    private def build_not_equals_body(func, equals_fn)
+      func.basic_blocks.append("entry").build do |b|
+        eq_result = b.call(equals_fn, func.params[0], func.params[1], func.params[2], func.params[3], "eq_result")
+        b.ret(b.not(eq_result, "neq_result"))
+      end
     end
 
     private def define_comparison(name, predicate)
@@ -82,10 +164,6 @@ module Stone
       define_boolean_binary("∨", :or)
       define_boolean_binary("⊻", :xor)
       define_boolean_unary("¬", :xor)
-
-      # TODO: Overload `==` and `!=` for Bool type once we support function overloading.
-      # Currently these operators only work for Int. For Booleans, use `xor` for XOR/inequality,
-      # or the integer comparison operators will work since TRUE=1 and FALSE=0.
     end
 
     private def define_boolean_binary(name, instruction)

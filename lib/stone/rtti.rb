@@ -1,4 +1,5 @@
 require "llvm/core"
+require "stone/libc"
 
 
 module Stone
@@ -19,12 +20,14 @@ module Stone
     KIND_FUNCTION = 3
     KIND_TYPE = 4
 
+    EQUALS_FN_INDEX = 4
+
     def initialize(mod)
       @mod = mod
     end
 
     def setup
-      define_type_struct
+      define_primitive_equals_functions
       generate_primitive_type_constants
     end
 
@@ -38,23 +41,24 @@ module Stone
       "Stone.Type.#{type.name}"
     end
 
-    private def define_type_struct
-      @type_struct = self.class.type_struct_type
-    end
-
     # Cache the struct type at the class level since it's the same for all modules
     def self.type_struct_type
       @type_struct_type ||= create_type_struct_type
     end
 
+    def self.reset_type_struct_cache!
+      @type_struct_type = nil
+    end
+
     def self.create_type_struct_type
-      # %Stone.Type = type { ptr, i64, i8, ptr }
-      # Fields: name (string ptr), size (bytes), kind (enum), fields (FieldList ptr)
+      # %Stone.Type = type { ptr, i64, i8, ptr, ptr }
+      # Fields: name (string ptr), size (bytes), kind (enum), fields (FieldList ptr), equals_fn
       LLVM::Type.struct([
         LLVM::Type.pointer,  # name - pointer to null-terminated string
         LLVM::Int64.type,    # size - size in bytes
         LLVM::Int8.type,     # kind - type kind enum
-        LLVM::Type.pointer   # fields - pointer to FieldList (or null for primitives)
+        LLVM::Type.pointer,  # fields - pointer to FieldList (or null for primitives)
+        LLVM::Type.pointer   # equals_fn - pointer to type-specific equality function
       ], false)
     end
 
@@ -68,22 +72,73 @@ module Stone
       ], false)
     end
 
+    # The function type for all equals_fn functions: (ptr, ptr) -> i1
+    def self.equals_fn_type
+      @equals_fn_type ||= LLVM::Type.function(
+        [LLVM::Type.pointer, LLVM::Type.pointer],
+        LLVM::Int1.type
+      )
+    end
+
     private def type_struct
       @type_struct ||= self.class.type_struct_type
     end
 
-    private def generate_primitive_type_constants
-      generate_type_constant("Int", 8, KIND_PRIMITIVE)
-      generate_type_constant("Bool", 1, KIND_PRIMITIVE)
-      generate_type_constant("String", 8, KIND_PRIMITIVE)  # pointer size
-      generate_type_constant("Null", 0, KIND_PRIMITIVE)
-      generate_type_constant("Type", 8, KIND_TYPE)  # pointer size
+    private def define_primitive_equals_functions
+      @int_equals_fn = define_icmp_equals("__Int_equals__", LLVM::Int64.type)
+      @bool_equals_fn = define_icmp_equals("__Bool_equals__", LLVM::Int1.type)
+      @string_equals_fn = define_string_equals
+      @null_equals_fn = define_null_equals
+      @type_equals_fn = define_icmp_equals("__Type_equals__", LLVM::Type.pointer)
     end
 
-    private def generate_type_constant(name, size, kind, fields_ptr = nil)
+    private def define_icmp_equals(name, load_type)
+      @mod.functions.add(name, self.class.equals_fn_type).tap do |func|
+        func.basic_blocks.append("entry").build do |b|
+          a = b.load2(load_type, func.params[0], "a")
+          val_b = b.load2(load_type, func.params[1], "b")
+          b.ret(b.icmp(:eq, a, val_b, "eq"))
+        end
+      end
+    end
+
+    private def define_string_equals
+      strcmp_func = Stone::LibC.get_or_declare_strcmp(@mod)
+      @mod.functions.add("__String_equals__", self.class.equals_fn_type).tap do |func|
+        build_string_equals_body(func, strcmp_func)
+      end
+    end
+
+    private def build_string_equals_body(func, strcmp_func)
+      func.basic_blocks.append("entry").build do |b|
+        str1 = b.load2(LLVM::Type.pointer, func.params[0], "str1")
+        str2 = b.load2(LLVM::Type.pointer, func.params[1], "str2")
+        strcmp_result = b.call(strcmp_func, str1, str2, "strcmp_result")
+        b.ret(b.icmp(:eq, strcmp_result, LLVM::Int32.from_i(0), "eq"))
+      end
+    end
+
+    private def define_null_equals
+      @mod.functions.add("__Null_equals__", self.class.equals_fn_type).tap do |func|
+        func.basic_blocks.append("entry").build do |b|
+          b.ret(LLVM::TRUE) # Both are Null type, always equal
+        end
+      end
+    end
+
+    private def generate_primitive_type_constants
+      generate_type_constant("Int", 8, KIND_PRIMITIVE, nil, @int_equals_fn)
+      generate_type_constant("Bool", 1, KIND_PRIMITIVE, nil, @bool_equals_fn)
+      generate_type_constant("String", 8, KIND_PRIMITIVE, nil, @string_equals_fn)
+      generate_type_constant("Null", 0, KIND_PRIMITIVE, nil, @null_equals_fn)
+      generate_type_constant("Type", 8, KIND_TYPE, nil, @type_equals_fn)
+    end
+
+    private def generate_type_constant(name, size, kind, fields_ptr = nil, equals_fn_ptr = nil)
       name_global = create_name_string(name)
       fields_value = fields_ptr || LLVM::Type.pointer.null_pointer
-      values = [name_global, LLVM::Int64.from_i(size), LLVM::Int8.from_i(kind), fields_value]
+      equals_fn_value = equals_fn_ptr || LLVM::Type.pointer.null_pointer
+      values = [name_global, LLVM::Int64.from_i(size), LLVM::Int8.from_i(kind), fields_value, equals_fn_value]
       add_type_global("Stone.Type.#{name}", values)
     end
 
@@ -110,27 +165,27 @@ module Stone
     end
 
     # Generate a type constant for a record type with field information
-    def self.generate_record_type_constant(mod, record_name, size_bytes, fields = [])
-      rtti = new(mod)
-      rtti.__send__(:define_type_struct)
-      fields_ptr = rtti.__send__(:generate_field_list, record_name, fields)
-      rtti.__send__(:generate_type_constant, record_name, size_bytes, KIND_RECORD, fields_ptr)
+    def self.generate_record_type_constant(mod, record_name, size_bytes, fields = [], equals_fn = nil)
+      new(mod).generate_record_type(record_name, size_bytes, fields, equals_fn)
     end
 
+    def generate_record_type(record_name, size_bytes, fields = [], equals_fn = nil)
+      fields_ptr = generate_field_list(record_name, fields)
+      generate_type_constant(record_name, size_bytes, KIND_RECORD, fields_ptr, equals_fn)
+    end
+
+    def generate_type_for(type)
+      generate_type_constant(type.name, type.size_bytes, self.class.type_kind(type))
+    end
+
+    # Build a linked list of field entries (last field points to null, each prior field points to the next)
     private def generate_field_list(record_name, fields)
       return LLVM::Type.pointer.null_pointer if fields.empty?
 
-      # Generate field entries in reverse order so we can link them correctly
-      field_entries = []
-      fields.reverse_each.with_index do |field, reverse_index|
-        index = fields.length - 1 - reverse_index
-        rest_ptr = field_entries.last || LLVM::Type.pointer.null_pointer
-        entry = generate_field_list_entry(record_name, field, index, rest_ptr)
-        field_entries << entry
+      null_ptr = LLVM::Type.pointer.null_pointer
+      fields.each_with_index.reverse_each.reduce(null_ptr) do |rest_ptr, (field, index)|
+        generate_field_list_entry(record_name, field, index, rest_ptr)
       end
-
-      # Return the first field entry (which is last in our reversed list)
-      field_entries.last
     end
 
     private def generate_field_list_entry(record_name, field, index, rest_ptr)
@@ -160,15 +215,11 @@ module Stone
     end
 
     private_class_method def self.create_type_constant(mod, type)
-      rtti = new(mod)
-      rtti.__send__(:define_type_struct)
-      size = type.size_bytes
-      kind = type_kind(type)
-      rtti.__send__(:generate_type_constant, type.name, size, kind)
+      new(mod).generate_type_for(type)
       mod.globals[type_constant_name(type)]
     end
 
-    private_class_method def self.type_kind(type)
+    def self.type_kind(type)
       return KIND_PRIMITIVE if type.primitive?
       return KIND_RECORD if type.record?
       return KIND_UNION if type.union?

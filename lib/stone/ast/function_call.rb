@@ -1,6 +1,7 @@
 require "stone/ast/expression"
 require "stone/libc"
 require "stone/error/argument_error"
+require "stone/rtti"
 
 
 module Stone
@@ -16,19 +17,13 @@ module Stone
       end
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
-        # NULL comparisons with non-NULL values are always unequal (different types)
-        return null_comparison_result if mixed_null_comparison?
-
-        # TODO: Record equality should be delegated to the type system.
-        # When the type system is refactored, equality should be polymorphic:
-        # - Global `==` checks that both args are the same type
-        # - If same type, delegate to type-specific comparison
-        # - This special case should be removed
-        return generate_record_equality(builder, mod, scope) if record_equality_comparison?(mod)
         # TODO: Record instantiation should not be special-cased here.
         # When the type system is refactored, record constructors should be
         # regular functions, and this check should be removed.
         return instantiate_record(builder, mod, scope) if mod.record_type?(function_name)
+
+        # Equality operators box arguments with type tags for runtime dispatch
+        return generate_equality_call(builder, mod, scope) if equality_operator?
 
         # For chained comparisons, generate inline comparison logic
         return generate_chained_comparison(builder, mod, scope) if chained_comparison?
@@ -45,7 +40,7 @@ module Stone
       end
 
       def type(context = nil)
-        return Stone::Type::Bool if comparison_operator? || boolean_operator?
+        return Stone::Type::Bool if comparison_operator? || equality_operator? || boolean_operator?
         return record_constructor_type if context&.record_type?(function_name)
 
         function_return_type
@@ -68,12 +63,71 @@ module Stone
         builder.call(func, *args, "#{function_name}_result")
       end
 
+      # Box each argument as (type_tag, value_ptr) for RTTI-based equality dispatch
+      private def generate_equality_call(builder, mod, scope)
+        validate_argument_count(2)
+        arg_values = evaluate_arguments(builder, mod, scope)
+        boxed_args = box_equality_arguments(builder, mod, arg_values)
+        func = mod.lookup_function(function_name)
+        builder.call(func, *boxed_args, "#{function_name}_result")
+      end
+
+      private def box_equality_arguments(builder, mod, arg_values)
+        arguments.zip(arg_values).flat_map do |ast_node, llvm_value|
+          box_for_equality(builder, mod, ast_node, llvm_value)
+        end
+      end
+
+      private def box_for_equality(builder, mod, ast_node, llvm_value)
+        stone_type = infer_stone_type(ast_node, mod, llvm_value)
+        type_tag = resolve_type_tag(builder, mod, stone_type, llvm_value)
+        value_ptr = box_value(builder, llvm_value)
+        [type_tag, value_ptr]
+      end
+
+      # Infer the Stone type for an AST node, falling back to LLVM type inspection
+      private def infer_stone_type(ast_node, mod, llvm_value)
+        result = begin
+          ast_node.type(mod)
+        rescue Stone::PropertyError, Stone::TypeError
+          nil
+        end
+        result || type_from_llvm_value(llvm_value)
+      end
+
+      private def type_from_llvm_value(llvm_value)
+        case llvm_value.type.kind
+        when :integer then llvm_value.type.width == 1 ? Stone::Type::Bool : Stone::Type::Int
+        else Stone::Type::Null
+        end
+      end
+
+      # Resolve the RTTI type tag, using Null for null pointers at runtime
+      private def resolve_type_tag(builder, mod, stone_type, llvm_value)
+        declared_tag = Stone::RTTI.type_constant_for(mod, stone_type)
+        return declared_tag unless llvm_value.type.kind == :pointer
+
+        null_tag = Stone::RTTI.type_constant_for(mod, Stone::Type::Null)
+        is_null = builder.icmp(:eq, llvm_value, LLVM::Type.ptr.null, "is_null")
+        builder.select(is_null, null_tag, declared_tag, "type_tag")
+      end
+
+      private def box_value(builder, llvm_value)
+        alloca = builder.alloca(llvm_value.type, "eq_box")
+        builder.store(llvm_value, alloca)
+        alloca
+      end
+
+      private def equality_operator?
+        %w[== != ≠ equals?].include?(function_name)
+      end
+
       private def chained_comparison?
         comparison_operator? && arguments.length > 2
       end
 
       private def comparison_operator?
-        %w[== != ≠ < <= ≤ > >= ≥].include?(function_name)
+        %w[< <= ≤ > >= ≥].include?(function_name)
       end
 
       private def boolean_operator?
@@ -137,7 +191,6 @@ module Stone
         build_comparison_conjunction(builder, func, args)
       end
 
-
       private def build_comparison_conjunction(builder, func, args)
         result = builder.call(func, args[0], args[1], "cmp_0")
 
@@ -159,131 +212,9 @@ module Stone
         arguments.map { |arg| arg.to_llir(builder, mod, scope) }
       end
 
-      private def record_equality_comparison?(mod)
-        return false unless equality_operator?
-        return false unless arguments.size == 2
-
-        both_arguments_are_records?(mod)
-      end
-
-      private def both_arguments_are_records?(mod)
-        Stone::AST::RecordHelpers.record_instance?(arguments[0], mod) &&
-          Stone::AST::RecordHelpers.record_instance?(arguments[1], mod)
-      end
-
       private def instantiate_record(builder, mod, scope)
         record_instantiation = Stone::AST::RecordInstantiation.new(function_name, arguments)
         record_instantiation.to_llir(builder, mod, scope)
-      end
-
-      private def equality_operator?
-        %w[== != ≠].include?(function_name)
-      end
-
-      private def mixed_null_comparison?
-        return false unless equality_operator?
-        return false unless arguments.size == 2
-
-        null_args = arguments.count { |arg| arg.is_a?(Stone::AST::NullLiteral) }
-        return false unless null_args == 1 # Exactly one NULL
-
-        # If the non-NULL operand returns a pointer, it's a valid pointer comparison
-        non_null_arg = arguments.find { |arg| !arg.is_a?(Stone::AST::NullLiteral) }
-        !returns_pointer?(non_null_arg)
-      end
-
-      private def returns_pointer?(node)
-        # PropertyAccess to a recursive field returns a pointer
-        return true if node.is_a?(Stone::AST::PropertyAccess)
-
-        false
-      end
-
-      private def null_comparison_result
-        # For ==: different types are not equal, return false
-        # For != or ≠: different types are not equal, return true
-        function_name == "==" ? LLVM::FALSE : LLVM::TRUE
-      end
-
-      private def generate_record_equality(builder, mod, scope)
-        records = evaluate_record_arguments(builder, mod, scope)
-        type1, type2 = get_record_types(mod)
-
-        return different_types_result if type1 != type2
-
-        result = compare_all_fields(builder, records, mod.record_types[type1], mod)
-        apply_not_operator(builder, result)
-      end
-
-      private def evaluate_record_arguments(builder, mod, scope)
-        [arguments[0].to_llir(builder, mod, scope), arguments[1].to_llir(builder, mod, scope)]
-      end
-
-      private def get_record_types(mod)
-        [mod.record_instance_type(arguments[0].identifier), mod.record_instance_type(arguments[1].identifier)]
-      end
-
-      private def different_types_result
-        function_name == "==" ? LLVM::Int1.from_i(0) : LLVM::Int1.from_i(1)
-      end
-
-      private def apply_not_operator(builder, result)
-        function_name == "==" ? result : builder.not(result, "not_equal")
-      end
-
-      private def compare_all_fields(builder, records, record_def, mod)
-        fields = record_def.fields
-        result = compare_fields_at_index(builder, records, fields, mod, 0)
-
-        (1...fields.size).each do |i|
-          field_equal = compare_fields_at_index(builder, records, fields, mod, i)
-          result = builder.and(result, field_equal, "and_#{i}")
-        end
-
-        result
-      end
-
-      private def compare_fields_at_index(builder, records, fields, mod, index)
-        field = fields[index]
-        val1 = builder.extract_value(records[0], index, "field1_#{field[:name]}")
-        val2 = builder.extract_value(records[1], index, "field2_#{field[:name]}")
-
-        compare_field_values(builder, val1, val2, field[:type_name], mod)
-      end
-
-      private def compare_field_values(builder, val1, val2, type_name, mod)
-        case type_name
-        when "Int", "Bool"
-          builder.icmp(:eq, val1, val2, "field_eq")
-        when "String"
-          # Stone represents strings as i64 pointers to null-terminated C strings
-          # We need to compare the string contents, not just the pointers
-          compare_strings(builder, val1, val2, mod)
-        else
-          fail "Unknown type for comparison: #{type_name}"
-        end
-      end
-
-      private def compare_strings(builder, str_ptr1, str_ptr2, mod)
-        # Optimization: check if pointers are equal first
-        # If pointers differ, we still need strcmp for content comparison
-        ptrs_equal = builder.icmp(:eq, str_ptr1, str_ptr2, "ptrs_eq")
-
-        # Convert i64 pointers back to i8* for strcmp
-        ptr1 = builder.int2ptr(str_ptr1, LLVM::Type.pointer(LLVM::Int8), "ptr1")
-        ptr2 = builder.int2ptr(str_ptr2, LLVM::Type.pointer(LLVM::Int8), "ptr2")
-
-        # Declare or get strcmp function
-        strcmp_func = Stone::LibC.get_or_declare_strcmp(mod)
-        strcmp_result = builder.call(strcmp_func, ptr1, ptr2, "strcmp_result")
-
-        # strcmp returns 0 if strings are equal
-        strings_equal = builder.icmp(:eq, strcmp_result, LLVM::Int32.from_i(0), "strings_eq")
-
-        # Return true if pointers are equal OR string contents are equal
-        # Note: This always calls strcmp, but LLVM's optimizer will likely eliminate
-        # the strcmp call when ptrs_equal is true at compile time
-        builder.or(ptrs_equal, strings_equal, "str_cmp_result")
       end
 
     end

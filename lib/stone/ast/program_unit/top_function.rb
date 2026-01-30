@@ -165,6 +165,8 @@ module Stone
             next unless child.is_a?(Stone::AST::ConstantDefinition)
 
             register_record_type_definition(child, mod, scope)
+            register_generic_type_definition(child, mod)
+            register_generic_instantiation(child, mod, scope)
             register_record_instance_if_needed(child, mod)
           end
         end
@@ -176,6 +178,32 @@ module Stone
           record_def.assigned_name = child.identifier
           mod.register_record_type(child.identifier, record_def)
           register_record_type_in_registry(child.identifier, record_def, mod, scope)
+        end
+
+        private def register_generic_type_definition(child, mod)
+          return unless child.value_expression.is_a?(Stone::AST::Lambda)
+
+          lambda_node = child.value_expression
+          return unless lambda_node.block.statements.last.is_a?(Stone::AST::RecordDefinition)
+
+          mod.register_generic_type(child.identifier, lambda_node)
+        end
+
+        private def register_generic_instantiation(child, mod, scope)
+          return unless child.value_expression.is_a?(Stone::AST::FunctionCall)
+
+          func_call = child.value_expression
+          return unless mod.generic_type?(func_call.function_name)
+
+          specialized = func_call.specialize_generic_type(mod)
+          canonical_name = specialized.assigned_name
+
+          mod.register_record_type(canonical_name, specialized)
+          mod.register_record_type(child.identifier, specialized)
+          register_record_type_in_registry(canonical_name, specialized, mod, scope)
+
+          canonical_type = Stone::Type::Registry.lookup(canonical_name)
+          Stone::Type::Registry.register_as(child.identifier, canonical_type) if canonical_type
         end
 
         private def register_record_type_in_registry(name, record_def, mod, scope)

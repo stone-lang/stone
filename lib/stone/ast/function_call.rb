@@ -22,6 +22,9 @@ module Stone
         # regular functions, and this check should be removed.
         return instantiate_record(builder, mod, scope) if mod.record_type?(function_name)
 
+        # Generic type instantiation: Box(Int) → creates specialized record type
+        return instantiate_generic_type(builder, mod, scope) if mod.generic_type?(function_name)
+
         # Equality operators box arguments with type tags for runtime dispatch
         return generate_equality_call(builder, mod, scope) if equality_operator?
 
@@ -226,6 +229,44 @@ module Stone
       private def instantiate_record(builder, mod, scope)
         record_instantiation = Stone::AST::RecordInstantiation.new(function_name, arguments)
         record_instantiation.to_llir(builder, mod, scope)
+      end
+
+      private def instantiate_generic_type(builder, mod, scope)
+        specialized = specialize_generic_type(mod)
+        mod.register_record_type(specialized.assigned_name, specialized)
+        register_in_type_registry(specialized.assigned_name, specialized, mod, scope)
+        specialized.to_llir(builder, mod, scope)
+      end
+
+      # Build a specialized RecordDefinition by substituting type arguments into the generic template.
+      # Public because TopFunction also calls this during type pre-registration.
+      def specialize_generic_type(mod)
+        validate_type_arguments
+        lambda_node = mod.generic_types[function_name]
+        type_arg_names = arguments.map(&:identifier)
+        substitution = build_substitution_map(lambda_node.parameters, type_arg_names)
+
+        record_template = lambda_node.block.statements.last
+        specialized = record_template.substitute_type_params(substitution)
+        specialized.assigned_name = "#{function_name}(#{type_arg_names.join(', ')})"
+        specialized
+      end
+
+      private def validate_type_arguments
+        invalid = arguments.reject { |arg| arg.is_a?(Stone::AST::Reference) }
+        return if invalid.empty?
+
+        fail Stone::TypeError, "generic type arguments must be type names, got: #{invalid.map(&:to_s).join(', ')}"
+      end
+
+      private def register_in_type_registry(name, record_def, mod, scope)
+        fields = record_def.fields.map { |f| {name: f[:name], type: f[:type]} }
+        type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type(mod, scope))
+        Stone::Type::Registry.register(type)
+      end
+
+      private def build_substitution_map(param_names, type_arg_names)
+        param_names.zip(type_arg_names).to_h
       end
 
     end

@@ -158,6 +158,19 @@ module Stone
         type_name == @assigned_name || mod&.record_type?(type_name) || scope.lookup_type(type_name)
       end
 
+      def substitute_type_params(substitution)
+        new_fields = @fields.map { |field| substitute_field(field, substitution) }
+        self.class.new(new_fields)
+      end
+
+      private def substitute_field(field, substitution)
+        type_name = Stone::AST::FieldHelpers.field_type_name(field)
+        return field unless substitution.key?(type_name)
+
+        new_type_name = substitution[type_name]
+        {name: field[:name], type: Stone::AST::TypeAnnotation.new(new_type_name), type_name: new_type_name}
+      end
+
       def field_names
         @fields.map { |f| f[:name] }
       end

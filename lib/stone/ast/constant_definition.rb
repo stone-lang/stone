@@ -69,6 +69,7 @@ module Stone
 
       # Register a function (lambda) as an alias so it can be called by the constant name
       private def register_function_alias(mod, function, scope)
+        register_generic_instantiation_alias(mod) if generic_instantiation?(mod)
         mod.register_function_alias(identifier, function)
         scope.define(identifier, value: function)
         nil
@@ -116,6 +117,26 @@ module Stone
       private def generic_type_definition?
         value_expression.is_a?(Stone::AST::Lambda) &&
           value_expression.block.statements.last.is_a?(Stone::AST::RecordDefinition)
+      end
+
+      private def generic_instantiation?(mod)
+        value_expression.is_a?(Stone::AST::FunctionCall) && mod.generic_type?(value_expression.function_name)
+      end
+
+      private def register_generic_instantiation_alias(mod)
+        canonical_name = canonical_generic_name
+        record_def = mod.record_types[canonical_name]
+        return unless record_def
+
+        mod.register_record_type(identifier, record_def)
+        # Register alias in type registry so type inference works for instances
+        canonical_type = Stone::Type::Registry.lookup(canonical_name)
+        Stone::Type::Registry.register_as(identifier, canonical_type) if canonical_type
+      end
+
+      private def canonical_generic_name
+        type_args = value_expression.arguments.map(&:identifier)
+        "#{value_expression.function_name}(#{type_args.join(', ')})"
       end
 
       private def register_as_generic_type(mod)

@@ -62,14 +62,6 @@ jobs:
           echo "LDFLAGS=-L$LLVM_PREFIX/lib" >> $GITHUB_ENV
           echo "CPPFLAGS=-I$LLVM_PREFIX/include" >> $GITHUB_ENV
 
-      - name: Install Ruby
-        uses: ruby/setup-ruby@v1
-        with:
-          bundler-cache: true
-
-      - name: Install bun
-        uses: oven-sh/setup-bun@v2
-
       - name: Install mise and the tools from its config
         uses: jdx/mise-action@v3
 

@@ -106,9 +106,9 @@ invalid after function return. Heap allocation solves both problems.
 #### `lib/stone/ast/program_unit.rb`
 
 - Added `HeapUnionConverter` class that reads from heap memory via FFI:
-  - Reads type tag pointer (offset 0)
-  - Reads type name string from RTTI struct
-  - Reads and converts payload based on type name
+    - Reads type tag pointer (offset 0)
+    - Reads type name string from RTTI struct
+    - Reads and converts payload based on type name
 - Added `:heap_union_ptr` result type handling in `last_expression_type` and `convert_to_ruby`
 
 ### Memory Management

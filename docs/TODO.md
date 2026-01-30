@@ -34,6 +34,7 @@ match b.value {
 ```
 
 This would:
+
 1. Extract the type tag from the union struct
 2. Compare against each case's type constant
 3. Extract and cast payload appropriately for each branch
@@ -41,6 +42,7 @@ This would:
 ### Alternative: Runtime Type Checking in Property Access
 
 For simpler cases, property access could check the type tag and:
+
 - Return null pointer if type is Null
 - Truncate to i1 if type is Bool
 - Convert i64 to pointer if type is String or Record

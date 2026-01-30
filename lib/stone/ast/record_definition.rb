@@ -122,9 +122,16 @@ module Stone
       end
 
       private def lookup_field_equals_fn(mod, field)
-        type_name = Stone::AST::FieldHelpers.field_type_name(field)
+        type_name = resolve_field_type_name(field, mod)
         fn_name = "__#{type_name}_equals__"
         mod.functions[fn_name] || fail("No equals function found for type: #{type_name}")
+      end
+
+      # Resolve type aliases (e.g., "MaybeInt" → "Maybe(Int)") via record_def assigned_name
+      private def resolve_field_type_name(field, mod)
+        type_name = Stone::AST::FieldHelpers.field_type_name(field)
+        record_def = mod.record_types[type_name]
+        record_def&.assigned_name || type_name
       end
 
       # Calculate size based on field types (simplified -- assumes packed alignment)
@@ -164,11 +171,22 @@ module Stone
       end
 
       private def substitute_field(field, substitution)
+        annotation = field[:type]
+        return substitute_parameterized_field(field, annotation, substitution) if annotation.is_a?(Stone::AST::ParameterizedTypeAnnotation)
+
         type_name = Stone::AST::FieldHelpers.field_type_name(field)
         return field unless substitution.key?(type_name)
 
         new_type_name = substitution[type_name]
         {name: field[:name], type: Stone::AST::TypeAnnotation.new(new_type_name), type_name: new_type_name}
+      end
+
+      private def substitute_parameterized_field(field, annotation, substitution)
+        new_args = annotation.type_arguments.map { |arg|
+          substitution.key?(arg.to_s) ? Stone::AST::TypeAnnotation.new(substitution[arg.to_s]) : arg
+        }
+        new_annotation = Stone::AST::ParameterizedTypeAnnotation.new(annotation.base_name, new_args)
+        {name: field[:name], type: new_annotation, type_name: new_annotation.to_s}
       end
 
       def field_names

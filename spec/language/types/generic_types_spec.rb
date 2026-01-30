@@ -81,4 +81,87 @@ RSpec.describe "Generic Types" do
     end
   end
 
+  describe "recursive generic types" do
+    it "allows recursive reference in generic type" do
+      code = <<~STONE
+        List :: (Type) -> Type
+        List := λ(T) { Record(first :: T, rest :: List(T)) }
+        List
+      STONE
+      expect { Stone.eval(code) }.not_to raise_error
+    end
+
+    it "can create a single-element linked list" do
+      code = <<~STONE
+        List :: (Type) -> Type
+        List := λ(T) { Record(first :: T, rest :: List(T)) }
+        IntList := List(Int)
+        list := IntList(42, NULL)
+        list.first
+      STONE
+      expect(Stone.eval(code)).to eq(42)
+    end
+
+    it "can create a multi-element linked list" do
+      code = <<~STONE
+        List :: (Type) -> Type
+        List := λ(T) { Record(first :: T, rest :: List(T)) }
+        IntList := List(Int)
+        list := IntList(1, IntList(2, IntList(3, NULL)))
+        list.first
+      STONE
+      expect(Stone.eval(code)).to eq(1)
+    end
+
+    it "can access elements via rest" do
+      code = <<~STONE
+        List :: (Type) -> Type
+        List := λ(T) { Record(first :: T, rest :: List(T)) }
+        IntList := List(Int)
+        list := IntList(1, IntList(2, IntList(3, NULL)))
+        list.rest.first
+      STONE
+      expect(Stone.eval(code)).to eq(2)
+    end
+
+    it "works with string element type" do
+      code = <<~STONE
+        List :: (Type) -> Type
+        List := λ(T) { Record(first :: T, rest :: List(T)) }
+        StringList := List(String)
+        list := StringList("hello", StringList("world", NULL))
+        list.first
+      STONE
+      expect(Stone.eval(code)).to eq("hello")
+    end
+
+    it "allows NULL as terminator for generic list type" do
+      code = <<~STONE
+        List :: (Type) -> Type
+        List := λ(T) { Record(first :: T, rest :: List(T)) }
+        IntList := List(Int)
+        list := IntList(1, NULL)
+        list.rest == NULL
+      STONE
+      expect(Stone.eval(code)).to be true
+    end
+  end
+
+  describe "composed generic types" do
+    it "can compose type constructors" do
+      code = <<~STONE
+        Maybe :: (Type) -> Type
+        Maybe := λ(T) { Record(value :: T, present :: Bool) }
+
+        List :: (Type) -> Type
+        List := λ(T) { Record(first :: T, rest :: List(T)) }
+
+        MaybeInt := Maybe(Int)
+        ListMaybeInt := List(MaybeInt)
+        ListMaybeInt
+      STONE
+      expect { Stone.eval(code) }.not_to raise_error
+    end
+  end
+
 end

@@ -9,6 +9,7 @@ require "stone/ast/type_of_expression"
 require "stone/ast/type_annotation"
 require "stone/ast/function_type_annotation"
 require "stone/ast/union_type_annotation"
+require "stone/ast/parameterized_type_annotation"
 require "stone/ast/type_declaration"
 require "stone/ast/function_call"
 require "stone/ast/property_access"
@@ -334,10 +335,25 @@ module Stone
     private def transform_type_term(node)
       return nil unless node
       return transform_type_function(node.find_child(:type_function)) if node.find_child(:type_function)
+      return transform_parameterized_type(node.find_child(:parameterized_type)) if node.find_child(:parameterized_type)
       return transform_type_annotation(node.find_child(:type_annotation)) if node.find_child(:type_annotation)
 
       type_name_node = node.find_child(:type_name)
       type_name_node ? Stone::AST::TypeAnnotation.new(extract_identifier_from(type_name_node)) : nil
+    end
+
+    private def transform_parameterized_type(node)
+      return nil unless node
+
+      base_name_node = node.find_child(:type_name)
+      base_name = extract_identifier_from(base_name_node)
+
+      type_annotation_nodes = node.children.select { |child|
+        child.respond_to?(:name) && child.name == :type_annotation
+      }
+      type_args = type_annotation_nodes.map { |n| transform_type_annotation(n) }
+
+      Stone::AST::ParameterizedTypeAnnotation.new(base_name, type_args)
     end
 
     private def transform_type_function(node)

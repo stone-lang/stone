@@ -34,7 +34,8 @@ module Stone
     rule(:type_declaration) { identifier + ws! + str("::") + ws! + type_annotation }
     rule(:type_annotation) { type_union }
     rule(:type_union) { type_term + (ws? + str("|") + ws? + type_term)[0..] }
-    rule(:type_term) { type_function | parens(type_annotation) | type_name }
+    rule(:type_term) { type_function | parameterized_type | parens(type_annotation) | type_name }
+    rule(:parameterized_type) { type_name + parens(comma_separated(type_annotation, allow_trailing: false)) }
     rule(:type_function) { type_params + ws? + str("->") + ws? + type_return }
     rule(:type_params) { parens(comma_separated(type_annotation, allow_trailing: false)) }
     rule(:type_return) { type_return_union | parens(type_annotation) }

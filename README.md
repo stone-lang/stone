@@ -45,13 +45,15 @@ Binaries are located in the bin directory:
     - `stone ast` - Output AST (abstract syntax tree)
     - `stone mlir` - Output MLIR (multi-level intermediate representation)
     - `stone llir` - Output LLIR (low-level intermediate representation)
+    - `stone check` - Output any code that does not pass type checking
+    - `stone type` - Output the code with inferred type declarations added
     - `stone compile` - Compile to an executable
     - `stone run` - Compile to an executable and run it
     - `stone eval` - Output the result of each top-level expression (non-interactive REPL)
     - `stone verify` - Verify that results of top-level expressions match expectations in comments
     - `stone repl` - Accept interactive manual input, and show the result of each top-level expression (default if no arguments are given)
     - `stone specs` - Run tests/specs
-    - `stone build` - Compile an entire project
+    - `stone build` - Compile an entire project (alias `stone make`)
     - `stone lint` - Check Stone code for issues
     - `stone format` - Format Stone code
     - `stone lsp` - Start the Language Server Protocol service
@@ -73,5 +75,4 @@ Stone is released under the MIT license. See the [LICENSE](/LICENSE.txt) file fo
 Thanks to some advice from my friends in the STL Polyglots group in selecting the name.
 Especially Deech.
 
-Thanks to Claude, ChatGPT, and GitHub Copilot for lots of good advice.
-And lots of frustration!
+Thanks to Claude, ChatGPT, and GitHub Copilot for lots of good advice, decent code, and lots of frustration!

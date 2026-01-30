@@ -170,8 +170,7 @@ DYLD_LIBRARY_PATH="$(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)"
 make test       # Run all tests
 make specs      # Alias for make test
 make rspec      # Run RSpec tests directly
-mise exec -- bundle exec rspec                    # Run all specs
-mise exec -- bundle exec rspec spec/path/to/file # Run specific spec file
+make rspec FILE='spec/my_spec.rb'  # Run RSpec on a specific file
 ```
 
 ### Linting
@@ -181,6 +180,7 @@ LLVM_PREFIX="$(shell brew --prefix llvm 2>/dev/null || { [ -d /usr/lib/llvm-21 ]
 DYLD_LIBRARY_PATH="$(LLVM_PREFIX)/lib:$(DYLD_LIBRARY_PATH)"
 make lint       # Run all linters (RuboCop + markdownlint)
 make rubocop    # Run RuboCop only
+make rubocop FILE='lib/my.rb'   # Run RuboCop on a specific file
 make markdownlint # Run markdownlint only
 bundle exec rubocop -a .            # Auto-fix Ruby issues
 ```

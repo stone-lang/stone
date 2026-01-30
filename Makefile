@@ -35,7 +35,7 @@ console: bundle
 lint: rubocop markdownlint
 
 rspec: bundle
-	DEBUG=0 mise exec -- bundle exec rspec
+	DEBUG=0 mise exec -- bundle exec rspec $(FILE)
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)
@@ -47,7 +47,7 @@ Gemfile.lock: Gemfile
 	@mise exec -- bundle
 
 rubocop:
-	@mise exec -- bundle exec rubocop lib spec
+	@mise exec -- bundle exec rubocop $(or $(FILE), lib spec)
 
 markdownlint: node_modules/.bin/markdownlint-cli2
 	@mise exec -- bunx markdownlint-cli2 '**/*.md' '!vendor' '!node_modules'

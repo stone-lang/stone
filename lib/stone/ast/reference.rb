@@ -46,6 +46,7 @@ module Stone
           lookup_global(builder, mod) ||
           lookup_function(mod) ||
           lookup_record_type(mod) ||
+          lookup_generic_type(mod) ||
           fail_with_reference_error
       end
 
@@ -127,6 +128,14 @@ module Stone
         # Record types aren't really values, but if referenced, return a dummy value
         # This allows code like "Person := Record(...)\nPerson" to not fail
         return LLVM::Int64.from_i(0) if mod.record_type?(identifier)
+
+        nil
+      end
+
+      private def lookup_generic_type(mod)
+        # Generic types aren't runtime values, but if referenced, return a dummy value
+        # This allows code like "Box := λ(T) { Record(value :: T) }\nBox" to not fail
+        return LLVM::Int64.from_i(0) if mod.generic_type?(identifier)
 
         nil
       end

@@ -94,6 +94,19 @@ module Stone
       record_instances[variable_name]
     end
 
+    # Track generic type definitions (lambdas that produce record types)
+    def generic_types
+      @generic_types ||= {}
+    end
+
+    def register_generic_type(name, lambda_node)
+      generic_types[name] = lambda_node
+    end
+
+    def generic_type?(name)
+      generic_types.key?(name)
+    end
+
   end
 end
 

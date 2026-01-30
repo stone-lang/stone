@@ -15,10 +15,10 @@ module Stone
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
         return register_record_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::RecordDefinition)
+        return register_as_generic_type(mod) if generic_type_definition?
 
         llvm_value = value_expression.to_llir(builder, mod, scope)
 
-        return handle_record_definition(mod, llvm_value) if value_expression.is_a?(Stone::AST::RecordDefinition)
         return register_function_alias(mod, llvm_value, scope) if llvm_value.is_a?(LLVM::Function)
 
         handle_value_expression(mod, scope)
@@ -44,12 +44,6 @@ module Stone
         # Register in scope for lexical lookup
         scope.define(identifier, value: llvm_value)
 
-        nil
-      end
-
-      private def handle_record_definition(mod, llvm_value)
-        mod.register_record_type(identifier, value_expression)
-        mod.register_function_alias(identifier, llvm_value)
         nil
       end
 
@@ -117,6 +111,16 @@ module Stone
 
       private def record_constructor_call?(mod)
         value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(value_expression.function_name)
+      end
+
+      private def generic_type_definition?
+        value_expression.is_a?(Stone::AST::Lambda) &&
+          value_expression.block.statements.last.is_a?(Stone::AST::RecordDefinition)
+      end
+
+      private def register_as_generic_type(mod)
+        mod.register_generic_type(identifier, value_expression)
+        nil
       end
 
     end

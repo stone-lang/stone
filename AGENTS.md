@@ -78,6 +78,7 @@ When the tests pass, check to see if there are any refactoring opportunities. I'
 Double-check to ensure the code is following security best practices, coding best practices. Make sure `make specs` and `make lint` are passing before considering the task complete. Do not disable any linting checks without permission; in most cases, you will need to fix the issue.
 
 - When the user says "proceed through to commit," batch the reviews and lint fixes more aggressively — aim for one CI run after all reviews rather than re-running between each.
+- When implementing multiple phases/stages/steps, you may be told to or decide to make a commit for each. In such cases, run code reviews and make sure tests and linting pass before each commit.
 
 Once that's done, give yourself a code review - 4 of them, in sequence (after fixing what as found in previous review). Delegate to subagents, whenever possible and reasonable. Consider using different models. Correct any issues identified. Look for edge cases or any other cases that we don't handle well. Look for security issues. Refactor more than you think you should. ;P There's no need to check linting in the reviews; we can do that once the reviews have all been completed.
 
@@ -86,19 +87,6 @@ Ensure that the code is readable, maintainable, flexible (easily changed), and a
 Then suggest a concise commit message, following the directions below. Suggest multiple commits if it's appropriate to keep small atomic commits. I want to be able to use `git bisect` without worries, and I want atomic commits to make rollbacks safer and easier. Have the commit(s) and commit message(s) approved before making the commits, unless I have previously told you to continue through to the commit.
 
 Please ask me questions, challenge my assumptions, and make suggestions at any time. Suggest any improvements to the approach, the code structure, or organization. Suggest things you learned that would be good to add to the AGENTS.md or CLAUDE.md file, or some other file.
-
-## ⚠️ MANDATORY APPROVAL CHECKPOINTS
-
-Before proceeding past any of these points, you MUST have my explicit approval:
-
-1. **Before writing tests** - Discuss the problem, requirements, and approach first
-2. **Before writing implementation** - Tests must be reviewed and approved
-3. **Before committing** - Code review and commit message must be approved
-
-If I give a task that seems straightforward, STILL discuss the approach first.
-Do not assume approval. Look for explicit phrases like "go ahead", "proceed", "continue", "looks good", etc.
-
-When in doubt, ask: "Should I proceed with [next step]?"
 
 ## ⚠️ CI REQUIREMENTS (HARD BLOCKERS)
 
@@ -338,6 +326,18 @@ Stone compiles to LLVM IR using the ruby-llvm gem (v21+). LLVM is managed via:
 - mise (fallback): Configured in `.tool-versions` and `.mise.toml`
 
 Environment setup in `.mise.toml` automatically configures `LLVM_PREFIX`, `PATH`, and `DYLD_LIBRARY_PATH`.
+
+### Generic Types
+
+Generic types are implemented as type-level lambdas stored in the module's
+`generic_types` registry. Instantiation creates specialized RecordDefinitions
+via field substitution. Key points:
+
+- Canonical names like `"Box(Int)"` are the type identity
+- User aliases (e.g., `IntBox`) map to the same RecordDefinition
+- TopFunction pre-registers generic types in two-phase processing
+- `FunctionCall#specialize_generic_type` is the single source of truth for specialization
+- Grammar uses PEG ordered choice: `parameterized_type` before `type_name`
 
 ### Planned Stone CLI Commands
 

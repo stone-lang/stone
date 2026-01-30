@@ -24,6 +24,44 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Install LLVM
+        run: |
+          LLVM_VERSION=21
+          if command -v brew >/dev/null 2>&1; then
+            echo "Installing LLVM via Homebrew..."
+            brew install llvm@${LLVM_VERSION} 2>/dev/null || brew install llvm
+          elif command -v apt-get >/dev/null 2>&1; then
+            echo "Installing LLVM ${LLVM_VERSION} via apt-get..."
+            # LLVM 21 is not in Ubuntu's default repos; use apt.llvm.org
+            wget -qO- https://apt.llvm.org/llvm-snapshot.gpg.key | sudo tee /etc/apt/trusted.gpg.d/apt.llvm.org.asc
+            UBUNTU_CODENAME=$(lsb_release -cs)
+            echo "deb http://apt.llvm.org/${UBUNTU_CODENAME}/ llvm-toolchain-${UBUNTU_CODENAME}-${LLVM_VERSION} main" | \
+              sudo tee /etc/apt/sources.list.d/llvm-${LLVM_VERSION}.list
+            sudo apt-get update
+            sudo apt-get install -y llvm-${LLVM_VERSION}-dev llvm-${LLVM_VERSION}
+          fi
+
+      - name: Set LLVM environment variables
+        run: |
+          LLVM_VERSION=21
+          if command -v brew >/dev/null 2>&1; then
+            LLVM_PREFIX=$(brew --prefix llvm)
+          elif [ -d /usr/lib/llvm-${LLVM_VERSION} ]; then
+            LLVM_PREFIX=/usr/lib/llvm-${LLVM_VERSION}
+          elif command -v llvm-config-${LLVM_VERSION} >/dev/null 2>&1; then
+            LLVM_PREFIX=$(llvm-config-${LLVM_VERSION} --prefix)
+          elif command -v llvm-config >/dev/null 2>&1; then
+            LLVM_PREFIX=$(llvm-config --prefix)
+          else
+            echo "ERROR: Could not find LLVM installation"
+            exit 1
+          fi
+          echo "Found LLVM at: $LLVM_PREFIX"
+          echo "$LLVM_PREFIX/bin" >> $GITHUB_PATH
+          echo "LLVM_PREFIX=$LLVM_PREFIX" >> $GITHUB_ENV
+          echo "LDFLAGS=-L$LLVM_PREFIX/lib" >> $GITHUB_ENV
+          echo "CPPFLAGS=-I$LLVM_PREFIX/include" >> $GITHUB_ENV
+
       - name: Install Ruby
         uses: ruby/setup-ruby@v1
         with:
@@ -31,6 +69,9 @@ jobs:
 
       - name: Install bun
         uses: oven-sh/setup-bun@v2
+
+      - name: Install mise and the tools from its config
+        uses: jdx/mise-action@v3
 
       - name: Install dependencies
         run: |

@@ -99,6 +99,76 @@ RSpec.describe Stone::TypeRegistry do
     end
   end
 
+  describe "#reset_to_bootstrap!" do
+    it "retains types registered before the first call" do
+      int = Stone::Type.primitive(name: "Int", llvm_type: :mock)
+      bool = Stone::Type.primitive(name: "Bool", llvm_type: :mock)
+      registry.register(int)
+      registry.register(bool)
+      registry.reset_to_bootstrap!
+      expect(registry.lookup("Int")).to eq(int)
+      expect(registry.lookup("Bool")).to eq(bool)
+    end
+
+    it "removes types registered after the first call" do
+      int = Stone::Type.primitive(name: "Int", llvm_type: :mock)
+      registry.register(int)
+      registry.reset_to_bootstrap!
+
+      point = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
+      registry.register(point)
+      expect(registry.lookup("Point")).to eq(point)
+
+      registry.reset_to_bootstrap!
+      expect(registry.lookup("Point")).to be_nil
+    end
+
+    it "preserves bootstrap types across multiple resets" do
+      int = Stone::Type.primitive(name: "Int", llvm_type: :mock)
+      registry.register(int)
+      registry.reset_to_bootstrap!
+
+      registry.register(Stone::Type.record(name: "Foo", fields: [], llvm_type: :mock))
+      registry.reset_to_bootstrap!
+
+      registry.register(Stone::Type.record(name: "Bar", fields: [], llvm_type: :mock))
+      registry.reset_to_bootstrap!
+
+      expect(registry.lookup("Int")).to eq(int)
+      expect(registry.lookup("Foo")).to be_nil
+      expect(registry.lookup("Bar")).to be_nil
+    end
+
+    it "establishes a fresh bootstrap snapshot after reset!" do
+      int = Stone::Type.primitive(name: "Int", llvm_type: :mock)
+      registry.register(int)
+      registry.reset_to_bootstrap!
+
+      registry.reset!
+
+      new_base = Stone::Type.primitive(name: "NewBase", llvm_type: :mock)
+      registry.register(new_base)
+      registry.reset_to_bootstrap!
+
+      expect(registry.lookup("NewBase")).to eq(new_base)
+      expect(registry.lookup("Int")).to be_nil
+    end
+
+    it "captures bootstrap snapshot only on the first call" do
+      int = Stone::Type.primitive(name: "Int", llvm_type: :mock)
+      registry.register(int)
+      registry.reset_to_bootstrap!
+
+      # Register a new type and reset again — the new type should NOT become part of bootstrap
+      extra = Stone::Type.primitive(name: "Extra", llvm_type: :mock)
+      registry.register(extra)
+      registry.reset_to_bootstrap!
+
+      expect(registry.lookup("Int")).to eq(int)
+      expect(registry.lookup("Extra")).to be_nil
+    end
+  end
+
   describe "convenience accessors" do
     before do
       registry.register(Stone::Type.primitive(name: "Int", llvm_type: :mock))

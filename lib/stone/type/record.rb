@@ -18,6 +18,19 @@ module Stone
         LLVM::Type.pointer
       end
 
+      def field_index(field_name)
+        return nil unless @fields
+
+        @fields.index { |f| f.name == field_name }
+      end
+
+      def field_type_annotation(field_name)
+        return nil unless @fields
+
+        field = @fields.find { |f| f.name == field_name }
+        field&.type_annotation
+      end
+
       def property_return_type(property_name)
         @property_types[property_name] || field_type(property_name)
       end

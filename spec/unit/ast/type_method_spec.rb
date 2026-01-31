@@ -220,7 +220,10 @@ RSpec.describe "AST node type() method" do
 
     it "returns field type for record field access" do
       # Register a Point record type with x: Int, y: Int
-      fields = [{name: "x", type: "Int"}, {name: "y", type: "Int"}]
+      fields = [
+        Stone::Type::Record::Field.new(name: "x", type_annotation: "Int"),
+        Stone::Type::Record::Field.new(name: "y", type_annotation: "Int")
+      ]
       point_type = Stone::Type.record(name: "Point", fields:, llvm_type: :mock)
       registry.register(point_type)
 
@@ -234,7 +237,10 @@ RSpec.describe "AST node type() method" do
     end
 
     it "returns String type for String field on record" do
-      fields = [{name: "name", type: "String"}, {name: "age", type: "Int"}]
+      fields = [
+        Stone::Type::Record::Field.new(name: "name", type_annotation: "String"),
+        Stone::Type::Record::Field.new(name: "age", type_annotation: "Int")
+      ]
       person_type = Stone::Type.record(name: "Person", fields:, llvm_type: :mock)
       registry.register(person_type)
 
@@ -290,27 +296,26 @@ RSpec.describe "AST node type() method" do
 
   describe "RecordDefinition#type" do
     it "returns nil when assigned_name is not set" do
-      fields = [{name: "x", type: "Int"}]
+      fields = [Stone::Type::Record::Field.new(name: "x", type_annotation: "Int")]
       node = Stone::AST::RecordDefinition.new(fields)
       expect(node.type).to be_nil
     end
 
     it "returns constructor function type when assigned_name is set and type is registered" do
-      fields = [{name: "x", type: "Int"}, {name: "y", type: "Int"}]
+      int_field = ->(name) { Stone::Type::Record::Field.new(name:, type_annotation: "Int") }
+      fields = [int_field["x"], int_field["y"]]
       point_type = Stone::Type.record(name: "Point", fields:, llvm_type: :mock)
       registry.register(point_type)
-
       node = Stone::AST::RecordDefinition.new(fields)
       node.assigned_name = "Point"
       func_type = node.type
-
       expect(func_type.function?).to be true
       expect(func_type.param_types).to eq([Stone::Type::Int, Stone::Type::Int])
       expect(func_type.return_type).to eq(point_type)
     end
 
     it "returns nil when assigned_name is set but type is not registered" do
-      fields = [{name: "x", type: "Int"}]
+      fields = [Stone::Type::Record::Field.new(name: "x", type_annotation: "Int")]
       node = Stone::AST::RecordDefinition.new(fields)
       node.assigned_name = "UnregisteredType"
       expect(node.type).to be_nil

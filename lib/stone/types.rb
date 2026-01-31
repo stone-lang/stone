@@ -15,13 +15,19 @@ module Stone
     INT_MAX = 2**63 - 1  # +9_223_372_036_854_775_807
 
     def bootstrap_registry!
-      types = create_primitive_types
+      types = create_types
       register_all_types(types)
       setup_property_types(types)
       aliases = create_type_aliases(types)
       register_all_types(aliases)
       setup_type_constants(types.merge(aliases))
       Stone::TypeRegistry.instance
+    end
+
+    def create_types
+      primitives = create_primitive_types
+      records = create_record_types(primitives)
+      primitives.merge(records)
     end
 
     def create_primitive_types
@@ -32,10 +38,15 @@ module Stone
         type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Type.pointer),
         null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Type.ptr),
         record: Stone::Type.primitive(name: "Record", llvm_type: LLVM::Type.pointer, generic_for: :record),
-        function: Stone::Type.primitive(name: "Function", llvm_type: LLVM::Type.pointer, generic_for: :function),
-        # FieldList is a list-like type for record field metadata
-        # TODO: Replace with List(Field) once generics are available
-        field_list: Stone::Type.primitive(name: "FieldList", llvm_type: LLVM::Type.pointer)
+        function: Stone::Type.primitive(name: "Function", llvm_type: LLVM::Type.pointer, generic_for: :function)
+      }
+    end
+
+    def create_record_types(_primitives)
+      # FieldList is a linked-list record type for runtime field metadata.
+      # TODO: Replace with List(Record::Field) once generics are available.
+      {
+        field_list: Stone::Type.record(name: "FieldList", fields: [], llvm_type: LLVM::Type.pointer)
       }
     end
 
@@ -86,10 +97,8 @@ module Stone
     end
 
     def setup_int_properties(types)
-      types[:int].property_types.merge!(
-        "positive?" => types[:bool], "negative?" => types[:bool],
-        "zero?" => types[:bool], "as_String" => types[:string]
-      )
+      types[:int].property_types.merge!("positive?" => types[:bool], "negative?" => types[:bool],
+                                        "zero?" => types[:bool], "as_String" => types[:string])
     end
 
     def setup_bool_properties(types)
@@ -97,16 +106,23 @@ module Stone
     end
 
     def setup_string_properties(types)
-      types[:string].property_types.merge!(
-        "byte_count" => types[:int], "empty?" => types[:bool], "as_String" => types[:string]
-      )
+      types[:string].property_types.merge!("byte_count" => types[:int], "empty?" => types[:bool],
+                                           "as_String" => types[:string])
     end
+
+    # Constant names that would collide with subclass names
+    GENERIC_CONSTANT_NAMES = {
+      "Record" => :GENERIC_RECORD,
+      "Function" => :GENERIC_FUNCTION,
+      "Primitive" => :GENERIC_PRIMITIVE
+    }.freeze
 
     def setup_type_constants(types)
       # Define type constants on Stone::Type for convenient access
       # Only define if not already defined (avoids warnings during test resets)
       types.each_value do |type|
-        define_type_constant(type.name.to_sym, type)
+        constant_name = GENERIC_CONSTANT_NAMES[type.name] || type.name.to_sym
+        define_type_constant(constant_name, type)
       end
       define_type_constant(:Registry, Stone::TypeRegistry.instance)
     end

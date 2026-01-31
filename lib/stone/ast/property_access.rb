@@ -299,8 +299,8 @@ module Stone
         record_def = mod.record_types[parent_record_type]
         return nil unless record_def
 
-        field = record_def.fields.find { |f| f[:name] == @receiver.property }
-        field&.dig(:type_name)
+        field = record_def.fields.find { |f| f.name == @receiver.property }
+        field&.type_name
       end
 
       private def access_record_field(builder, mod, scope)
@@ -322,7 +322,7 @@ module Stone
         annotation = record_def.field_type_annotation(@property)
         return field_value unless Stone::AST::FieldHelpers.union_annotation?(annotation)
 
-        union_type = Stone::AST::FieldHelpers.resolve_field_type({type: annotation})
+        union_type = annotation.to_type(Stone::Type::Registry)
         extract_union_payload(builder, mod, field_value, union_type)
       end
 
@@ -508,8 +508,8 @@ module Stone
         record_def = mod.record_types[record_type_name]
         return false unless record_def
 
-        field_def = record_def.fields.find { |f| f[:name] == @property }
-        field_def && field_def[:type_name] == "String"
+        field_def = record_def.fields.find { |f| f.name == @property }
+        field_def && field_def.type_name == "String"
       end
 
       def get_record_type_name(mod)

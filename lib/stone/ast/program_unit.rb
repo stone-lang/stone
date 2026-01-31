@@ -205,7 +205,7 @@ module Stone
         annotation = record_def.field_type_annotation(property_access.property)
         return nil unless Stone::AST::FieldHelpers.union_annotation?(annotation)
 
-        Stone::AST::FieldHelpers.resolve_field_type({type: annotation})
+        annotation.to_type(Stone::Type::Registry)
       end
 
       private def convert_based_on_union_type(value, union_type)

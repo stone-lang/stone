@@ -11,49 +11,53 @@ RSpec.describe "Type aliases and generic types" do
     Stone::Types.bootstrap_registry!
   end
 
-  describe "Stone::Type::Record (generic type)" do
+  describe "Generic Record type" do
+    let(:generic_record) { Stone::Type::GENERIC_RECORD }
+
     it "exists as a constant" do
-      expect(Stone::Type::Record).to be_a(Stone::Type)
+      expect(generic_record).to be_a(Stone::Type)
     end
 
     it "is a primitive type" do
-      expect(Stone::Type::Record.primitive?).to be true
+      expect(generic_record.primitive?).to be true
     end
 
     it "has generic_for set to :record" do
-      expect(Stone::Type::Record.generic_for).to eq(:record)
+      expect(generic_record.generic_for).to eq(:record)
     end
 
     it "is registered in the type registry" do
-      expect(Stone::TypeRegistry.instance.lookup("Record")).to eq(Stone::Type::Record)
+      expect(Stone::TypeRegistry.instance.lookup("Record")).to eq(generic_record)
     end
 
     it "has RTTI type_kind of KIND_RECORD" do
-      expect(Stone::RTTI.type_kind(Stone::Type::Record)).to eq(Stone::RTTI::KIND_RECORD)
+      expect(Stone::RTTI.type_kind(generic_record)).to eq(Stone::RTTI::KIND_RECORD)
     end
   end
 
-  describe "Stone::Type::Function (generic_for)" do
+  describe "Generic Function type" do
+    let(:generic_function) { Stone::Type::GENERIC_FUNCTION }
+
     it "exists as a constant" do
-      expect(Stone::Type::Function).to be_a(Stone::Type)
+      expect(generic_function).to be_a(Stone::Type)
     end
 
     it "has generic_for set to :function" do
-      expect(Stone::Type::Function.generic_for).to eq(:function)
+      expect(generic_function.generic_for).to eq(:function)
     end
   end
 
-  describe "Stone::Type::Primitive" do
+  describe "Stone::Type::GENERIC_PRIMITIVE" do
     it "exists as a constant" do
-      expect(Stone::Type::Primitive).to be_a(Stone::Type)
+      expect(Stone::Type::GENERIC_PRIMITIVE).to be_a(Stone::Type)
     end
 
     it "is a union type" do
-      expect(Stone::Type::Primitive.union?).to be true
+      expect(Stone::Type::GENERIC_PRIMITIVE.union?).to be true
     end
 
     it "has exactly Null, Bool, Int, and String as alternatives" do
-      expect(Stone::Type::Primitive.alternatives).to contain_exactly(
+      expect(Stone::Type::GENERIC_PRIMITIVE.alternatives).to contain_exactly(
         Stone::Type::Null,
         Stone::Type::Bool,
         Stone::Type::Int,
@@ -62,24 +66,24 @@ RSpec.describe "Type aliases and generic types" do
     end
 
     it "has the name 'Primitive'" do
-      expect(Stone::Type::Primitive.name).to eq("Primitive")
+      expect(Stone::Type::GENERIC_PRIMITIVE.name).to eq("Primitive")
     end
 
     it "is registered in the type registry" do
-      expect(Stone::TypeRegistry.instance.lookup("Primitive")).to eq(Stone::Type::Primitive)
+      expect(Stone::TypeRegistry.instance.lookup("Primitive")).to eq(Stone::Type::GENERIC_PRIMITIVE)
     end
 
     it "is compatible with Int" do
-      expect(Stone::Type::Primitive.compatible_with?(Stone::Type::Int)).to be true
+      expect(Stone::Type::GENERIC_PRIMITIVE.compatible_with?(Stone::Type::Int)).to be true
     end
 
     it "is compatible with String" do
-      expect(Stone::Type::Primitive.compatible_with?(Stone::Type::String)).to be true
+      expect(Stone::Type::GENERIC_PRIMITIVE.compatible_with?(Stone::Type::String)).to be true
     end
 
     it "is not compatible with a record type" do
-      record = Stone::Type.record(name: "Point", fields: [{name: "x", type: "Int"}], llvm_type: :mock)
-      expect(Stone::Type::Primitive.compatible_with?(record)).to be false
+      record = Stone::Type.record(name: "Point", fields: [Stone::Type::Record::Field.new(name: "x", type_annotation: "Int")], llvm_type: :mock)
+      expect(Stone::Type::GENERIC_PRIMITIVE.compatible_with?(record)).to be false
     end
   end
 
@@ -98,8 +102,8 @@ RSpec.describe "Type aliases and generic types" do
         Stone::Type::Bool,
         Stone::Type::Int,
         Stone::Type::String,
-        Stone::Type::Record,
-        Stone::Type::Function,
+        Stone::Type::GENERIC_RECORD,
+        Stone::Type::GENERIC_FUNCTION,
         Stone::Type::Type
       )
     end
@@ -117,7 +121,7 @@ RSpec.describe "Type aliases and generic types" do
     end
 
     it "is compatible with a record type (via generic Record)" do
-      record = Stone::Type.record(name: "Point", fields: [{name: "x", type: "Int"}], llvm_type: :mock)
+      record = Stone::Type.record(name: "Point", fields: [Stone::Type::Record::Field.new(name: "x", type_annotation: "Int")], llvm_type: :mock)
       expect(Stone::Type::Any.compatible_with?(record)).to be true
     end
 

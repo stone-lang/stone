@@ -279,14 +279,14 @@ module Stone
     end
 
     private def generate_field_list_entry(record_name, field, index, rest_ptr)
-      name_global = create_field_name_string(record_name, field[:name])
+      name_global = create_field_name_string(record_name, field.name)
       type_ptr = field_type_constant(field)
       values = [name_global, type_ptr, rest_ptr]
-      add_field_list_global("Stone.Field.#{record_name}.#{index}.#{field[:name]}", values)
+      add_field_list_global("Stone.Field.#{record_name}.#{index}.#{field.name}", values)
     end
 
     private def field_type_constant(field)
-      field_type = Stone::AST::FieldHelpers.resolve_field_type(field) || Stone::Type::Int
+      field_type = field.resolve_type || Stone::Type::Int
       self.class.type_constant_for(@mod, field_type)
     end
 
@@ -310,9 +310,9 @@ module Stone
     end
 
     def self.type_kind(type)
-      return KIND_TYPE if type == Stone::Type::Type
-      return KIND_FUNCTION if type.function? || type == Stone::Type::Function
-      return KIND_RECORD if type.record? || type == Stone::Type::Record
+      return KIND_TYPE if type.name == "Type"
+      return KIND_FUNCTION if type.function? || type.name == "Function"
+      return KIND_RECORD if type.record? || type.name == "Record"
       return KIND_UNION if type.union?
 
       KIND_PRIMITIVE

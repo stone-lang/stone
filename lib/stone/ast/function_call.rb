@@ -96,12 +96,12 @@ module Stone
           nil
         end
         # Use the generic Function primitive for equality (pointer comparison, not structural)
-        result = Stone::Type::Function if result&.function?
+        result = Stone::Type::GENERIC_FUNCTION if result&.function?
         result || type_from_llvm_value(llvm_value)
       end
 
       private def type_from_llvm_value(llvm_value)
-        return Stone::Type::Function if llvm_function?(llvm_value)
+        return Stone::Type::GENERIC_FUNCTION if llvm_function?(llvm_value)
 
         case llvm_value.type.kind
         when :integer then llvm_value.type.width == 1 ? Stone::Type::Bool : Stone::Type::Int
@@ -260,8 +260,7 @@ module Stone
       end
 
       private def register_in_type_registry(name, record_def, mod, scope)
-        fields = record_def.fields.map { |f| {name: f[:name], type: f[:type]} }
-        type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type(mod, scope))
+        type = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(mod, scope))
         Stone::Type::Registry.register(type)
       end
 

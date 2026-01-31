@@ -36,27 +36,9 @@ module Stone
       end
     end
 
-    # Shared utilities for working with field annotations
     module FieldHelpers
-      # Check if an annotation represents a union type
       module_function def union_annotation?(annotation)
         annotation.is_a?(Stone::AST::UnionTypeAnnotation)
-      end
-
-      # Resolve a field's annotation to a Stone::Type
-      # Returns nil if the type cannot be resolved
-      module_function def resolve_field_type(field, registry = Stone::Type::Registry)
-        annotation = field[:type]
-        if annotation.respond_to?(:to_type)
-          annotation.to_type(registry)
-        else
-          registry.lookup(field[:type_name] || field[:type])
-        end
-      end
-
-      # Get the string representation of a field's type
-      module_function def field_type_name(field)
-        field[:type_name] || field[:type].to_s
       end
     end
 

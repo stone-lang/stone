@@ -120,7 +120,7 @@ module Stone
           annotation = record_def.field_type_annotation(property_access.property)
           return nil unless Stone::AST::FieldHelpers.union_annotation?(annotation)
 
-          Stone::AST::FieldHelpers.resolve_field_type({type: annotation})
+          annotation.to_type(Stone::Type::Registry)
         end
 
         private def build_return(builder, last_value)
@@ -207,8 +207,7 @@ module Stone
         end
 
         private def register_record_type_in_registry(name, record_def, mod, scope)
-          fields = record_def.fields.map { |f| {name: f[:name], type: f[:type]} }
-          type = Stone::Type.record(name:, fields:, llvm_type: record_def.llvm_type(mod, scope))
+          type = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(mod, scope))
           Stone::Type::Registry.register(type)
         end
 

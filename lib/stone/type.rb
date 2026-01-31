@@ -1,30 +1,11 @@
+require "stone/type/record/field"
+
 module Stone
-  # Value object representing a type in the Stone language.
-  # Each type (Int, Bool, String, etc.) is a singleton instance registered in TypeRegistry.
+  # Base class representing a type in the Stone language.
+  # Subclasses: Primitive, Record, Function, Union.
+  # Each built-in type is a singleton instance registered in TypeRegistry.
   # Access via Stone::Type::Int, Stone::Type::Bool, etc.
   class Type
-
-    # Size in bytes for primitive types, used for union payload sizing
-    PRIMITIVE_SIZES = {
-      "Int" => 8,
-      "Bool" => 1,
-      "String" => 8,  # pointer size
-      "Null" => 0,
-      "Type" => 8,    # pointer size
-      "Function" => 8,  # pointer size
-      "FieldList" => 8  # pointer size
-    }.freeze
-
-    # Alignment requirements for primitive types
-    PRIMITIVE_ALIGNMENTS = {
-      "Int" => 8,
-      "Bool" => 1,
-      "String" => 8,  # pointer alignment
-      "Null" => 1,
-      "Type" => 8,    # pointer alignment
-      "Function" => 8,  # pointer alignment
-      "FieldList" => 8  # pointer alignment
-    }.freeze
 
     attr_reader :name, :llvm_type, :fields, :min, :max, :param_types, :return_type, :generic_for
     attr_accessor :property_types
@@ -34,7 +15,6 @@ module Stone
       @llvm_type = llvm_type
       @property_types = property_types
       @fields = fields
-      @primitive = options[:primitive] || false
       @min = options[:min]
       @max = options[:max]
       @param_types = options[:param_types]
@@ -43,59 +23,19 @@ module Stone
     end
 
     def property_return_type(property_name)
-      @property_types[property_name] || field_type(property_name)
-    end
-
-    private def field_type(field_name)
-      return nil unless @fields
-
-      field = @fields.find { |f| f[:name] == field_name }
-      return nil unless field
-
-      Stone::AST::FieldHelpers.resolve_field_type(field)
+      @property_types[property_name]
     end
 
     def primitive?
-      @primitive
+      false
     end
 
     def record?
-      !@primitive && !@fields.nil?
-    end
-
-    def size_bytes
-      return PRIMITIVE_SIZES[@name] if primitive? && PRIMITIVE_SIZES.key?(@name)
-      # Records are stored as pointers in unions (to avoid infinite recursion with recursive types)
-      return 8 if record?  # pointer size
-      return 8 if function?  # function pointer
-
-      8  # default
-    end
-
-    def alignment
-      return PRIMITIVE_ALIGNMENTS[@name] if primitive? && PRIMITIVE_ALIGNMENTS.key?(@name)
-      # Records are stored as pointers in unions
-      return 8 if record?  # pointer alignment
-
-      8  # default pointer alignment
-    end
-
-    def pointer_type?
-      %w[String Null].include?(@name) || record?
-    end
-
-    def payload_llvm_type
-      case @name
-      when "Null" then LLVM::Type.pointer
-      when "Int" then LLVM::Int64.type
-      when "Bool" then LLVM::Int1.type
-      when "String" then LLVM::Type.pointer
-      else LLVM::Type.pointer  # records and other pointer types
-      end
+      false
     end
 
     def function?
-      @param_types.is_a?(Array)
+      false
     end
 
     def union?
@@ -108,6 +48,22 @@ module Stone
 
     def non_null_type
       self
+    end
+
+    def size_bytes
+      8
+    end
+
+    def alignment
+      8
+    end
+
+    def pointer_type?
+      false
+    end
+
+    def payload_llvm_type
+      LLVM::Type.pointer
     end
 
     def compatible_with?(other)
@@ -138,7 +94,7 @@ module Stone
     end
 
     def ==(other)
-      other.is_a?(self.class) && other.name == name
+      other.is_a?(Stone::Type) && other.name == name
     end
     alias eql? ==
 
@@ -154,26 +110,41 @@ module Stone
       "#<Stone::Type:#{name}>"
     end
 
+    # Factory methods delegate to subclasses
     def self.primitive(name:, llvm_type:, property_types: {}, **options)
-      new(name:, llvm_type:, property_types:, primitive: true, **options)
+      klass = primitive_class_for(name)
+      klass.new(name:, llvm_type:, property_types:, **options)
     end
 
     def self.record(name:, fields:, llvm_type:)
-      new(name:, llvm_type:, fields:, primitive: false)
+      Record.new(name:, fields:, llvm_type:)
     end
 
     def self.function(param_types:, return_type:)
       param_names = param_types.map(&:name).join(", ")
       return_name = return_type.function? ? "(#{return_type.name})" : return_type.name
-      name = "(#{param_names}) -> #{return_name}"
-      new(name:, llvm_type: nil, param_types:, return_type:)
+      fn_name = "(#{param_names}) -> #{return_name}"
+      Function.new(name: fn_name, param_types:, return_type:)
     end
 
     def self.union(alternatives:, name: nil)
       union = Union.new(alternatives:, name:)
       return union if name
+
       union.alternatives.length == 1 ? union.alternatives.first : union
     end
+
+    def self.primitive_class_for(name)
+      case name
+      when "Int" then Primitive::Int
+      when "Bool" then Primitive::Boolean
+      when "String" then Primitive::String
+      when "Null" then Primitive::Null
+      when "Type" then Primitive::TypeType
+      else Primitive
+      end
+    end
+    private_class_method :primitive_class_for
 
     # Union type - represents a value that can be one of several types
     class Union < Type
@@ -240,18 +211,6 @@ module Stone
 
       def union?
         true
-      end
-
-      def primitive?
-        false
-      end
-
-      def record?
-        false
-      end
-
-      def function?
-        false
       end
 
       def nullable?
@@ -327,6 +286,13 @@ module Stone
 
   end
 
-  # Backwards compatibility alias (deprecated - use Stone::Type directly)
-  TypeInstance = Type
 end
+
+require "stone/type/primitive"
+require "stone/type/primitive/int"
+require "stone/type/primitive/boolean"
+require "stone/type/primitive/string"
+require "stone/type/primitive/null"
+require "stone/type/primitive/type_type"
+require "stone/type/record"
+require "stone/type/function"

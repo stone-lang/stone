@@ -50,7 +50,6 @@ module Stone
         expected_llvm_type = llvm_type_for(expected_type)
         actual_llvm_type = llvm_value.type
 
-        # Compare LLVM types
         return if types_match?(expected_llvm_type, actual_llvm_type)
 
         fail "Type mismatch for field '#{field_name}': expected #{expected_type}, got #{actual_llvm_type}"
@@ -77,8 +76,8 @@ module Stone
       end
 
       private def convert_field_value(builder, mod, field, value, index)
-        if Stone::AST::FieldHelpers.union_annotation?(field[:type])
-          union_type = Stone::AST::FieldHelpers.resolve_field_type(field)
+        if field.union_annotation?
+          union_type = field.resolve_type
           return wrap_in_tagged_union(builder, mod, value, @field_values[index], union_type)
         end
         return allocate_and_store(builder, value) if needs_pointer_conversion?(field, mod, value)
@@ -87,7 +86,7 @@ module Stone
       end
 
       private def needs_pointer_conversion?(field, mod, value)
-        field_expects_pointer?(field[:type_name], mod) && value.type.kind == :struct
+        field_expects_pointer?(field.type_name, mod) && value.type.kind == :struct
       end
 
       private def wrap_in_tagged_union(builder, mod, llvm_value, ast_value, union_type)
@@ -125,10 +124,8 @@ module Stone
       end
 
       private def create_struct(struct_type, values, builder)
-        # Start with a null/undef struct value
         struct_value = struct_type.null
 
-        # Insert each field value
         values.each_with_index do |value, index|
           struct_value = builder.insert_value(struct_value, value, index)
         end

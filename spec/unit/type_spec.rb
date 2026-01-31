@@ -59,9 +59,13 @@ RSpec.describe Stone::Type do
 
   describe ".record" do
     it "creates a record type" do
-      fields = [{name: "x", type: "Int"}, {name: "y", type: "Int"}]
+      fields = [
+        Stone::Type::Record::Field.new(name: "x", type_annotation: "Int"),
+        Stone::Type::Record::Field.new(name: "y", type_annotation: "Int")
+      ]
       type = described_class.record(name: "Point", fields:, llvm_type: :mock)
       expect(type.name).to eq("Point")
+      expect(type).to be_a(Stone::Type::Record)
       expect(type.primitive?).to be false
       expect(type.record?).to be true
       expect(type.fields).to eq(fields)
@@ -242,17 +246,6 @@ RSpec.describe Stone::Type do
     end
   end
 
-  describe "backward compatibility" do
-    it "provides Stone::TypeInstance as alias for Stone::Type" do
-      expect(Stone::TypeInstance).to eq(Stone::Type)
-    end
-
-    it "allows creating types through the alias" do
-      type = Stone::TypeInstance.primitive(name: "Test", llvm_type: :mock)
-      expect(type).to be_a(Stone::Type)
-    end
-  end
-
   describe "#size_bytes" do
     it "returns 8 for Int" do
       expect(Stone::Type::Int.size_bytes).to eq(8)
@@ -321,6 +314,56 @@ RSpec.describe Stone::Type do
         union = Stone::Type.union(alternatives: [Stone::Type::Int, Stone::Type::Null])
         expect(union.alignment).to eq(8)
       end
+    end
+  end
+
+  describe "#pointer_type?" do
+    it "returns false for Int" do
+      expect(Stone::Type::Int.pointer_type?).to be false
+    end
+
+    it "returns false for Bool" do
+      expect(Stone::Type::Bool.pointer_type?).to be false
+    end
+
+    it "returns true for String" do
+      expect(Stone::Type::String.pointer_type?).to be true
+    end
+
+    it "returns true for Null" do
+      expect(Stone::Type::Null.pointer_type?).to be true
+    end
+
+    it "returns true for record types" do
+      record = Stone::Type.record(name: "Point", fields: [], llvm_type: :mock)
+      expect(record.pointer_type?).to be true
+    end
+
+    it "returns false for function types" do
+      func = Stone::Type.function(param_types: [Stone::Type::Int], return_type: Stone::Type::Int)
+      expect(func.pointer_type?).to be false
+    end
+  end
+
+  describe "type subclass hierarchy" do
+    it "creates Primitive::Int for Int type" do
+      expect(Stone::Type::Int).to be_a(Stone::Type::Primitive::Int)
+    end
+
+    it "creates Primitive::Boolean for Bool type" do
+      expect(Stone::Type::Bool).to be_a(Stone::Type::Primitive::Boolean)
+    end
+
+    it "creates Primitive::String for String type" do
+      expect(Stone::Type::String).to be_a(Stone::Type::Primitive::String)
+    end
+
+    it "creates Primitive::Null for Null type" do
+      expect(Stone::Type::Null).to be_a(Stone::Type::Primitive::Null)
+    end
+
+    it "creates Record for FieldList type" do
+      expect(Stone::Type::FieldList).to be_a(Stone::Type::Record)
     end
   end
 
@@ -432,7 +475,7 @@ RSpec.describe Stone::Type do
     context "with generic types" do
       it "generic Record is compatible with any record type" do
         generic_record = Stone::Type.primitive(name: "Record", llvm_type: :mock, generic_for: :record)
-        point = Stone::Type.record(name: "Point", fields: [{name: "x", type: "Int"}], llvm_type: :mock)
+        point = Stone::Type.record(name: "Point", fields: [Stone::Type::Record::Field.new(name: "x", type_annotation: "Int")], llvm_type: :mock)
         expect(generic_record.compatible_with?(point)).to be true
       end
 

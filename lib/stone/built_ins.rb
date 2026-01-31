@@ -1,4 +1,5 @@
 require "llvm/core"
+require "stone/scope"
 require "stone/types"
 require "stone/rtti"
 
@@ -7,8 +8,9 @@ module Stone
   # Handles registration of built-in constants (including functions and operators).
   class BuiltIns
 
-    def initialize(mod)
+    def initialize(mod, scope = Stone::Scope.top_level)
       @mod = mod
+      @scope = scope
     end
 
     def setup
@@ -276,45 +278,47 @@ module Stone
       @block_func_type ||= LLVM::Type.function([], LLVM::Int64.type)
     end
 
-    # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
+    # rubocop:disable Metrics/MethodLength
     private def register_builtin_function_types
       int = Stone::Type::Int
       bool = Stone::Type::Bool
 
       # sum(Int, Int) -> Int
-      Stone::Type::Registry.register_as("sum", Stone::Type.function(param_types: [int, int], return_type: int))
+      register_function_type("sum", param_types: [int, int], return_type: int)
 
       # if(Bool, Block, Block) -> Int
       # Note: Block type not yet in type system, so we just record param count conceptually
-      Stone::Type::Registry.register_as("if", Stone::Type.function(param_types: [bool], return_type: int))
+      register_function_type("if", param_types: [bool], return_type: int)
 
       # Boolean operators
-      # and(Bool, Bool) -> Bool
-      Stone::Type::Registry.register_as("and", Stone::Type.function(param_types: [bool, bool], return_type: bool))
-
-      # or(Bool, Bool) -> Bool
-      Stone::Type::Registry.register_as("or", Stone::Type.function(param_types: [bool, bool], return_type: bool))
-
-      # xor(Bool, Bool) -> Bool
-      Stone::Type::Registry.register_as("xor", Stone::Type.function(param_types: [bool, bool], return_type: bool))
-
-      # not(Bool) -> Bool
-      Stone::Type::Registry.register_as("not", Stone::Type.function(param_types: [bool], return_type: bool))
+      register_function_type("and", param_types: [bool, bool], return_type: bool)
+      register_function_type("or", param_types: [bool, bool], return_type: bool)
+      register_function_type("xor", param_types: [bool, bool], return_type: bool)
+      register_function_type("not", param_types: [bool], return_type: bool)
 
       # Equality operators: equals?(Any, Any) -> Bool
       any = Stone::Type::Any
       equality_type = Stone::Type.function(param_types: [any, any], return_type: bool)
       %w[equals? == != ≠].each do |name|
-        Stone::Type::Registry.register_as(name, equality_type)
+        register_type(name, equality_type)
       end
 
       # Unicode operator aliases
-      Stone::Type::Registry.register_as("∧", Stone::Type.function(param_types: [bool, bool], return_type: bool))
-      Stone::Type::Registry.register_as("∨", Stone::Type.function(param_types: [bool, bool], return_type: bool))
-      Stone::Type::Registry.register_as("⊻", Stone::Type.function(param_types: [bool, bool], return_type: bool))
-      Stone::Type::Registry.register_as("¬", Stone::Type.function(param_types: [bool], return_type: bool))
+      register_function_type("∧", param_types: [bool, bool], return_type: bool)
+      register_function_type("∨", param_types: [bool, bool], return_type: bool)
+      register_function_type("⊻", param_types: [bool, bool], return_type: bool)
+      register_function_type("¬", param_types: [bool], return_type: bool)
     end
-    # rubocop:enable Metrics/AbcSize, Metrics/MethodLength
+    # rubocop:enable Metrics/MethodLength
+
+    private def register_function_type(name, param_types:, return_type:)
+      register_type(name, Stone::Type.function(param_types:, return_type:))
+    end
+
+    private def register_type(name, type)
+      Stone::Type::Registry.register_as(name, type)
+      @scope.declare_type(name, type:)
+    end
 
   end
 end

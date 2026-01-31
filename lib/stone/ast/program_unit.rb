@@ -382,8 +382,9 @@ module Stone
 
       private def create_module
         LLVM::Module.new("__program_unit__").tap do |mod|
-          Stone::BuiltIns.new(mod).setup
-          generate_top_function(mod)
+          scope = Stone::Scope.top_level
+          Stone::BuiltIns.new(mod, scope).setup
+          generate_top_function(mod, scope)
         end
       end
 
@@ -392,8 +393,8 @@ module Stone
       # ... for `ARGV`, we'll probably need to implement `main(argc, argv, envp)`.
       # ... for `ENV`, we can probably call `getenv`, maybe `environ`.
       # Look into run_function_as_main(engine, fn, argc, argv, envp)
-      private def generate_top_function(mod)
-        @top_function.generate(mod)
+      private def generate_top_function(mod, scope = Stone::Scope.top_level)
+        @top_function.generate(mod, scope)
       end
     end
   end

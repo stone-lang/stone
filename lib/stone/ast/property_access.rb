@@ -29,14 +29,16 @@ module Stone
       end
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
+        type_context = Stone::TypeContext.new(mod, scope:)
+
         # 1. Check if this is a record field access (highest priority)
         return access_record_field(builder, mod, scope) if record_field_access?(mod)
 
         # 2. Check if receiver is a union containing record(s) - enables chained access like o.value.x
-        return access_field_on_union_record(builder, mod, scope) if receiver_is_union_with_record?(mod)
+        return access_field_on_union_record(builder, mod, scope, type_context) if receiver_is_union_with_record?(type_context)
 
         # Resolve the receiver type for subsequent checks
-        receiver_type = resolve_node_type(@receiver, mod)
+        receiver_type = resolve_node_type(@receiver, type_context)
 
         # Try different property access strategies
         handle_type_property(builder, mod, scope, receiver_type) ||
@@ -217,8 +219,8 @@ module Stone
         nil
       end
 
-      private def resolve_node_type(node, mod)
-        Stone::AST::TypeResolver.resolve_node_type(node, mod)
+      private def resolve_node_type(node, context)
+        Stone::AST::TypeResolver.resolve_node_type(node, context)
       end
 
       private def record_field_access?(mod)
@@ -241,8 +243,8 @@ module Stone
 
       # Check if receiver returns a union type that contains record(s)
       # This enables chained access like o.value.x where value is Point | Null
-      private def receiver_is_union_with_record?(mod)
-        receiver_type = safe_get_receiver_type(mod)
+      private def receiver_is_union_with_record?(type_context)
+        receiver_type = safe_get_receiver_type(type_context)
         return false unless receiver_type&.union?
 
         # Check if any non-null alternative is a record with this property
@@ -255,8 +257,8 @@ module Stone
 
       # Safely get the receiver's type, returning nil if type resolution fails.
       # This prevents errors during speculative checks like receiver_is_union_with_record?.
-      private def safe_get_receiver_type(mod)
-        @receiver.type(mod)
+      private def safe_get_receiver_type(type_context)
+        @receiver.type(type_context)
       rescue Stone::PropertyError, Stone::TypeError
         nil
       end
@@ -265,8 +267,8 @@ module Stone
       # For o.value.x where value is Point | Null:
       # The receiver (o.value) already extracts the record pointer from the union
       # via extract_homogeneous_union, so we just use that pointer directly.
-      private def access_field_on_union_record(builder, mod, scope)
-        receiver_type = @receiver.type(mod)
+      private def access_field_on_union_record(builder, mod, scope, type_context)
+        receiver_type = @receiver.type(type_context)
         record_type = find_record_type_in_union(receiver_type, mod)
         record_def = mod.record_types[record_type.name]
 

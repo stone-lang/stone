@@ -70,28 +70,29 @@ module Stone
       private def generate_equality_call(builder, mod, scope)
         validate_argument_count(2)
         arg_values = evaluate_arguments(builder, mod, scope)
-        boxed_args = box_equality_arguments(builder, mod, arg_values)
+        context = Stone::TypeContext.new(mod, scope:)
+        boxed_args = box_equality_arguments(builder, mod, context, arg_values)
         func = mod.lookup_function(function_name)
         builder.call(func, *boxed_args, "#{function_name}_result")
       end
 
-      private def box_equality_arguments(builder, mod, arg_values)
+      private def box_equality_arguments(builder, mod, context, arg_values)
         arguments.zip(arg_values).flat_map do |ast_node, llvm_value|
-          box_for_equality(builder, mod, ast_node, llvm_value)
+          box_for_equality(builder, mod, context, ast_node, llvm_value)
         end
       end
 
-      private def box_for_equality(builder, mod, ast_node, llvm_value)
-        stone_type = infer_stone_type(ast_node, mod, llvm_value)
+      private def box_for_equality(builder, mod, context, ast_node, llvm_value)
+        stone_type = infer_stone_type(ast_node, context, llvm_value)
         type_tag = resolve_type_tag(builder, mod, stone_type, llvm_value)
         value_ptr = box_value(builder, llvm_value)
         [type_tag, value_ptr]
       end
 
       # Infer the Stone type for an AST node, falling back to LLVM type inspection
-      private def infer_stone_type(ast_node, mod, llvm_value)
+      private def infer_stone_type(ast_node, context, llvm_value)
         result = begin
-          ast_node.type(mod)
+          ast_node.type(context)
         rescue Stone::PropertyError, Stone::TypeError
           nil
         end

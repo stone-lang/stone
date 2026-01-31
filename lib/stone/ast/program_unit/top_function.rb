@@ -88,9 +88,8 @@ module Stone
         end
 
         private def safe_get_type(node)
-          node.type(@mod)
+          node.type(Stone::TypeContext.new(@mod, scope: @scope))
         rescue Stone::PropertyError, Stone::TypeError
-          # Type couldn't be determined at this stage - default to non-pointer (i64)
           nil
         end
 

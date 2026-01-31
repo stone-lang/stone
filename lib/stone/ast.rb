@@ -19,17 +19,17 @@ module Stone
 
     # Shared type resolution logic for AST nodes
     module TypeResolver
-      module_function def resolve_node_type(node, mod)
+      module_function def resolve_node_type(node, context)
         case node
-        when Stone::AST::Reference then node.type(mod)
-        when Stone::AST::FunctionCall then node.type(mod)
-        when Stone::AST::PropertyAccess then resolve_property_type(node, mod)
+        when Stone::AST::Reference then node.type(context)
+        when Stone::AST::FunctionCall then node.type(context)
+        when Stone::AST::PropertyAccess then resolve_property_type(node, context)
         else node.type
         end
       end
 
-      module_function def resolve_property_type(node, mod)
-        receiver_type = resolve_node_type(node.receiver, mod)
+      module_function def resolve_property_type(node, context)
+        receiver_type = resolve_node_type(node.receiver, context)
         return nil unless receiver_type
 
         receiver_type.property_return_type(node.property)

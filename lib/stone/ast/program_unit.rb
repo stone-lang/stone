@@ -66,6 +66,8 @@ module Stone
         type_decl.type_annotation.to_type(Stone::TypeRegistry.instance)
       end
 
+      # NOTE: No scope available in eval phase; passes raw module_ref.
+      # TypeContext migration will happen when scope is threaded through ProgramUnit.
       private def safe_get_type(node)
         node.type(module_ref)
       rescue Stone::PropertyError, Stone::TypeError

@@ -36,6 +36,26 @@ RSpec.describe Stone::TypeContext do
       context.bind("x", registry.int)
       expect(context.lookup("x")).to eq(registry.int)
     end
+
+    context "with scope" do
+      let(:scope) { Stone::Scope.new }
+      let(:context_with_scope) { described_class.new(nil, scope:) }
+
+      it "falls back to scope's declared type when no binding exists" do
+        scope.declare_type("x", type: registry.int)
+        expect(context_with_scope.lookup("x")).to eq(registry.int)
+      end
+
+      it "prefers bindings over scope declarations" do
+        scope.declare_type("x", type: registry.string)
+        context_with_scope.bind("x", registry.int)
+        expect(context_with_scope.lookup("x")).to eq(registry.int)
+      end
+
+      it "returns nil when neither binding nor scope has the name" do
+        expect(context_with_scope.lookup("unknown")).to be_nil
+      end
+    end
   end
 
   describe "#with_llvm_module" do

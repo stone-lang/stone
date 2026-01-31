@@ -381,11 +381,16 @@ module Stone
       end
 
       private def create_module
+        reset_type_registry
         LLVM::Module.new("__program_unit__").tap do |mod|
           scope = Stone::Scope.top_level
           Stone::BuiltIns.new(mod, scope).setup
           generate_top_function(mod, scope)
         end
+      end
+
+      private def reset_type_registry
+        Stone::TypeRegistry.instance.reset_to_bootstrap!
       end
 
       # Generate IR for all code that's directly in the module.

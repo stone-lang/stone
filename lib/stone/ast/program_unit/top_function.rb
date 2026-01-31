@@ -175,7 +175,6 @@ module Stone
 
           record_def = child.value_expression
           record_def.assigned_name = child.identifier
-          mod.register_record_type(child.identifier, record_def)
           register_record_type_in_registry(child.identifier, record_def, mod, scope)
         end
 
@@ -198,8 +197,6 @@ module Stone
           specialized = func_call.specialize_generic_type
           canonical_name = specialized.assigned_name
 
-          mod.register_record_type(canonical_name, specialized)
-          mod.register_record_type(child.identifier, specialized)
           register_record_type_in_registry(canonical_name, specialized, mod, scope)
           register_type_alias(canonical_name, child.identifier, scope)
         end

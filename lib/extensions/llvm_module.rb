@@ -12,7 +12,6 @@ require "llvm/core"
 # - function_aliases: LLVM::Function objects for operators, computed properties, lambdas
 # - lambda_param_storage: temporary LLVM stack allocations during lambda compilation
 # - string_constants: maps constant names to StringLiteral AST nodes for type inference
-# - record_types: maps record names to RecordDefinition AST nodes (compilation-scoped validation)
 # - record_instances: maps variable names to record type names for property access
 module Stone
   module LLVMModuleExtensions
@@ -53,22 +52,6 @@ module Stone
 
     def string_constant?(name)
       string_constants.key?(name)
-    end
-
-    # Track record type definitions (compilation-scoped).
-    # Most type lookups use Stone::Type::Registry, but record_definition.rb
-    # validation requires compilation-scoped checks to avoid cross-compilation
-    # type leakage from the global Registry singleton.
-    def record_types
-      @record_types ||= {}
-    end
-
-    def register_record_type(name, record_definition)
-      record_types[name] = record_definition
-    end
-
-    def record_type?(name)
-      record_types.key?(name)
     end
 
     # Track which variables hold record instances (maps variable name -> record type name)

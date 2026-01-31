@@ -69,5 +69,12 @@ module Stone
       @types.clear
     end
 
+    # Reset to bootstrap state: keep primitive/built-in types, remove user-defined types.
+    # Called at the start of each compilation to prevent cross-compilation type leakage.
+    def reset_to_bootstrap!
+      @bootstrap_type_names ||= @types.keys.dup.freeze
+      @types.select! { |name, _type| @bootstrap_type_names.include?(name) }
+    end
+
   end
 end

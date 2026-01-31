@@ -36,9 +36,9 @@ module Stone
         "#{function_name}(#{arguments.join(', ')})"
       end
 
-      def type(context = nil)
+      def type(_context = nil)
         return Stone::Type::Bool if comparison_operator? || equality_operator? || boolean_operator?
-        return record_constructor_type if context&.record_type?(function_name)
+        return record_constructor_type if Stone::Type::Registry.lookup(function_name)&.record?
 
         function_return_type
       end
@@ -240,7 +240,6 @@ module Stone
 
       private def instantiate_generic_type(builder, mod, scope)
         specialized = specialize_generic_type
-        mod.register_record_type(specialized.assigned_name, specialized)
         register_in_type_registry(specialized.assigned_name, specialized, mod, scope)
         specialized.to_llir(builder, mod, scope)
       end

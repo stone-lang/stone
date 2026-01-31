@@ -14,7 +14,7 @@ module Stone
       end
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
-        return register_record_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::RecordDefinition)
+        return compile_record_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::RecordDefinition)
         return register_as_generic_type if generic_type_definition?
 
         llvm_value = value_expression.to_llir(builder, mod, scope)
@@ -59,17 +59,15 @@ module Stone
         register_record_instance(mod, scope)
       end
 
-      # Register a record type definition and generate its type constant
-      private def register_record_type(mod, builder = nil, scope = Stone::Scope.top_level)
-        mod.register_record_type(identifier, value_expression)
-        # Generate constructor function and type constant
+      # Compile a record type definition: generate its constructor, equals fn, and RTTI constant.
+      private def compile_record_type(mod, builder = nil, scope = Stone::Scope.top_level)
         value_expression.to_llir(builder, mod, scope) if builder
         nil
       end
 
       # Register a function (lambda) as an alias so it can be called by the constant name
       private def register_function_alias(mod, function, scope)
-        register_generic_instantiation_alias(mod, scope) if generic_instantiation?
+        register_generic_instantiation_alias(scope) if generic_instantiation?
         mod.register_function_alias(identifier, function)
         scope.define(identifier, value: function)
         nil
@@ -123,15 +121,10 @@ module Stone
         value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value_expression.function_name)&.generic?
       end
 
-      private def register_generic_instantiation_alias(mod, scope)
+      private def register_generic_instantiation_alias(scope)
         canonical_name = canonical_generic_name
-        record_def = mod.record_types[canonical_name]
-        return unless record_def
-
-        mod.register_record_type(identifier, record_def)
-        # Register alias in type registry and scope so type inference works for instances
         canonical_type = Stone::Type::Registry.lookup(canonical_name)
-        return unless canonical_type
+        return unless canonical_type&.record?
 
         Stone::Type::Registry.register_as(identifier, canonical_type)
         scope.declare_type(identifier, type: canonical_type) unless scope.type_declared_locally?(identifier)

@@ -5,12 +5,10 @@ require "stone/rtti"
 
 module Stone
   class AST
-    # TODO: Records should be first-class Type objects, not AST nodes.
-    # When the type system is refactored:
-    # - Record types should be instances of a RecordType class
-    # - Record types should be global constants with properties
-    # - Record types should have vtables for polymorphic operations
-    # - Record instantiation should work like any other function call
+    # RecordType (Stone::Type::Record) now holds field metadata, type info, and LLVM type.
+    # RecordDefinition remains responsible for LLVM IR generation (constructor, equals fn,
+    # RTTI type constant) because IR generation requires builder/module context.
+    # Future: move IR generation to a separate CodeGenerator or onto RecordType itself.
     class RecordDefinition < Stone::AST::Expression
 
       attr_reader :fields
@@ -23,7 +21,7 @@ module Stone
       end
 
       def to_llir(_builder, mod, scope = Stone::Scope.top_level)
-        validate_field_types(scope, mod)
+        validate_field_types(scope)
         generate_type_constant(mod, scope) if @assigned_name
         generate_constructor_function(mod, scope)
       end
@@ -68,7 +66,7 @@ module Stone
 
       private def compare_simple_field(builder, func, mod, struct_type, field)
         a_val, b_val = field_value_ptrs(builder, struct_type, field, func)
-        a_val, b_val = load_if_record_field(builder, field, mod, a_val, b_val)
+        a_val, b_val = load_if_record_field(builder, field, a_val, b_val)
         fn = lookup_field_equals_fn(mod, field)
         builder.call2(Stone::RTTI.equals_fn_type, fn, a_val, b_val, "#{field.name}_eq")
       end
@@ -103,8 +101,8 @@ module Stone
         [a, b]
       end
 
-      private def load_if_record_field(builder, field, mod, a_val, b_val)
-        return [a_val, b_val] unless record_typed_field?(field, mod)
+      private def load_if_record_field(builder, field, a_val, b_val)
+        return [a_val, b_val] unless record_typed_field?(field)
 
         [
           builder.load2(LLVM::Type.pointer, a_val, "a_#{field.name}_ptr"),
@@ -112,10 +110,8 @@ module Stone
         ]
       end
 
-      # NOTE: Uses mod.record_type? (not Registry) because validation must be scoped
-      # to the current compilation. The global Registry retains types from previous compilations.
-      private def record_typed_field?(field, mod)
-        field.type_name == @assigned_name || mod.record_type?(field.type_name)
+      private def record_typed_field?(field)
+        field.type_name == @assigned_name || Stone::Type::Registry.lookup(field.type_name)&.record?
       end
 
       private def lookup_field_equals_fn(mod, field)
@@ -145,21 +141,20 @@ module Stone
         end
       end
 
-      private def validate_field_types(scope, mod)
-        @fields.each { |field| validate_field_type(field, scope, mod) }
+      private def validate_field_types(scope)
+        @fields.each { |field| validate_field_type(field, scope) }
       end
 
-      private def validate_field_type(field, scope, mod)
+      private def validate_field_type(field, scope)
         return if field.union_annotation?
 
-        return if known_type?(field.type_name, scope, mod)
+        return if known_type?(field.type_name, scope)
 
         fail Stone::TypeError, "Unknown type: #{field.type_name}"
       end
 
-      # NOTE: Uses mod.record_type? (not Registry) — see record_typed_field? comment.
-      private def known_type?(type_name, scope, mod)
-        type_name == @assigned_name || mod&.record_type?(type_name) || scope.lookup_type(type_name)
+      private def known_type?(type_name, scope)
+        type_name == @assigned_name || Stone::Type::Registry.lookup(type_name) || scope.lookup_type(type_name)
       end
 
       def substitute_type_params(substitution)
@@ -202,8 +197,8 @@ module Stone
         field_names.index(field_name)
       end
 
-      def llvm_type(mod = nil, scope = Stone::Scope.top_level)
-        llvm_field_types = @fields.map { |field| llvm_type_for_field(field, mod, scope) }
+      def llvm_type(_mod = nil, scope = Stone::Scope.top_level)
+        llvm_field_types = @fields.map { |field| llvm_type_for_field(field, scope) }
         LLVM::Type.struct(llvm_field_types, false)
       end
 
@@ -225,23 +220,22 @@ module Stone
       end
 
       # Returns the LLVM type for a field. Handles union types, primitives, and record types.
-      private def llvm_type_for_field(field, mod, scope)
+      private def llvm_type_for_field(field, scope)
         return llvm_type_for_union(field.type_annotation) if field.union_annotation?
 
-        resolve_simple_llvm_type(field.type_name, mod, scope)
+        resolve_simple_llvm_type(field.type_name, scope)
       end
 
-      private def resolve_simple_llvm_type(type_name, mod, scope)
-        return LLVM::Type.ptr if record_reference?(type_name, mod)
+      private def resolve_simple_llvm_type(type_name, scope)
+        return LLVM::Type.ptr if record_reference?(type_name)
         return Stone::Type::Registry.lookup(type_name).llvm_type if primitive_type?(type_name)
         return LLVM::Type.ptr if scope.lookup_type(type_name)
 
         fail Stone::TypeError, "Unknown type: #{type_name}"
       end
 
-      # NOTE: Uses mod.record_type? (not Registry) — see record_typed_field? comment.
-      private def record_reference?(type_name, mod)
-        type_name == @assigned_name || mod&.record_type?(type_name)
+      private def record_reference?(type_name)
+        type_name == @assigned_name || Stone::Type::Registry.lookup(type_name)&.record?
       end
 
       private def primitive_type?(type_name)
@@ -263,7 +257,7 @@ module Stone
       end
 
       private def constructor_function_type(mod, scope)
-        field_llvm_types = @fields.map { |field| llvm_type_for_field(field, mod, scope) }
+        field_llvm_types = @fields.map { |field| llvm_type_for_field(field, scope) }
         LLVM::Type.function(field_llvm_types, llvm_type(mod, scope))
       end
 

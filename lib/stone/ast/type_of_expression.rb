@@ -23,7 +23,7 @@ module Stone
         return @inner_expression.extract_union_type_tag(builder, mod, scope) if union_field_access?(mod)
 
         # Default: return compile-time type constant
-        context = Stone::TypeContext.new(mod)
+        context = Stone::TypeContext.new(mod, scope:)
         result_type = @inner_expression.type(context)
         Stone::RTTI.type_constant_for(mod, result_type)
       end

@@ -122,10 +122,12 @@ module Stone
         mod.functions[fn_name] || fail("No equals function found for type: #{type_name}")
       end
 
-      # Resolve type aliases (e.g., "MaybeInt" -> "Maybe(Int)") via record_def assigned_name
-      private def resolve_field_type_name(field, mod)
-        record_def = mod.record_types[field.type_name]
-        record_def&.assigned_name || field.type_name
+      # Resolve type aliases (e.g., "MaybeInt" -> "Maybe(Int)") via Type::Record name
+      private def resolve_field_type_name(field, _mod)
+        record_type = Stone::Type::Registry.lookup(field.type_name)
+        return field.type_name unless record_type&.record?
+
+        record_type.name
       end
 
       private def calculate_struct_size(struct_type)

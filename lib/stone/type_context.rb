@@ -29,10 +29,8 @@ module Stone
       @llvm_module.record_type?(name)
     end
 
-    def record_definition(name)
-      return nil unless @llvm_module
-
-      @llvm_module.record_types&.[](name)
+    def record_type(name)
+      Stone::Type::Registry.lookup(name)&.then { |t| t.record? ? t : nil }
     end
 
     private def lookup_in_scope(name)

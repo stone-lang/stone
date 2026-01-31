@@ -270,15 +270,14 @@ module Stone
       private def access_field_on_union_record(builder, mod, scope, type_context)
         receiver_type = @receiver.type(type_context)
         record_type = find_record_type_in_union(receiver_type, mod)
-        record_def = mod.record_types[record_type.name]
 
         # Get the already-extracted record pointer from the receiver
         # (receiver.to_llir already handles union extraction)
         record_ptr = @receiver.to_llir(builder, mod, scope)
 
         # Load the record struct and access the field
-        record_struct = builder.load2(record_def.llvm_type(mod), record_ptr, "record_from_union")
-        field_index = record_def.field_index(@property)
+        record_struct = builder.load2(record_type.llvm_type, record_ptr, "record_from_union")
+        field_index = record_type.field_index(@property)
         builder.extract_value(record_struct, field_index, "#{@property}_value")
       end
 
@@ -298,30 +297,30 @@ module Stone
         return nil unless parent_record_type
 
         # Look up the field type for the receiver's property
-        record_def = mod.record_types[parent_record_type]
-        return nil unless record_def
+        record_type = Stone::Type::Registry.lookup(parent_record_type)
+        return nil unless record_type&.record?
 
-        field = record_def.fields.find { |f| f.name == @receiver.property }
+        field = record_type.fields.find { |f| f.name == @receiver.property }
         field&.type_name
       end
 
       private def access_record_field(builder, mod, scope)
-        record_def = lookup_record_definition(mod, get_record_type_name(mod))
-        receiver_value = load_receiver_struct(builder, mod, scope, record_def)
-        field_index = get_field_index(record_def, record_def.assigned_name)
+        record_type = lookup_record_type(get_record_type_name(mod))
+        receiver_value = load_receiver_struct(builder, mod, scope, record_type)
+        field_index = get_field_index(record_type, record_type.name)
         field_value = builder.extract_value(receiver_value, field_index, "#{@property}_value")
-        maybe_extract_union_payload(builder, mod, field_value, record_def)
+        maybe_extract_union_payload(builder, mod, field_value, record_type)
       end
 
-      private def load_receiver_struct(builder, mod, scope, record_def)
+      private def load_receiver_struct(builder, mod, scope, record_type)
         receiver_value = @receiver.to_llir(builder, mod, scope)
         return receiver_value unless receiver_value.type.kind == :pointer
 
-        builder.load2(record_def.llvm_type(mod), receiver_value, "loaded_struct")
+        builder.load2(record_type.llvm_type, receiver_value, "loaded_struct")
       end
 
-      private def maybe_extract_union_payload(builder, mod, field_value, record_def)
-        annotation = record_def.field_type_annotation(@property)
+      private def maybe_extract_union_payload(builder, mod, field_value, record_type)
+        annotation = record_type.field_type_annotation(@property)
         return field_value unless Stone::AST::FieldHelpers.union_annotation?(annotation)
 
         union_type = annotation.to_type(Stone::Type::Registry)
@@ -474,27 +473,24 @@ module Stone
         return false unless record_field_access?(mod)
 
         record_type_name = get_record_type_name(mod)
-        record_def = mod.record_types[record_type_name]
-        return false unless record_def
+        record_type = Stone::Type::Registry.lookup(record_type_name)
+        return false unless record_type&.record?
 
-        field_annotation = record_def.field_type_annotation(@property)
+        field_annotation = record_type.field_type_annotation(@property)
         Stone::AST::FieldHelpers.union_annotation?(field_annotation)
       end
 
       # Extract the type tag from a union field (for Type.of() support)
       def extract_union_type_tag(builder, mod, scope)
         record_type_name = get_record_type_name(mod)
-        record_def = lookup_record_definition(mod, record_type_name)
-        field_index = get_field_index(record_def, record_type_name)
+        record_type = lookup_record_type(record_type_name)
+        field_index = get_field_index(record_type, record_type_name)
 
         # Evaluate the receiver to get the record struct
         receiver_value = @receiver.to_llir(builder, mod, scope)
 
         # If receiver is a pointer (recursive field), load the struct first
-        if receiver_value.type.kind == :pointer
-          struct_type = record_def.llvm_type(mod)
-          receiver_value = builder.load2(struct_type, receiver_value, "loaded_struct")
-        end
+        receiver_value = builder.load2(record_type.llvm_type, receiver_value, "loaded_struct") if receiver_value.type.kind == :pointer
 
         # Extract the union struct from the record
         union_value = builder.extract_value(receiver_value, field_index, "#{@property}_union")
@@ -507,11 +503,11 @@ module Stone
         return false unless record_field_access?(mod)
 
         record_type_name = get_record_type_name(mod)
-        record_def = mod.record_types[record_type_name]
-        return false unless record_def
+        record_type = Stone::Type::Registry.lookup(record_type_name)
+        return false unless record_type&.record?
 
-        field_def = record_def.fields.find { |f| f.name == @property }
-        field_def && field_def.type_name == "String"
+        field = record_type.fields.find { |f| f.name == @property }
+        field && field.type_name == "String"
       end
 
       def get_record_type_name(mod)
@@ -526,15 +522,15 @@ module Stone
         end
       end
 
-      private def lookup_record_definition(mod, record_type_name)
-        record_def = mod.record_types[record_type_name]
-        fail "Unknown record type: #{record_type_name}" unless record_def
+      private def lookup_record_type(record_type_name)
+        record_type = Stone::Type::Registry.lookup(record_type_name)
+        fail "Unknown record type: #{record_type_name}" unless record_type&.record?
 
-        record_def
+        record_type
       end
 
-      private def get_field_index(record_def, record_type_name)
-        field_index = record_def.field_index(@property)
+      private def get_field_index(record_type, record_type_name)
+        field_index = record_type.field_index(@property)
         fail Stone::PropertyError, "Property '#{@property}' not found for record type '#{record_type_name}'" unless field_index
 
         field_index

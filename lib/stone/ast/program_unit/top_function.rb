@@ -113,10 +113,10 @@ module Stone
           record_type_name = property_access.get_record_type_name(@mod)
           return nil unless record_type_name
 
-          record_def = @mod.record_types[record_type_name]
-          return nil unless record_def
+          record_type = Stone::Type::Registry.lookup(record_type_name)
+          return nil unless record_type&.record?
 
-          annotation = record_def.field_type_annotation(property_access.property)
+          annotation = record_type.field_type_annotation(property_access.property)
           return nil unless Stone::AST::FieldHelpers.union_annotation?(annotation)
 
           annotation.to_type(Stone::Type::Registry)

@@ -7,36 +7,35 @@ module Stone
   class AST
     class RecordInstantiation < Stone::AST::Expression
 
-      attr_reader :record_type_name, :field_values, :record_definition
+      attr_reader :record_type_name, :field_values
 
       def initialize(record_type_name, field_values)
         @name = :record_instantiation
         @record_type_name = record_type_name
         @field_values = field_values
-        @record_definition = nil
       end
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
-        record_def = resolve_record_def(mod)
+        record_type = resolve_record_type
         llvm_values = @field_values.map { |field_ast| field_ast.to_llir(builder, mod, scope) }
         type_context = Stone::TypeContext.new(mod, scope:)
-        llvm_values = convert_structs_to_pointers(builder, type_context, record_def, llvm_values)
-        create_struct(record_def.llvm_type(mod), llvm_values, builder)
+        llvm_values = convert_structs_to_pointers(builder, type_context, record_type, llvm_values)
+        create_struct(record_type.llvm_type, llvm_values, builder)
       end
 
-      private def resolve_record_def(mod)
-        record_def = mod.record_types[@record_type_name]
-        fail "Unknown record type: #{@record_type_name}" unless record_def
+      private def resolve_record_type
+        record_type = Stone::Type::Registry.lookup(@record_type_name)
+        fail "Unknown record type: #{@record_type_name}" unless record_type&.record?
 
-        validate_field_count(record_def)
-        @record_definition = record_def
+        validate_field_count(record_type)
+        record_type
       end
 
-      private def validate_field_count(record_def)
-        return if @field_values.size == record_def.fields.size
+      private def validate_field_count(record_type)
+        return if @field_values.size == record_type.fields.size
 
         fail Stone::ArityError,
-             "wrong number of arguments for #{@record_type_name} (given #{@field_values.size}, expected #{record_def.fields.size})"
+             "wrong number of arguments for #{@record_type_name} (given #{@field_values.size}, expected #{record_type.fields.size})"
       end
 
       def to_s
@@ -70,9 +69,9 @@ module Stone
         end
       end
 
-      private def convert_structs_to_pointers(builder, type_context, record_def, llvm_values)
+      private def convert_structs_to_pointers(builder, type_context, record_type, llvm_values)
         llvm_values.each_with_index.map do |value, index|
-          convert_field_value(builder, type_context, record_def.fields[index], value, index)
+          convert_field_value(builder, type_context, record_type.fields[index], value, index)
         end
       end
 

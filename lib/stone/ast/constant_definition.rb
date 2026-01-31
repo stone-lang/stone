@@ -15,7 +15,7 @@ module Stone
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
         return register_record_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::RecordDefinition)
-        return register_as_generic_type(mod) if generic_type_definition?
+        return register_as_generic_type if generic_type_definition?
 
         llvm_value = value_expression.to_llir(builder, mod, scope)
 
@@ -69,7 +69,7 @@ module Stone
 
       # Register a function (lambda) as an alias so it can be called by the constant name
       private def register_function_alias(mod, function, scope)
-        register_generic_instantiation_alias(mod, scope) if generic_instantiation?(mod)
+        register_generic_instantiation_alias(mod, scope) if generic_instantiation?
         mod.register_function_alias(identifier, function)
         scope.define(identifier, value: function)
         nil
@@ -95,7 +95,7 @@ module Stone
       end
 
       private def register_record_instance(mod, scope)
-        type_name = record_type_name(mod)
+        type_name = record_type_name
         return unless type_name
 
         mod.register_record_instance(identifier, type_name)
@@ -103,14 +103,14 @@ module Stone
         scope.declare_type(identifier, type: record_type) if record_type
       end
 
-      private def record_type_name(mod)
+      private def record_type_name
         return value_expression.record_type_name if value_expression.is_a?(Stone::AST::RecordInstantiation)
-        return value_expression.function_name if record_constructor_call?(mod)
+        return value_expression.function_name if record_constructor_call?
 
         nil
       end
 
-      private def record_constructor_call?(_mod)
+      private def record_constructor_call?
         value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value_expression.function_name)&.record?
       end
 
@@ -119,7 +119,7 @@ module Stone
           value_expression.block.statements.last.is_a?(Stone::AST::RecordDefinition)
       end
 
-      private def generic_instantiation?(_mod)
+      private def generic_instantiation?
         value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value_expression.function_name)&.generic?
       end
 
@@ -142,7 +142,7 @@ module Stone
         "#{value_expression.function_name}(#{type_args.join(', ')})"
       end
 
-      private def register_as_generic_type(_mod)
+      private def register_as_generic_type
         generic = Stone::Type::Generic.new(name: identifier, template: value_expression)
         Stone::Type::Registry.register(generic)
         nil

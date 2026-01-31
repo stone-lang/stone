@@ -195,7 +195,7 @@ module Stone
           func_call = child.value_expression
           return unless Stone::Type::Registry.lookup(func_call.function_name)&.generic?
 
-          specialized = func_call.specialize_generic_type(mod)
+          specialized = func_call.specialize_generic_type
           canonical_name = specialized.assigned_name
 
           mod.register_record_type(canonical_name, specialized)

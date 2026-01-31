@@ -1,19 +1,19 @@
 require "llvm/core"
 
 
-# Extensions to LLVM::Module to support Stone-specific features
+# Compilation-scoped registries for LLVM::Module.
 #
-# NOTE: Many of these registries are now duplicated in Stone::Scope for lexical scoping:
-# - string_constants: types also stored via scope.declare_type(name, type: Stone::Type::String)
-# - record_instances: types also stored via scope.declare_type(name, type: record_type)
-# - function_aliases: values also stored via scope.define(name, value: function)
+# These track LLVM-level artifacts during a single compilation pass.
+# Type lookups have been migrated to Stone::Type::Registry; these registries
+# hold LLVM objects (functions, allocations) or compilation-scoped AST data
+# that cannot live in the global Registry.
 #
-# The module registries remain necessary for:
-# - Computed properties (Int@abs) which are global, not lexically scoped
-# - Type inference via the `type` method (which doesn't have access to scope)
-# - Property access lookups that need the actual AST node (not just the type)
-#
-# Future work: migrate fully to scope by updating `type` method signatures to accept scope.
+# Remaining registries:
+# - function_aliases: LLVM::Function objects for operators, computed properties, lambdas
+# - lambda_param_storage: temporary LLVM stack allocations during lambda compilation
+# - string_constants: maps constant names to StringLiteral AST nodes for type inference
+# - record_types: maps record names to RecordDefinition AST nodes (compilation-scoped validation)
+# - record_instances: maps variable names to record type names for property access
 module Stone
   module LLVMModuleExtensions
 
@@ -55,16 +55,10 @@ module Stone
       string_constants.key?(name)
     end
 
-    # TODO: Type system refactor needed.
-    # This ad-hoc tracking of record types and instances should be replaced
-    # with a proper Type class hierarchy where:
-    # - All types (Bool, Int, String, Records) are Type instances
-    # - Types are global constants accessible at runtime
-    # - Types have vtables for properties and polymorphic operations
-    # - typeof() can get the type of any value
-    # - User-defined types work the same as built-in types
-
-    # Track record type definitions
+    # Track record type definitions (compilation-scoped).
+    # Most type lookups use Stone::Type::Registry, but record_definition.rb
+    # validation requires compilation-scoped checks to avoid cross-compilation
+    # type leakage from the global Registry singleton.
     def record_types
       @record_types ||= {}
     end
@@ -92,18 +86,6 @@ module Stone
 
     def record_instance_type(variable_name)
       record_instances[variable_name]
-    end
-
-    def generic_types
-      @generic_types ||= {}
-    end
-
-    def register_generic_type(name, lambda_node)
-      generic_types[name] = Stone::Type::Generic.new(name:, template: lambda_node)
-    end
-
-    def generic_type?(name)
-      generic_types.key?(name)
     end
 
   end

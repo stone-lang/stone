@@ -239,7 +239,7 @@ module Stone
       end
 
       private def instantiate_generic_type(builder, mod, scope)
-        specialized = specialize_generic_type(mod)
+        specialized = specialize_generic_type
         mod.register_record_type(specialized.assigned_name, specialized)
         register_in_type_registry(specialized.assigned_name, specialized, mod, scope)
         specialized.to_llir(builder, mod, scope)
@@ -247,7 +247,7 @@ module Stone
 
       # Build a specialized RecordDefinition by substituting type arguments into the generic template.
       # Public because TopFunction also calls this during type pre-registration.
-      def specialize_generic_type(_mod)
+      def specialize_generic_type
         validate_type_arguments
         generic_type = Stone::Type::Registry.lookup(function_name)
         fail Stone::TypeError, "Unknown generic type: #{function_name}" unless generic_type&.generic?

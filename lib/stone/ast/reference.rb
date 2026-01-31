@@ -45,8 +45,8 @@ module Stone
           lookup_in_scope(scope) ||
           lookup_global(builder, mod) ||
           lookup_function(mod) ||
-          lookup_record_type(mod) ||
-          lookup_generic_type(mod) ||
+          lookup_record_type ||
+          lookup_generic_type ||
           fail_with_reference_error
       end
 
@@ -124,7 +124,7 @@ module Stone
         mod.lookup_function(identifier)
       end
 
-      private def lookup_record_type(_mod)
+      private def lookup_record_type
         # Record types aren't really values, but if referenced, return a dummy value
         # This allows code like "Person := Record(...)\nPerson" to not fail
         return LLVM::Int64.from_i(0) if Stone::Type::Registry.lookup(identifier)&.record?
@@ -132,7 +132,7 @@ module Stone
         nil
       end
 
-      private def lookup_generic_type(_mod)
+      private def lookup_generic_type
         # Generic types aren't runtime values, but if referenced, return a dummy value
         # This allows code like "Box := λ(T) { Record(value :: T) }\nBox" to not fail
         return LLVM::Int64.from_i(0) if Stone::Type::Registry.lookup(identifier)&.generic?

@@ -17,13 +17,7 @@ module Stone
       end
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
-        # TODO: Record instantiation should not be special-cased here.
-        # When the type system is refactored, record constructors should be
-        # regular functions, and this check should be removed.
-        return instantiate_record(builder, mod, scope) if Stone::Type::Registry.lookup(function_name)&.record?
-
-        # Generic type instantiation: Box(Int) → creates specialized record type
-        return instantiate_generic_type(builder, mod, scope) if mod.generic_type?(function_name)
+        return instantiate_type(builder, mod, scope) if type_instantiation?
 
         # Equality operators box arguments with type tags for runtime dispatch
         return generate_equality_call(builder, mod, scope) if equality_operator?
@@ -227,6 +221,18 @@ module Stone
         arguments.map { |arg| arg.to_llir(builder, mod, scope) }
       end
 
+      private def type_instantiation?
+        type = Stone::Type::Registry.lookup(function_name)
+        type&.record? || type&.generic?
+      end
+
+      private def instantiate_type(builder, mod, scope)
+        type = Stone::Type::Registry.lookup(function_name)
+        return instantiate_record(builder, mod, scope) if type&.record?
+
+        instantiate_generic_type(builder, mod, scope)
+      end
+
       private def instantiate_record(builder, mod, scope)
         record_instantiation = Stone::AST::RecordInstantiation.new(function_name, arguments)
         record_instantiation.to_llir(builder, mod, scope)
@@ -241,9 +247,11 @@ module Stone
 
       # Build a specialized RecordDefinition by substituting type arguments into the generic template.
       # Public because TopFunction also calls this during type pre-registration.
-      def specialize_generic_type(mod)
+      def specialize_generic_type(_mod)
         validate_type_arguments
-        generic_type = mod.generic_types[function_name]
+        generic_type = Stone::Type::Registry.lookup(function_name)
+        fail Stone::TypeError, "Unknown generic type: #{function_name}" unless generic_type&.generic?
+
         type_arg_names = arguments.map(&:identifier)
         generic_type.specialize(type_arg_names)
       end

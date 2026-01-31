@@ -179,20 +179,21 @@ module Stone
           register_record_type_in_registry(child.identifier, record_def, mod, scope)
         end
 
-        private def register_generic_type_definition(child, mod)
+        private def register_generic_type_definition(child, _mod)
           return unless child.value_expression.is_a?(Stone::AST::Lambda)
 
           lambda_node = child.value_expression
           return unless lambda_node.block.statements.last.is_a?(Stone::AST::RecordDefinition)
 
-          mod.register_generic_type(child.identifier, lambda_node)
+          generic = Stone::Type::Generic.new(name: child.identifier, template: lambda_node)
+          Stone::Type::Registry.register(generic)
         end
 
         private def register_generic_instantiation(child, mod, scope)
           return unless child.value_expression.is_a?(Stone::AST::FunctionCall)
 
           func_call = child.value_expression
-          return unless mod.generic_type?(func_call.function_name)
+          return unless Stone::Type::Registry.lookup(func_call.function_name)&.generic?
 
           specialized = func_call.specialize_generic_type(mod)
           canonical_name = specialized.assigned_name

@@ -132,10 +132,10 @@ module Stone
         nil
       end
 
-      private def lookup_generic_type(mod)
+      private def lookup_generic_type(_mod)
         # Generic types aren't runtime values, but if referenced, return a dummy value
         # This allows code like "Box := λ(T) { Record(value :: T) }\nBox" to not fail
-        return LLVM::Int64.from_i(0) if mod.generic_type?(identifier)
+        return LLVM::Int64.from_i(0) if Stone::Type::Registry.lookup(identifier)&.generic?
 
         nil
       end

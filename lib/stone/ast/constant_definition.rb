@@ -119,8 +119,8 @@ module Stone
           value_expression.block.statements.last.is_a?(Stone::AST::RecordDefinition)
       end
 
-      private def generic_instantiation?(mod)
-        value_expression.is_a?(Stone::AST::FunctionCall) && mod.generic_type?(value_expression.function_name)
+      private def generic_instantiation?(_mod)
+        value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value_expression.function_name)&.generic?
       end
 
       private def register_generic_instantiation_alias(mod, scope)
@@ -142,8 +142,9 @@ module Stone
         "#{value_expression.function_name}(#{type_args.join(', ')})"
       end
 
-      private def register_as_generic_type(mod)
-        mod.register_generic_type(identifier, value_expression)
+      private def register_as_generic_type(_mod)
+        generic = Stone::Type::Generic.new(name: identifier, template: value_expression)
+        Stone::Type::Registry.register(generic)
         nil
       end
 

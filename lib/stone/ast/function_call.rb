@@ -242,14 +242,9 @@ module Stone
       # Public because TopFunction also calls this during type pre-registration.
       def specialize_generic_type(mod)
         validate_type_arguments
-        lambda_node = mod.generic_types[function_name]
+        generic_type = mod.generic_types[function_name]
         type_arg_names = arguments.map(&:identifier)
-        substitution = build_substitution_map(lambda_node.parameters, type_arg_names)
-
-        record_template = lambda_node.block.statements.last
-        specialized = record_template.substitute_type_params(substitution)
-        specialized.assigned_name = "#{function_name}(#{type_arg_names.join(', ')})"
-        specialized
+        generic_type.specialize(type_arg_names)
       end
 
       private def validate_type_arguments
@@ -262,10 +257,6 @@ module Stone
       private def register_in_type_registry(name, record_def, mod, scope)
         type = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(mod, scope))
         Stone::Type::Registry.register(type)
-      end
-
-      private def build_substitution_map(param_names, type_arg_names)
-        param_names.zip(type_arg_names).to_h
       end
 
     end

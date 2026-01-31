@@ -42,6 +42,10 @@ module Stone
       false
     end
 
+    def generic?
+      false
+    end
+
     def nullable?
       false
     end
@@ -296,3 +300,4 @@ require "stone/type/primitive/null"
 require "stone/type/primitive/type_type"
 require "stone/type/record"
 require "stone/type/function"
+require "stone/type/generic"

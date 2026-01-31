@@ -53,7 +53,7 @@ module Stone
         return nil unless type_receiver?(receiver_type)
 
         type_ptr = @receiver.to_llir(builder, mod, scope)
-        generate_type_property(builder, mod, type_ptr)
+        generate_type_property(builder, type_ptr)
       end
 
       private def type_receiver?(receiver_type)
@@ -76,7 +76,7 @@ module Stone
         "primitive?" => :generate_type_primitive_check, "fields" => :generate_type_fields
       }.freeze
 
-      private def generate_type_property(builder, _mod, type_ptr)
+      private def generate_type_property(builder, type_ptr)
         method_name = TYPE_PROPERTY_GENERATORS[@property]
         __send__(method_name, builder, Stone::RTTI.type_struct_type, type_ptr)
       end
@@ -269,7 +269,7 @@ module Stone
       # via extract_homogeneous_union, so we just use that pointer directly.
       private def access_field_on_union_record(builder, mod, scope, type_context)
         receiver_type = @receiver.type(type_context)
-        record_type = find_record_type_in_union(receiver_type, mod)
+        record_type = find_record_type_in_union(receiver_type)
 
         # Get the already-extracted record pointer from the receiver
         # (receiver.to_llir already handles union extraction)
@@ -281,7 +281,7 @@ module Stone
         builder.extract_value(record_struct, field_index, "#{@property}_value")
       end
 
-      private def find_record_type_in_union(union_type, _mod)
+      private def find_record_type_in_union(union_type)
         union_type.alternatives.find do |alt|
           next false if alt.name == "Null"
 
@@ -338,7 +338,7 @@ module Stone
         # For mixed-type unions (e.g., Int | String), extract payload as i64.
         # Both Int (8 bytes) and String pointers (8 bytes) fit in i64.
         # Ruby-side conversion uses the type tag to interpret the value correctly.
-        extract_mixed_union_payload(builder, mod, union_value, union_type)
+        extract_mixed_union_payload(builder, union_value, union_type)
       end
 
       # Allocate union on heap using malloc, store the value, return pointer.
@@ -364,7 +364,7 @@ module Stone
         mod.functions.add("malloc", malloc_type)
       end
 
-      private def extract_mixed_union_payload(builder, _mod, union_value, union_type)
+      private def extract_mixed_union_payload(builder, union_value, union_type)
         # Allocate union on stack to get pointer for GEP
         union_ptr = builder.alloca(union_type.llvm_type, "mixed_union_for_extract")
         builder.store(union_value, union_ptr)

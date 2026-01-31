@@ -163,22 +163,22 @@ module Stone
           @children&.each do |child|
             next unless child.is_a?(Stone::AST::ConstantDefinition)
 
-            register_record_type_definition(child, mod, scope)
-            register_generic_type_definition(child, mod)
-            register_generic_instantiation(child, mod, scope)
+            register_record_type_definition(child, scope)
+            register_generic_type_definition(child)
+            register_generic_instantiation(child, scope)
             register_record_instance_if_needed(child, mod)
           end
         end
 
-        private def register_record_type_definition(child, mod, scope)
+        private def register_record_type_definition(child, scope)
           return unless child.value_expression.is_a?(Stone::AST::RecordDefinition)
 
           record_def = child.value_expression
           record_def.assigned_name = child.identifier
-          register_record_type_in_registry(child.identifier, record_def, mod, scope)
+          register_record_type_in_registry(child.identifier, record_def, scope)
         end
 
-        private def register_generic_type_definition(child, _mod)
+        private def register_generic_type_definition(child)
           return unless child.value_expression.is_a?(Stone::AST::Lambda)
 
           lambda_node = child.value_expression
@@ -188,7 +188,7 @@ module Stone
           Stone::Type::Registry.register(generic)
         end
 
-        private def register_generic_instantiation(child, mod, scope)
+        private def register_generic_instantiation(child, scope)
           return unless child.value_expression.is_a?(Stone::AST::FunctionCall)
 
           func_call = child.value_expression
@@ -197,7 +197,7 @@ module Stone
           specialized = func_call.specialize_generic_type
           canonical_name = specialized.assigned_name
 
-          register_record_type_in_registry(canonical_name, specialized, mod, scope)
+          register_record_type_in_registry(canonical_name, specialized, scope)
           register_type_alias(canonical_name, child.identifier, scope)
         end
 
@@ -211,10 +211,15 @@ module Stone
           scope.declare_type(alias_name, type: canonical_type)
         end
 
-        private def register_record_type_in_registry(name, record_def, mod, scope)
-          type = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(mod, scope))
-          Stone::Type::Registry.register(type)
-          scope.declare_type(name, type:) unless scope.type_declared_locally?(name)
+        private def register_record_type_in_registry(name, record_def, scope)
+          # Register a preliminary type so self-referential union fields (e.g., IntList | Null
+          # inside IntList) can find this type during llvm_type computation.
+          preliminary = Stone::Type.record(name:, fields: record_def.fields, llvm_type: LLVM::Type.pointer)
+          Stone::Type::Registry.register(preliminary)
+          # Now compute the real llvm_type (union fields can resolve self-references via Registry).
+          resolved = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(scope))
+          Stone::Type::Registry.register(resolved)
+          scope.declare_type(name, type: resolved) unless scope.type_declared_locally?(name)
         end
 
         private def register_record_instance_if_needed(child, mod)

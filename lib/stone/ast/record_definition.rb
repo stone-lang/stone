@@ -27,7 +27,7 @@ module Stone
       end
 
       private def generate_type_constant(mod, scope)
-        struct_type = llvm_type(mod, scope)
+        struct_type = llvm_type(scope)
         size_bytes = calculate_struct_size(struct_type)
         equals_fn = generate_record_equals_fn(mod, struct_type)
         Stone::RTTI.generate_record_type_constant(mod, @assigned_name, size_bytes, @fields, equals_fn)
@@ -115,13 +115,13 @@ module Stone
       end
 
       private def lookup_field_equals_fn(mod, field)
-        type_name = resolve_field_type_name(field, mod)
+        type_name = resolve_field_type_name(field)
         fn_name = "__#{type_name}_equals__"
         mod.functions[fn_name] || fail("No equals function found for type: #{type_name}")
       end
 
       # Resolve type aliases (e.g., "MaybeInt" -> "Maybe(Int)") via Type::Record name
-      private def resolve_field_type_name(field, _mod)
+      private def resolve_field_type_name(field)
         record_type = Stone::Type::Registry.lookup(field.type_name)
         return field.type_name unless record_type&.record?
 
@@ -197,7 +197,7 @@ module Stone
         field_names.index(field_name)
       end
 
-      def llvm_type(_mod = nil, scope = Stone::Scope.top_level)
+      def llvm_type(scope = Stone::Scope.top_level)
         llvm_field_types = @fields.map { |field| llvm_type_for_field(field, scope) }
         LLVM::Type.struct(llvm_field_types, false)
       end
@@ -239,7 +239,7 @@ module Stone
       end
 
       private def primitive_type?(type_name)
-        Stone::Type::Registry.lookup(type_name)
+        Stone::Type::Registry.lookup(type_name)&.primitive?
       end
 
       private def llvm_type_for_union(annotation)
@@ -249,21 +249,21 @@ module Stone
 
       private def generate_constructor_function(mod, scope)
         func_name = "__record_constructor_#{object_id}__"
-        func_type = constructor_function_type(mod, scope)
+        func_type = constructor_function_type(scope)
 
         mod.functions.add(func_name, func_type).tap do |func|
-          build_constructor_body(func, mod, scope)
+          build_constructor_body(func, scope)
         end
       end
 
-      private def constructor_function_type(mod, scope)
+      private def constructor_function_type(scope)
         field_llvm_types = @fields.map { |field| llvm_type_for_field(field, scope) }
-        LLVM::Type.function(field_llvm_types, llvm_type(mod, scope))
+        LLVM::Type.function(field_llvm_types, llvm_type(scope))
       end
 
-      private def build_constructor_body(func, mod, scope)
+      private def build_constructor_body(func, scope)
         func.basic_blocks.append("entry").build do |builder|
-          struct_value = llvm_type(mod, scope).null
+          struct_value = llvm_type(scope).null
 
           @fields.each_with_index do |_field, index|
             struct_value = builder.insert_value(struct_value, func.params[index], index)

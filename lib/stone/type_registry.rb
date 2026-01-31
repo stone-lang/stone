@@ -67,6 +67,7 @@ module Stone
     # Reset registry (useful for testing)
     def reset!
       @types.clear
+      @bootstrap_type_names = nil
     end
 
     # Reset to bootstrap state: keep primitive/built-in types, remove user-defined types.

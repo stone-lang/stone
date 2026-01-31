@@ -80,13 +80,13 @@ module Stone
           union_type = field.resolve_type
           return wrap_in_tagged_union(builder, type_context, value, @field_values[index], union_type)
         end
-        return allocate_and_store(builder, value) if needs_pointer_conversion?(field, type_context.llvm_module, value)
+        return allocate_and_store(builder, value) if needs_pointer_conversion?(field, value)
 
         value
       end
 
-      private def needs_pointer_conversion?(field, mod, value)
-        field_expects_pointer?(field.type_name, mod) && value.type.kind == :struct
+      private def needs_pointer_conversion?(field, value)
+        field_expects_pointer?(field.type_name) && value.type.kind == :struct
       end
 
       private def wrap_in_tagged_union(builder, type_context, llvm_value, ast_value, union_type)
@@ -102,18 +102,18 @@ module Stone
 
         # Store payload (field 1) - no ptr2int needed
         payload_ptr = builder.struct_gep2(union_type.llvm_type, union_ptr, 1, "payload_ptr")
-        store_payload(builder, payload_ptr, llvm_value, value_type)
+        store_payload(builder, payload_ptr, llvm_value)
 
         # Load and return the union value
         builder.load2(union_type.llvm_type, union_ptr, "union_value")
       end
 
-      private def store_payload(builder, payload_ptr, llvm_value, _value_type)
+      private def store_payload(builder, payload_ptr, llvm_value)
         value_to_store = llvm_value.type.kind == :struct ? allocate_and_store(builder, llvm_value) : llvm_value
         builder.store(value_to_store, payload_ptr)
       end
 
-      private def field_expects_pointer?(field_type_name, _mod)
+      private def field_expects_pointer?(field_type_name)
         field_type_name == @record_type_name || Stone::Type::Registry.lookup(field_type_name)&.record?
       end
 

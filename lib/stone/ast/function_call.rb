@@ -240,7 +240,7 @@ module Stone
 
       private def instantiate_generic_type(builder, mod, scope)
         specialized = specialize_generic_type
-        register_in_type_registry(specialized.assigned_name, specialized, mod, scope)
+        register_in_type_registry(specialized.assigned_name, specialized, scope)
         specialized.to_llir(builder, mod, scope)
       end
 
@@ -262,10 +262,14 @@ module Stone
         fail Stone::TypeError, "generic type arguments must be type names, got: #{invalid.map(&:to_s).join(', ')}"
       end
 
-      private def register_in_type_registry(name, record_def, mod, scope)
-        type = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(mod, scope))
-        Stone::Type::Registry.register(type)
-        scope.declare_type(name, type:) unless scope.type_declared_locally?(name)
+      private def register_in_type_registry(name, record_def, scope)
+        # Register a preliminary type so self-referential union fields can resolve during llvm_type computation.
+        preliminary = Stone::Type.record(name:, fields: record_def.fields, llvm_type: LLVM::Type.pointer)
+        Stone::Type::Registry.register(preliminary)
+        # Now compute the real llvm_type (union fields can resolve self-references via Registry).
+        resolved = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(scope))
+        Stone::Type::Registry.register(resolved)
+        scope.declare_type(name, type: resolved) unless scope.type_declared_locally?(name)
       end
 
     end

@@ -124,10 +124,10 @@ module Stone
         mod.lookup_function(identifier)
       end
 
-      private def lookup_record_type(mod)
+      private def lookup_record_type(_mod)
         # Record types aren't really values, but if referenced, return a dummy value
         # This allows code like "Person := Record(...)\nPerson" to not fail
-        return LLVM::Int64.from_i(0) if mod.record_type?(identifier)
+        return LLVM::Int64.from_i(0) if Stone::Type::Registry.lookup(identifier)&.record?
 
         nil
       end

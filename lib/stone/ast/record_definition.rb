@@ -112,6 +112,8 @@ module Stone
         ]
       end
 
+      # NOTE: Uses mod.record_type? (not Registry) because validation must be scoped
+      # to the current compilation. The global Registry retains types from previous compilations.
       private def record_typed_field?(field, mod)
         field.type_name == @assigned_name || mod.record_type?(field.type_name)
       end
@@ -155,6 +157,7 @@ module Stone
         fail Stone::TypeError, "Unknown type: #{field.type_name}"
       end
 
+      # NOTE: Uses mod.record_type? (not Registry) — see record_typed_field? comment.
       private def known_type?(type_name, scope, mod)
         type_name == @assigned_name || mod&.record_type?(type_name) || scope.lookup_type(type_name)
       end
@@ -236,6 +239,7 @@ module Stone
         fail Stone::TypeError, "Unknown type: #{type_name}"
       end
 
+      # NOTE: Uses mod.record_type? (not Registry) — see record_typed_field? comment.
       private def record_reference?(type_name, mod)
         type_name == @assigned_name || mod&.record_type?(type_name)
       end

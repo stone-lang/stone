@@ -223,7 +223,7 @@ module Stone
           if child.value_expression.is_a?(Stone::AST::RecordInstantiation)
             record_type_name = child.value_expression.record_type_name
             mod.register_record_instance(child.identifier, record_type_name)
-          elsif child.value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(child.value_expression.function_name)
+          elsif child.value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(child.value_expression.function_name)&.record?
             mod.register_record_instance(child.identifier, child.value_expression.function_name)
           end
         end

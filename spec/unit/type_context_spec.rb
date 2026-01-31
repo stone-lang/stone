@@ -68,17 +68,20 @@ RSpec.describe Stone::TypeContext do
   end
 
   describe "#record_type?" do
-    it "returns false when no module is set" do
-      expect(context.record_type?("Point")).to be false
+    it "returns false for unknown type" do
+      expect(context.record_type?("UnknownRecord")).to be false
     end
 
-    # rubocop:disable RSpec/VerifiedDoubles -- LLVM::Module extensions aren't verifiable
-    it "delegates to module when module is set" do
-      mod = double("LLVM::Module", record_type?: true)
-      context_with_mod = described_class.new(mod)
-      expect(context_with_mod.record_type?("Point")).to be true
+    it "returns false for non-record types" do
+      expect(context.record_type?("Int")).to be false
     end
-    # rubocop:enable RSpec/VerifiedDoubles
+
+    it "returns true for registered record types" do
+      fields = [Stone::Type::Record::Field.new(name: "x", type_annotation: Stone::AST::TypeAnnotation.new("Int"))]
+      record = Stone::Type.record(name: "CheckPoint", fields:, llvm_type: nil)
+      Stone::Type::Registry.register(record)
+      expect(context.record_type?("CheckPoint")).to be true
+    end
   end
 
   describe "#record_type" do

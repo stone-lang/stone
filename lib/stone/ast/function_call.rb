@@ -20,7 +20,7 @@ module Stone
         # TODO: Record instantiation should not be special-cased here.
         # When the type system is refactored, record constructors should be
         # regular functions, and this check should be removed.
-        return instantiate_record(builder, mod, scope) if mod.record_type?(function_name)
+        return instantiate_record(builder, mod, scope) if Stone::Type::Registry.lookup(function_name)&.record?
 
         # Generic type instantiation: Box(Int) → creates specialized record type
         return instantiate_generic_type(builder, mod, scope) if mod.generic_type?(function_name)

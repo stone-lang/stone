@@ -24,9 +24,7 @@ module Stone
     end
 
     def record_type?(name)
-      return false unless @llvm_module
-
-      @llvm_module.record_type?(name)
+      Stone::Type::Registry.lookup(name)&.record? || false
     end
 
     def record_type(name)

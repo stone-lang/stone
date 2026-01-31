@@ -110,8 +110,8 @@ module Stone
         nil
       end
 
-      private def record_constructor_call?(mod)
-        value_expression.is_a?(Stone::AST::FunctionCall) && mod.record_type?(value_expression.function_name)
+      private def record_constructor_call?(_mod)
+        value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value_expression.function_name)&.record?
       end
 
       private def generic_type_definition?

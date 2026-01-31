@@ -228,7 +228,7 @@ module Stone
         return Stone::AST::RecordHelpers.record_instance?(@receiver, mod) if @receiver.is_a?(Reference)
 
         # Check if receiver is a FunctionCall that returns a record
-        return mod.record_type?(@receiver.function_name) if @receiver.is_a?(FunctionCall)
+        return Stone::Type::Registry.lookup(@receiver.function_name)&.record? if @receiver.is_a?(FunctionCall)
 
         # Check if receiver is a PropertyAccess that returns a record type
         return receiver_property_returns_record?(mod) if @receiver.is_a?(PropertyAccess)
@@ -238,7 +238,7 @@ module Stone
 
       private def receiver_property_returns_record?(mod)
         field_type = get_receiver_field_type(mod)
-        field_type && mod.record_type?(field_type)
+        field_type && Stone::Type::Registry.lookup(field_type)&.record?
       end
 
       # Check if receiver returns a union type that contains record(s)

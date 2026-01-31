@@ -113,8 +113,8 @@ module Stone
         builder.store(value_to_store, payload_ptr)
       end
 
-      private def field_expects_pointer?(field_type_name, mod)
-        field_type_name == @record_type_name || mod.record_type?(field_type_name)
+      private def field_expects_pointer?(field_type_name, _mod)
+        field_type_name == @record_type_name || Stone::Type::Registry.lookup(field_type_name)&.record?
       end
 
       private def allocate_and_store(builder, struct_value)

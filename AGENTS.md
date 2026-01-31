@@ -485,6 +485,24 @@ If you encounter `cd` failures or mise/zoxide errors when trying to change direc
 - Use absolute paths with git `--git-dir` and `--work-tree` flags instead
 - The shell configuration may interfere with `cd` commands in AI agent sessions
 
+### Missing `libRubyLLVMSupport-21.dylib`
+
+If `make ci` fails with `Could not open library '.../libRubyLLVMSupport-21.dylib'`,
+the ruby-llvm gem's native extension was not compiled. This can happen after
+`bundle install`, gem updates, or Ruby version changes. Fix:
+
+```bash
+make llvm_ext
+```
+
+The Makefile's `rspec` and `rubocop` targets depend on `llvm_ext`, which
+auto-builds the extension when missing. If you need to rebuild manually:
+
+```bash
+BUNDLE_GEMFILE=$PWD/Gemfile mise exec -- bash -c \
+  "cd $(mise exec -- bundle info ruby-llvm --path)/ext/ruby-llvm-support && bundle exec rake"
+```
+
 ### SSL Certificate Issues
 
 If RuboCop fails to fetch remote config due to SSL errors:

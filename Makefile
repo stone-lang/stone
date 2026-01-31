@@ -34,8 +34,15 @@ console: bundle
 
 lint: rubocop markdownlint
 
-rspec: bundle
+rspec: bundle llvm_ext
 	DEBUG=0 mise exec -- bundle exec rspec $(FILE)
+
+llvm_ext: bundle
+	@RUBY_LLVM_EXT=$$(mise exec -- bundle info ruby-llvm --path)/ext/ruby-llvm-support; \
+	if [ ! -f "$$RUBY_LLVM_EXT/libRubyLLVMSupport-21.dylib" ] && [ ! -f "$$RUBY_LLVM_EXT/libRubyLLVMSupport-21.so" ]; then \
+		echo "Building ruby-llvm native extension..."; \
+		BUNDLE_GEMFILE=$(CURDIR)/Gemfile mise exec -- bash -c "cd $$RUBY_LLVM_EXT && bundle exec rake"; \
+	fi
 
 bundle:
 ifneq ($(BUNDLE_CHECK), 0)
@@ -46,7 +53,7 @@ endif
 Gemfile.lock: Gemfile
 	@mise exec -- bundle
 
-rubocop:
+rubocop: llvm_ext
 	@mise exec -- bundle exec rubocop $(or $(FILE), lib spec)
 
 markdownlint: node_modules/.bin/markdownlint-cli2
@@ -73,4 +80,4 @@ llvm:
 		mise install llvm; \
 	fi
 
-.PHONY: all ci setup deps test specs console lint rspec bundle bundle_config rubocop markdownlint bun llvm
+.PHONY: all ci setup deps test specs console lint rspec llvm_ext bundle bundle_config rubocop markdownlint bun llvm

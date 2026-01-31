@@ -25,7 +25,7 @@ module Stone
         private def register_all_types(mod, scope)
           register_type_declarations(scope)
           register_record_types(mod, scope)
-          register_function_types
+          register_function_types(scope)
         end
 
         private def build_function_body(func, mod, scope)
@@ -200,14 +200,23 @@ module Stone
           mod.register_record_type(canonical_name, specialized)
           mod.register_record_type(child.identifier, specialized)
           register_record_type_in_registry(canonical_name, specialized, mod, scope)
+          register_type_alias(canonical_name, child.identifier, scope)
+        end
 
+        private def register_type_alias(canonical_name, alias_name, scope)
           canonical_type = Stone::Type::Registry.lookup(canonical_name)
-          Stone::Type::Registry.register_as(child.identifier, canonical_type) if canonical_type
+          return unless canonical_type
+
+          Stone::Type::Registry.register_as(alias_name, canonical_type)
+          return if scope.type_declared_locally?(alias_name)
+
+          scope.declare_type(alias_name, type: canonical_type)
         end
 
         private def register_record_type_in_registry(name, record_def, mod, scope)
           type = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(mod, scope))
           Stone::Type::Registry.register(type)
+          scope.declare_type(name, type:) unless scope.type_declared_locally?(name)
         end
 
         private def register_record_instance_if_needed(child, mod)
@@ -219,13 +228,14 @@ module Stone
           end
         end
 
-        private def register_function_types
+        private def register_function_types(scope)
           @children&.each do |child|
             next unless child.is_a?(Stone::AST::ConstantDefinition)
             next unless child.value_expression.is_a?(Stone::AST::Lambda)
 
             func_type = child.value_expression.type
             Stone::Type::Registry.register_as(child.identifier, func_type)
+            scope.declare_type(child.identifier, type: func_type) unless scope.type_declared_locally?(child.identifier)
           end
         end
 

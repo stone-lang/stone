@@ -258,6 +258,7 @@ module Stone
       private def register_in_type_registry(name, record_def, mod, scope)
         type = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(mod, scope))
         Stone::Type::Registry.register(type)
+        scope.declare_type(name, type:) unless scope.type_declared_locally?(name)
       end
 
     end

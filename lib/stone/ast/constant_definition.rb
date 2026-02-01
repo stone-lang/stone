@@ -1,9 +1,11 @@
 require "stone/ast/expression"
+require "stone/ast/union_type_registration"
 
 
 module Stone
   class AST
     class ConstantDefinition < Stone::AST::Expression
+      include UnionTypeRegistration
 
       attr_reader :identifier, :value_expression
 
@@ -15,6 +17,7 @@ module Stone
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
         return compile_record_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::RecordDefinition)
+        return compile_union_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::UnionExpression)
         return register_as_generic_type if generic_type_definition?
 
         llvm_value = value_expression.to_llir(builder, mod, scope)
@@ -65,6 +68,20 @@ module Stone
         nil
       end
 
+      # Compile a non-generic union type definition (e.g., IntOption := Null | Record(value :: Int))
+      private def compile_union_type(mod, builder, scope)
+        union_expr = value_expression
+        union_expr.assigned_name = identifier
+        register_union_record_alternatives(union_expr, identifier, scope)
+        compile_union_record_llir(union_expr, mod, builder, scope)
+        register_union_in_registry(union_expr, identifier, scope)
+        nil
+      end
+
+      private def compile_union_record_llir(union_expr, mod, builder, scope)
+        union_expr.record_alternatives.each { |record_def| record_def.to_llir(builder, mod, scope) }
+      end
+
       # Register a function (lambda) as an alias so it can be called by the constant name
       private def register_function_alias(mod, function, scope)
         register_generic_instantiation_alias(scope) if generic_instantiation?
@@ -97,13 +114,27 @@ module Stone
         return unless type_name
 
         mod.register_record_instance(identifier, type_name)
-        record_type = Stone::TypeRegistry.instance.lookup(type_name)
-        scope.declare_type(identifier, type: record_type) if record_type
+        scope_type = scope_type_for_instance(type_name)
+        scope.declare_type(identifier, type: scope_type) if scope_type
+      end
+
+      # For instances constructed through a union type, use the union type in scope
+      # (so computed property lookup can find generic base name).
+      # For plain records, use the record type directly.
+      private def scope_type_for_instance(record_type_name)
+        return union_scope_type if union_constructor_call?
+
+        Stone::TypeRegistry.instance.lookup(record_type_name)
+      end
+
+      private def union_scope_type
+        Stone::Type::Registry.lookup(value_expression.function_name)
       end
 
       private def record_type_name
         return value_expression.record_type_name if value_expression.is_a?(Stone::AST::RecordInstantiation)
         return value_expression.function_name if record_constructor_call?
+        return union_record_type_name if union_constructor_call?
 
         nil
       end
@@ -112,9 +143,20 @@ module Stone
         value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value_expression.function_name)&.record?
       end
 
+      private def union_constructor_call?
+        value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value_expression.function_name)&.union?
+      end
+
+      private def union_record_type_name
+        union_type = Stone::Type::Registry.lookup(value_expression.function_name)
+        union_type.find_record_alternative_by_field_count(value_expression.arguments.length)&.name
+      end
+
       private def generic_type_definition?
-        value_expression.is_a?(Stone::AST::Lambda) &&
-          value_expression.block.statements.last.is_a?(Stone::AST::RecordDefinition)
+        return false unless value_expression.is_a?(Stone::AST::Lambda)
+
+        body = value_expression.block.statements.last
+        body.is_a?(Stone::AST::RecordDefinition) || body.is_a?(Stone::AST::UnionExpression)
       end
 
       private def generic_instantiation?
@@ -124,7 +166,7 @@ module Stone
       private def register_generic_instantiation_alias(scope)
         canonical_name = canonical_generic_name
         canonical_type = Stone::Type::Registry.lookup(canonical_name)
-        return unless canonical_type&.record?
+        return unless canonical_type && (canonical_type.record? || canonical_type.union?)
 
         Stone::Type::Registry.register_as(identifier, canonical_type)
         scope.declare_type(identifier, type: canonical_type) unless scope.type_declared_locally?(identifier)

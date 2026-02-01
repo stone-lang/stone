@@ -30,7 +30,8 @@ module Stone
     # boolean_operation with zero operators is equivalent to postfix_expression.
     # This allows mixing with parentheses: (5 < 3) ∧ TRUE
     # Both can chain: 1 < 2 < 3 desugars to <(1, 2, 3)
-    rule(:expression) { type_declaration | comparison_operation | boolean_operation }
+    rule(:expression) { type_declaration | union_expression | comparison_operation | boolean_operation }
+    rule(:union_expression) { boolean_operation + (ws? + str("|") + ws? + boolean_operation)[1..] }
     rule(:type_declaration) { identifier + ws! + str("::") + ws! + type_annotation }
     rule(:type_annotation) { type_union }
     rule(:type_union) { type_term + (ws? + str("|") + ws? + type_term)[0..] }

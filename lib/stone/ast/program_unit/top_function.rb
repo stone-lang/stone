@@ -2,6 +2,7 @@ require "llvm/core"
 require "stone/libc"
 require "stone/scope"
 require "stone/ast/two_phase_processing"
+require "stone/ast/union_type_registration"
 
 
 module Stone
@@ -9,6 +10,7 @@ module Stone
     class ProgramUnit < Stone::AST
       class TopFunction
         include TwoPhaseProcessing
+        include UnionTypeRegistration
 
         def initialize(children)
           @children = children
@@ -164,6 +166,7 @@ module Stone
             next unless child.is_a?(Stone::AST::ConstantDefinition)
 
             register_record_type_definition(child, scope)
+            register_union_type_definition(child, scope)
             register_generic_type_definition(child)
             register_generic_instantiation(child, scope)
             register_record_instance_if_needed(child, mod)
@@ -178,11 +181,21 @@ module Stone
           register_record_type_in_registry(child.identifier, record_def, scope)
         end
 
+        private def register_union_type_definition(child, scope)
+          return unless child.value_expression.is_a?(Stone::AST::UnionExpression)
+
+          union_expr = child.value_expression
+          union_expr.assigned_name = child.identifier
+          register_union_record_alternatives(union_expr, child.identifier, scope)
+          register_union_in_registry(union_expr, child.identifier, scope, generic_base_name: nil)
+        end
+
         private def register_generic_type_definition(child)
           return unless child.value_expression.is_a?(Stone::AST::Lambda)
 
           lambda_node = child.value_expression
-          return unless lambda_node.block.statements.last.is_a?(Stone::AST::RecordDefinition)
+          body = lambda_node.block.statements.last
+          return unless body.is_a?(Stone::AST::RecordDefinition) || body.is_a?(Stone::AST::UnionExpression)
 
           generic = Stone::Type::Generic.new(name: child.identifier, template: lambda_node)
           Stone::Type::Registry.register(generic)
@@ -195,10 +208,19 @@ module Stone
           return unless Stone::Type::Registry.lookup(func_call.function_name)&.generic?
 
           specialized = func_call.specialize_generic_type
-          canonical_name = specialized.assigned_name
+          register_specialized_type(specialized, scope)
+          register_type_alias(specialized.assigned_name, child.identifier, scope)
+        end
 
-          register_record_type_in_registry(canonical_name, specialized, scope)
-          register_type_alias(canonical_name, child.identifier, scope)
+        private def register_specialized_type(specialized, scope)
+          canonical_name = specialized.assigned_name
+          if specialized.is_a?(Stone::AST::UnionExpression)
+            base_name = extract_generic_base_name(canonical_name)
+            register_union_record_alternatives(specialized, canonical_name, scope)
+            register_union_in_registry(specialized, canonical_name, scope, generic_base_name: base_name)
+          else
+            register_record_type_in_registry(canonical_name, specialized, scope)
+          end
         end
 
         private def register_type_alias(canonical_name, alias_name, scope)
@@ -211,24 +233,17 @@ module Stone
           scope.declare_type(alias_name, type: canonical_type)
         end
 
-        private def register_record_type_in_registry(name, record_def, scope)
-          # Register a preliminary type so self-referential union fields (e.g., IntList | Null
-          # inside IntList) can find this type during llvm_type computation.
-          preliminary = Stone::Type.record(name:, fields: record_def.fields, llvm_type: LLVM::Type.pointer)
-          Stone::Type::Registry.register(preliminary)
-          # Now compute the real llvm_type (union fields can resolve self-references via Registry).
-          resolved = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(scope))
-          Stone::Type::Registry.register(resolved)
-          scope.declare_type(name, type: resolved) unless scope.type_declared_locally?(name)
+        private def register_record_instance_if_needed(child, mod)
+          value = child.value_expression
+          if value.is_a?(Stone::AST::RecordInstantiation)
+            mod.register_record_instance(child.identifier, value.record_type_name)
+          elsif record_constructor?(value)
+            mod.register_record_instance(child.identifier, value.function_name)
+          end
         end
 
-        private def register_record_instance_if_needed(child, mod)
-          if child.value_expression.is_a?(Stone::AST::RecordInstantiation)
-            record_type_name = child.value_expression.record_type_name
-            mod.register_record_instance(child.identifier, record_type_name)
-          elsif child.value_expression.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(child.value_expression.function_name)&.record?
-            mod.register_record_instance(child.identifier, child.value_expression.function_name)
-          end
+        private def record_constructor?(value)
+          value.is_a?(Stone::AST::FunctionCall) && Stone::Type::Registry.lookup(value.function_name)&.record?
         end
 
         private def register_function_types(scope)

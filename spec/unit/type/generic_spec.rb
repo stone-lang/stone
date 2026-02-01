@@ -16,8 +16,8 @@ RSpec.describe Stone::Type::Generic do
       expect(generic_type.type_parameters).to eq(["T"])
     end
 
-    it "extracts record_template from template" do
-      expect(generic_type.record_template).to eq(record_def)
+    it "extracts body_template from template" do
+      expect(generic_type.body_template).to eq(record_def)
     end
 
     it "raises if template does not end with RecordDefinition" do

@@ -135,7 +135,8 @@ module Stone
       private def lookup_generic_type
         # Generic types aren't runtime values, but if referenced, return a dummy value
         # This allows code like "Box := λ(T) { Record(value :: T) }\nBox" to not fail
-        return LLVM::Int64.from_i(0) if Stone::Type::Registry.lookup(identifier)&.generic?
+        type = Stone::Type::Registry.lookup(identifier)
+        return LLVM::Int64.from_i(0) if type&.generic? || type&.union?
 
         nil
       end

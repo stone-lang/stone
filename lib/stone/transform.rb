@@ -20,6 +20,7 @@ require "stone/ast/lambda"
 require "stone/ast/block"
 require "stone/ast/record_definition"
 require "stone/ast/record_instantiation"
+require "stone/ast/union_expression"
 require "stone/error/overflow"
 require "grammy/tree/transformation"
 
@@ -141,6 +142,13 @@ module Stone
           receiver
         end
       end
+    end
+
+    transform(:union_expression) do |node|
+      # Collect all boolean_operation children as alternatives
+      boolean_operations = node.children.select { |c| c.respond_to?(:name) && c.name == :boolean_operation }
+      alternatives = boolean_operations.map { |expr| transform(expr) }
+      Stone::AST::UnionExpression.new(alternatives)
     end
 
     transform(:comparison_operation) do |node|

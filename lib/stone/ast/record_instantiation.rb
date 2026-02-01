@@ -114,7 +114,8 @@ module Stone
       end
 
       private def field_expects_pointer?(field_type_name)
-        field_type_name == @record_type_name || Stone::Type::Registry.lookup(field_type_name)&.record?
+        type = Stone::Type::Registry.lookup(field_type_name)
+        field_type_name == @record_type_name || type&.record? || type&.union?
       end
 
       private def allocate_and_store(builder, struct_value)

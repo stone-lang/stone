@@ -1,5 +1,6 @@
 require "stone/ast/expression"
 require "stone/error/property_error"
+require "stone/error/type_error"
 require "stone/rtti"
 
 
@@ -201,7 +202,12 @@ module Stone
       end
 
       private def lookup_computed_property_function(mod, receiver_type)
-        mod.lookup_function("#{receiver_type.name}@#{@property}")
+        func = mod.lookup_function("#{receiver_type.name}@#{@property}")
+        return func if func
+
+        # Fall back to generic base name for specialized union types (e.g., List@empty? for List(Int))
+        base_name = receiver_type.generic_base_name if receiver_type.is_a?(Stone::Type::Union)
+        mod.lookup_function("#{base_name}@#{@property}") if base_name
       end
 
       private def fail_property_not_found(receiver_type)
@@ -224,16 +230,14 @@ module Stone
       end
 
       private def record_field_access?(mod)
-        # Check if receiver is a Reference to a record instance
-        return Stone::AST::RecordHelpers.record_instance?(@receiver, mod) if @receiver.is_a?(Reference)
+        record_type_name = get_record_type_name(mod)
+        return false unless record_type_name
 
-        # Check if receiver is a FunctionCall that returns a record
-        return Stone::Type::Registry.lookup(@receiver.function_name)&.record? if @receiver.is_a?(FunctionCall)
+        record_type = Stone::Type::Registry.lookup(record_type_name)
+        return false unless record_type&.record?
 
-        # Check if receiver is a PropertyAccess that returns a record type
-        return receiver_property_returns_record?(mod) if @receiver.is_a?(PropertyAccess)
-
-        false
+        # Only treat as field access if the property is actually a field on the record
+        record_type.field_index(@property) != nil
       end
 
       private def receiver_property_returns_record?(mod)
@@ -524,7 +528,7 @@ module Stone
 
       private def lookup_record_type(record_type_name)
         record_type = Stone::Type::Registry.lookup(record_type_name)
-        fail "Unknown record type: #{record_type_name}" unless record_type&.record?
+        fail Stone::TypeError, "Unknown record type: #{record_type_name}" unless record_type&.record?
 
         record_type
       end

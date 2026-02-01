@@ -131,8 +131,8 @@ module Stone
       Function.new(name: fn_name, param_types:, return_type:)
     end
 
-    def self.union(alternatives:, name: nil)
-      union = Union.new(alternatives:, name:)
+    def self.union(alternatives:, name: nil, generic_base_name: nil)
+      union = Union.new(alternatives:, name:, generic_base_name:)
       return union if name
 
       union.alternatives.length == 1 ? union.alternatives.first : union
@@ -152,10 +152,11 @@ module Stone
 
     # Union type - represents a value that can be one of several types
     class Union < Type
-      attr_reader :alternatives
+      attr_reader :alternatives, :generic_base_name
 
-      def initialize(alternatives:, name: nil)
+      def initialize(alternatives:, name: nil, generic_base_name: nil)
         @alternatives = flatten_and_dedupe(alternatives)
+        @generic_base_name = generic_base_name
         fail ::ArgumentError, "Union type requires at least one alternative" if @alternatives.empty?
 
         super(name: name || generate_name, llvm_type: create_variable_sized_llvm_type)
@@ -248,6 +249,13 @@ module Stone
         Stone::Type.union(alternatives: remaining)
       end
 
+      # Find the first Record alternative whose field count matches the given count.
+      # NOTE: If multiple Record alternatives have the same field count, this picks the first.
+      # A future improvement could use type checking to disambiguate.
+      def find_record_alternative_by_field_count(field_count)
+        @alternatives.select(&:record?).find { |alt| alt.fields.length == field_count }
+      end
+
       def compatible_with?(other)
         other.union? ? covers_all_alternatives?(other) : includes_compatible_type?(other)
       end
@@ -279,7 +287,7 @@ module Stone
       end
 
       private def flatten_and_dedupe(types)
-        flattened = types.flat_map { |t| t.union? ? t.alternatives : [t] }
+        flattened = types.compact.flat_map { |t| t.union? ? t.alternatives : [t] }
         flattened.uniq
       end
 

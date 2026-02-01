@@ -1,12 +1,15 @@
 require "stone/ast/expression"
+require "stone/ast/union_type_registration"
 require "stone/libc"
 require "stone/error/argument_error"
+require "stone/error/type_error"
 require "stone/rtti"
 
 
 module Stone
   class AST
     class FunctionCall < Stone::AST::Expression
+      include UnionTypeRegistration
 
       attr_reader :function_name, :arguments
 
@@ -188,7 +191,7 @@ module Stone
         when "⊻"
           builder.xor(current_result, next_arg, "xor_#{index}")
         else
-          fail "Unsupported boolean operator for chaining: #{function_name}"
+          fail Stone::TypeError, "Unsupported boolean operator for chaining: #{function_name}"
         end
       end
 
@@ -223,12 +226,13 @@ module Stone
 
       private def type_instantiation?
         type = Stone::Type::Registry.lookup(function_name)
-        type&.record? || type&.generic?
+        type&.record? || type&.generic? || type&.union?
       end
 
       private def instantiate_type(builder, mod, scope)
         type = Stone::Type::Registry.lookup(function_name)
         return instantiate_record(builder, mod, scope) if type&.record?
+        return instantiate_union(builder, mod, scope) if type&.union?
 
         instantiate_generic_type(builder, mod, scope)
       end
@@ -238,10 +242,33 @@ module Stone
         record_instantiation.to_llir(builder, mod, scope)
       end
 
+      private def instantiate_union(builder, mod, scope)
+        union_type = Stone::Type::Registry.lookup(function_name)
+        record_alt = find_matching_record_alternative(union_type)
+        record_instantiation = Stone::AST::RecordInstantiation.new(record_alt.name, arguments)
+        record_instantiation.to_llir(builder, mod, scope)
+      end
+
+      private def find_matching_record_alternative(union_type)
+        match = union_type.find_record_alternative_by_field_count(arguments.length)
+        fail Stone::TypeError, "No matching Record variant for #{function_name} with #{arguments.length} arguments" unless match
+
+        match
+      end
+
       private def instantiate_generic_type(builder, mod, scope)
         specialized = specialize_generic_type
-        register_in_type_registry(specialized.assigned_name, specialized, scope)
+        return register_specialized_union(specialized, scope) if specialized.is_a?(Stone::AST::UnionExpression)
+
+        register_record_type_in_registry(specialized.assigned_name, specialized, scope)
         specialized.to_llir(builder, mod, scope)
+      end
+
+      private def register_specialized_union(union_expr, scope)
+        base_name = extract_generic_base_name(union_expr.assigned_name)
+        register_union_record_alternatives(union_expr, union_expr.assigned_name, scope)
+        register_union_in_registry(union_expr, union_expr.assigned_name, scope, generic_base_name: base_name)
+        LLVM::Int64.from_i(0)
       end
 
       # Build a specialized RecordDefinition by substituting type arguments into the generic template.
@@ -260,16 +287,6 @@ module Stone
         return if invalid.empty?
 
         fail Stone::TypeError, "generic type arguments must be type names, got: #{invalid.map(&:to_s).join(', ')}"
-      end
-
-      private def register_in_type_registry(name, record_def, scope)
-        # Register a preliminary type so self-referential union fields can resolve during llvm_type computation.
-        preliminary = Stone::Type.record(name:, fields: record_def.fields, llvm_type: LLVM::Type.pointer)
-        Stone::Type::Registry.register(preliminary)
-        # Now compute the real llvm_type (union fields can resolve self-references via Registry).
-        resolved = Stone::Type.record(name:, fields: record_def.fields, llvm_type: record_def.llvm_type(scope))
-        Stone::Type::Registry.register(resolved)
-        scope.declare_type(name, type: resolved) unless scope.type_declared_locally?(name)
       end
 
     end

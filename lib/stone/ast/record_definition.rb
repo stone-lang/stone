@@ -111,7 +111,8 @@ module Stone
       end
 
       private def record_typed_field?(field)
-        field.type_name == @assigned_name || Stone::Type::Registry.lookup(field.type_name)&.record?
+        type = Stone::Type::Registry.lookup(field.type_name)
+        field.type_name == @assigned_name || type&.record? || type&.union?
       end
 
       private def lookup_field_equals_fn(mod, field)
@@ -227,15 +228,16 @@ module Stone
       end
 
       private def resolve_simple_llvm_type(type_name, scope)
-        return LLVM::Type.ptr if record_reference?(type_name)
+        return LLVM::Type.ptr if compound_type_reference?(type_name)
         return Stone::Type::Registry.lookup(type_name).llvm_type if primitive_type?(type_name)
         return LLVM::Type.ptr if scope.lookup_type(type_name)
 
         fail Stone::TypeError, "Unknown type: #{type_name}"
       end
 
-      private def record_reference?(type_name)
-        type_name == @assigned_name || Stone::Type::Registry.lookup(type_name)&.record?
+      private def compound_type_reference?(type_name)
+        type = Stone::Type::Registry.lookup(type_name)
+        type_name == @assigned_name || type&.record? || type&.union?
       end
 
       private def primitive_type?(type_name)

@@ -3,12 +3,12 @@
 ```stone
 # Comments start with `#` and extend to the end of the line.
 
-# NOT YET IMPLEMENTED: Line continuation with backslash (`\`) at end of line.
+# NOT YET IMPLEMENTED: Line continuation with backslash (`\`) at beginning or end of line.
 # "This is a long line" \
 #     "that continues here."
 
 # Stone has no keywords. The basic elements are literals, functions,
-# blocks, definitions, function calls, properties, and operators.
+# blocks, definitions, function calls, properties, operators, and types.
 
 
 ### Literals
@@ -32,7 +32,7 @@ FALSE
 0b01100110        # binary
 
 ## Decimal
-# NOT YET IMPLEMENTED: Floating-point literals.
+# NOT YET IMPLEMENTED: Decimal literals.
 # 1.0
 # 3.14
 # +2.27e12
@@ -88,41 +88,41 @@ if(TRUE, { if(FALSE, { 1 }, { 2 }) }, { 3 })  # => 2
 ## Comparison Operators
 # Comparison operators can be used in prefix (function) form or infix form.
 # Infix form requires whitespace around the operator.
-==(5, 5)    # prefix form => true
-5 == 5      # infix form  => true
-5 != 3      # => true
-3 < 5       # => true
-5 <= 5      # => true
-5 > 3       # => true
-5 >= 5      # => true
+==(5, 5)    # prefix form # => TRUE
+5 == 5      # infix form  # => TRUE
+5 != 3      # => TRUE
+3 < 5       # => TRUE
+5 <= 5      # => TRUE
+5 > 3       # => TRUE
+5 >= 5      # => TRUE
 
-# Unicode alternatives are supported.
+# Unicode alternatives are supported/encouraged.
 5 ≠ 3       # same as !=
 3 ≤ 5       # same as <=
 5 ≥ 3       # same as >=
 
 ## Boolean Operators
 # AND - function form and Unicode infix form.
-and(TRUE, FALSE)      # => false
-TRUE ∧ FALSE          # => false
-TRUE ∧ TRUE ∧ TRUE    # chainable => true
+and(TRUE, FALSE)      # => FALSE
+TRUE ∧ FALSE          # => FALSE
+TRUE ∧ TRUE ∧ TRUE    # chainable # => TRUE
 
 # OR
-or(TRUE, FALSE)       # => true
-TRUE ∨ FALSE          # => true
-FALSE ∨ FALSE ∨ TRUE  # chainable => true
+or(TRUE, FALSE)       # => TRUE
+TRUE ∨ FALSE          # => TRUE
+FALSE ∨ FALSE ∨ TRUE  # chainable # => TRUE
 
 # NOT - function form, Unicode form, and property form.
-not(TRUE)             # => false
-¬(TRUE)               # => false
-TRUE.not              # => false
+not(TRUE)             # => FALSE
+¬(TRUE)               # => FALSE
+TRUE.not              # => FALSE
 
 # XOR
-xor(TRUE, FALSE)      # => true
-TRUE ⊻ FALSE          # => true
+xor(TRUE, FALSE)      # => TRUE
+TRUE ⊻ FALSE          # => TRUE
 
 # Mixing different boolean operators requires parentheses.
-(TRUE ∧ FALSE) ∨ TRUE          # => true
+(TRUE ∧ FALSE) ∨ TRUE          # => TRUE
 # TRUE ∧ FALSE ∨ TRUE          # Error! Must use parentheses.
 
 ## Arithmetic Operators
@@ -133,11 +133,11 @@ TRUE ⊻ FALSE          # => true
 
 ## Equality
 # `==` and `!=` work across all types.
-42 == 42              # => true
-"hi" == "hi"          # => true
-NULL == NULL          # => true
-# Cross-type comparisons are always false.
-42 == "42"            # => false
+42 == 42              # => TRUE
+"hi" == "hi"          # => TRUE
+NULL == NULL          # => TRUE
+# Cross-type comparisons are always FALSE.
+42 == "42"            # => FALSE
 
 
 ### Blocks
@@ -188,19 +188,19 @@ g(5)                  # => 5
 ## Built-in Properties
 
 # Integer properties:
-42.positive?          # => true
-42.negative?          # => false
-0.zero?               # => true
+42.positive?          # => TRUE
+42.negative?          # => FALSE
+0.zero?               # => TRUE
 
 # Boolean property:
-TRUE.not              # => false
+TRUE.not              # => FALSE
 
 # String property:
 "hello".byte_count    # => 5
 "λ".byte_count        # => 2 (byte count, not character count)
 
 # Properties can be chained.
-42.positive?.not.not  # => true
+42.positive?.not.not  # => TRUE
 
 ## Computed Properties
 
@@ -213,7 +213,7 @@ Int@abs := λ(this) { if(this.negative?, { sum(0, sum(0, this).negative? ... }, 
 
 # Computed properties work on any type.
 Bool@yes? := λ(this) { this }
-TRUE.yes?             # => true
+TRUE.yes?             # => TRUE
 
 
 ### Records (Structured Data)
@@ -232,8 +232,8 @@ pt.y                  # => 20
 p.name                # => "Craig"
 
 # Records use structural equality.
-Point(10, 20) == Point(10, 20)   # => true
-Point(10, 20) == Point(15, 25)   # => false
+Point(10, 20) == Point(10, 20)   # => TRUE
+Point(10, 20) == Point(15, 25)   # => FALSE
 
 # Records are immutable. They're "value objects".
 # pt.x = 1              # compilation error!
@@ -258,7 +258,7 @@ list := IntList(1, IntList(2, IntList(3, NULL)))
 list.first             # => 1
 list.rest.first        # => 2
 list.rest.rest.first   # => 3
-list.rest.rest.rest == NULL  # => true
+list.rest.rest.rest == NULL  # => TRUE
 
 # Trees work the same way.
 Tree := Record(value :: Int, left :: Tree, right :: Tree)
@@ -294,19 +294,19 @@ Type.of("hello").as_String     # => "String"
 Type.of(NULL).as_String        # => "Null"
 
 # Type properties:
-Type.of(42).primitive?         # => true
-Type.of(42).record?            # => false
+Type.of(42).primitive?         # => TRUE
+Type.of(42).record?            # => FALSE
 Type.of(42).size               # => 8 (bytes)
 
 # Record type introspection:
 Point := Record(x :: Int, y :: Int)
-Type.of(Point(1, 2)).record?              # => true
+Type.of(Point(1, 2)).record?              # => TRUE
 Type.of(Point(1, 2)).fields.first.name    # => "x"
 Type.of(Point(1, 2)).fields.first.type.as_String  # => "Int"
 
 # Type equality:
-Type.of(42) == Type.of(1)      # => true (both Int)
-Type.of(42) == Type.of(TRUE)   # => false
+Type.of(42) == Type.of(1)      # => TRUE (both Int)
+Type.of(42) == Type.of(TRUE)   # => FALSE
 
 
 ### Union Types
@@ -348,8 +348,8 @@ IntList := List(Int)
 list := IntList(1, IntList(2, IntList(3, NULL)))
 list.first             # => 1
 list.rest.first        # => 2
-list == NULL           # => false
-list.rest.rest.rest == NULL  # => true
+list == NULL           # => FALSE
+list.rest.rest.rest == NULL  # => TRUE
 
 
 ### Generic Types

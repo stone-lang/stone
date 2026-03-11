@@ -191,7 +191,7 @@ RSpec.describe "Sum Types" do
       expect(Stone.eval(code)).to be false
     end
 
-    it "returns TRUE for an empty list", pending: "requires lambda param type generalization" do
+    it "returns TRUE for an empty list", pending: "requires union constructor dispatch - see docs/prompts/union-constructor-dispatch.md" do
       code = <<~STONE
         List :: (Type) -> Type
         List := λ(T) { Null | Record(first :: T, rest :: List(T)) }

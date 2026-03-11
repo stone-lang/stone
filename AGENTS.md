@@ -339,6 +339,20 @@ via field substitution. Key points:
 - `FunctionCall#specialize_generic_type` is the single source of truth for specialization
 - Grammar uses PEG ordered choice: `parameterized_type` before `type_name`
 
+### Sum Types
+
+Sum types (algebraic data types) use expression-level `|` to create union types.
+Key implementation details:
+
+- `UnionExpression` AST node holds alternatives; `to_llir` returns dummy value
+- Real work happens in type registration phases, not LLIR generation
+- Anonymous Record alternatives named `"UnionName$Index"` (eg, `"IntOption$0"`)
+- Two-phase registration: placeholder union first (for recursive types), then resolved
+- `UnionTypeRegistration` module (`lib/stone/ast/union_type_registration.rb`)
+  centralizes shared registration logic for ConstantDefinition, FunctionCall, TopFunction
+- `generic_base_name` on Union type enables computed property fallback
+  (eg, `List@empty?` for `List(Int)`)
+
 ### Planned Stone CLI Commands
 
 The `stone` binary (not yet implemented) will support:

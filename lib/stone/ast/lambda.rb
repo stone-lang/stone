@@ -8,6 +8,7 @@ module Stone
     class Lambda < Stone::AST::Expression
 
       attr_reader :parameters, :block
+      attr_accessor :declared_param_types, :declared_return_type
 
       class << self
         attr_accessor :lambda_count
@@ -20,6 +21,8 @@ module Stone
         @parameters = parameters
         @block = Block.new(statements)
         @lambda_id = next_lambda_id
+        @declared_param_types = nil
+        @declared_return_type = nil
       end
 
       def to_llir(_builder, mod, scope = Stone::Scope.top_level)
@@ -32,8 +35,8 @@ module Stone
       end
 
       def type(context = nil)
-        return_type = @block.type(context) || Stone::Type::Int
-        param_types = parameters.map { Stone::Type::Int }
+        return_type = @declared_return_type || @block.type(context) || Stone::Type::Int
+        param_types = stone_param_types
         Stone::Type.function(param_types:, return_type:)
       end
 
@@ -43,13 +46,41 @@ module Stone
       end
 
       private def function_type
-        # For now, we assume all functions return an i64.
-        LLVM::Type.function(param_types, I64)
+        LLVM::Type.function(llvm_param_types, llvm_return_type)
       end
 
-      private def param_types
-        # For now, we assume all parameters are i64.
-        [I64] * parameters.size
+      # Stone types for each parameter (for type system)
+      private def stone_param_types
+        parameters.each_with_index.map do |_param, i|
+          @declared_param_types&.dig(i) || Stone::Type::Int
+        end
+      end
+
+      # LLVM types for each parameter (for function signature)
+      private def llvm_param_types
+        stone_param_types.map { |t| stone_type_to_llvm_type(t) }
+      end
+
+      # LLVM return type
+      # NOTE: We don't use declared_return_type for the LLVM signature yet because
+      # that would require boxing return values into union structs. For now, we
+      # infer from the block or default to I64.
+      private def llvm_return_type
+        # TODO: When the declared return type is a union, we'd need to box the
+        # actual return value. For now, keep the original inference behavior.
+        I64
+      end
+
+      # Map Stone type to LLVM type for function parameters/returns
+      private def stone_type_to_llvm_type(stone_type)
+        return I64 unless stone_type
+
+        # Function types don't have llvm_type set; at runtime they're pointers to LLVM functions
+        return LLVM::Type.pointer if stone_type.function?
+
+        # Use the type's llvm_type attribute when available
+        # For records, this gives us the struct type; for unions, the tagged union struct
+        stone_type.llvm_type || I64
       end
 
       private def function_name
@@ -100,7 +131,9 @@ module Stone
       private def argument_storage(func, builder)
         {}.tap do |storage|
           parameters.each_with_index do |param_name, i|
-            alloca = builder.alloca(LLVM::Int64.type, param_name)
+            # Use the actual parameter type from the function signature
+            param_type = func.params[i].type
+            alloca = builder.alloca(param_type, param_name)
             builder.store(func.params[i], alloca)
             storage[param_name] = alloca
           end

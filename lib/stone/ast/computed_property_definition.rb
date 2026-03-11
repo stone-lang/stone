@@ -15,6 +15,9 @@ module Stone
       end
 
       def to_llir(builder, mod, scope = Stone::Scope.top_level)
+        # Set declared param types on the lambda before generating
+        apply_lambda_param_types(scope)
+
         # Generate the lambda function
         func = @lambda.to_llir(builder, mod, scope)
 
@@ -25,6 +28,21 @@ module Stone
 
         # Return nil (computed properties are definitions, not expressions)
         nil
+      end
+
+      private def apply_lambda_param_types(scope)
+        # First, check for an explicit type declaration (e.g., "Point@sum :: (Point) -> Int")
+        function_name = "#{@type_name}@#{@property_name}"
+        declared_type = scope.declared_type(function_name)
+
+        if declared_type&.function?
+          @lambda.declared_param_types = declared_type.param_types
+          @lambda.declared_return_type = declared_type.return_type
+        else
+          # Infer first parameter type from the receiver type name
+          receiver_type = Stone::Type::Registry.lookup(@type_name)
+          @lambda.declared_param_types = [receiver_type] if receiver_type
+        end
       end
 
     end

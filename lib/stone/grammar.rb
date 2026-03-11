@@ -32,7 +32,7 @@ module Stone
     # Both can chain: 1 < 2 < 3 desugars to <(1, 2, 3)
     rule(:expression) { type_declaration | union_expression | comparison_operation | boolean_operation }
     rule(:union_expression) { boolean_operation + (ws? + str("|") + ws? + boolean_operation)[1..] }
-    rule(:type_declaration) { identifier + ws! + str("::") + ws! + type_annotation }
+    rule(:type_declaration) { (computed_property_id | identifier) + ws! + str("::") + ws! + type_annotation }
     rule(:type_annotation) { type_union }
     rule(:type_union) { type_term + (ws? + str("|") + ws? + type_term)[0..] }
     rule(:type_term) { type_function | parameterized_type | parens(type_annotation) | type_name }

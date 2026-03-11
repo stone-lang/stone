@@ -27,6 +27,7 @@ module Stone
         private def register_all_types(mod, scope)
           register_type_declarations(scope)
           register_record_types(mod, scope)
+          register_function_type_declarations(scope)
           register_function_types(scope)
         end
 

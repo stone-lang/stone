@@ -20,6 +20,12 @@ module Stone
         return compile_union_type(mod, builder, scope) if value_expression.is_a?(Stone::AST::UnionExpression)
         return register_as_generic_type if generic_type_definition?
 
+        compile_value_expression(builder, mod, scope)
+      end
+
+      private def compile_value_expression(builder, mod, scope)
+        apply_lambda_param_types(scope) if value_expression.is_a?(Stone::AST::Lambda)
+
         llvm_value = value_expression.to_llir(builder, mod, scope)
 
         return register_function_alias(mod, llvm_value, scope) if llvm_value.is_a?(LLVM::Function)
@@ -181,6 +187,15 @@ module Stone
         generic = Stone::Type::Generic.new(name: identifier, template: value_expression)
         Stone::Type::Registry.register(generic)
         nil
+      end
+
+      # Set declared param types on a lambda from type declarations in scope
+      private def apply_lambda_param_types(scope)
+        declared_type = scope.declared_type(identifier)
+        return unless declared_type&.function?
+
+        value_expression.declared_param_types = declared_type.param_types
+        value_expression.declared_return_type = declared_type.return_type
       end
 
     end

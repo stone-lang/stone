@@ -10,9 +10,21 @@ module Stone
     # This ensures type declarations are available before definitions that reference them.
     module TwoPhaseProcessing
 
+      # Register simple type declarations (non-function types).
+      # These don't reference user-defined types and can be processed early.
       private def register_type_declarations(scope)
         registry = Stone::TypeRegistry.instance
-        type_declarations.each do |td|
+        simple_type_declarations.each do |td|
+          stone_type = td.type_annotation.to_type(registry)
+          scope.declare_type(td.identifier, type: stone_type, location: td.location)
+        end
+      end
+
+      # Register function type declarations that may reference user-defined types.
+      # Called after record types are registered so references can be resolved.
+      private def register_function_type_declarations(scope)
+        registry = Stone::TypeRegistry.instance
+        function_type_declarations.each do |td|
           stone_type = td.type_annotation.to_type(registry)
           scope.declare_type(td.identifier, type: stone_type, location: td.location)
         end
@@ -20,6 +32,16 @@ module Stone
 
       private def type_declarations
         all_statements.select { |s| s.is_a?(Stone::AST::TypeDeclaration) }
+      end
+
+      # Type declarations with function type annotations (may reference user types)
+      private def function_type_declarations
+        type_declarations.select { |td| td.type_annotation.is_a?(Stone::AST::FunctionTypeAnnotation) }
+      end
+
+      # Type declarations with non-function type annotations (simple types)
+      private def simple_type_declarations
+        type_declarations.reject { |td| td.type_annotation.is_a?(Stone::AST::FunctionTypeAnnotation) }
       end
 
       private def other_statements

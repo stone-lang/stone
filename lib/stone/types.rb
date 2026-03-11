@@ -34,7 +34,7 @@ module Stone
       {
         int: Stone::Type.primitive(name: "Int", llvm_type: LLVM::Int64.type, min: INT_MIN, max: INT_MAX),
         bool: Stone::Type.primitive(name: "Bool", llvm_type: LLVM::Int1.type),
-        string: Stone::Type.primitive(name: "String", llvm_type: LLVM::Int64.type),
+        string: Stone::Type.primitive(name: "String", llvm_type: LLVM::Type.pointer),
         type: Stone::Type.primitive(name: "Type", llvm_type: LLVM::Type.pointer),
         null: Stone::Type.primitive(name: "Null", llvm_type: LLVM::Type.ptr),
         record: Stone::Type.primitive(name: "Record", llvm_type: LLVM::Type.pointer, generic_for: :record),

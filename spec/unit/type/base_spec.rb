@@ -25,8 +25,8 @@ RSpec.describe "Stone::Type built-in types" do
       expect(Stone::Type::Bool.llvm_type).to eq(LLVM::Int1.type)
     end
 
-    it "returns LLVM::Int64 for String type" do
-      expect(Stone::Type::String.llvm_type).to eq(LLVM::Int64.type)
+    it "returns LLVM::Type.pointer for String type" do
+      expect(Stone::Type::String.llvm_type).to eq(LLVM::Type.pointer)
     end
   end
 

@@ -1,7 +1,5 @@
-require "stone/ast/property_access"
-require "stone/ast/integer_literal"
-require "stone/ast/boolean_literal"
-require "stone/ast/string_literal"
+require "stone"
+require "stone/scope"
 
 # rubocop:disable Metrics/AbcSize, Metrics/MethodLength
 def setup_prelude_properties(mod)
@@ -60,8 +58,7 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        # Computed properties return i64 (function call result), not i1 directly
-        expect(result.type.to_s).to eq("i64")
+        expect(result.type.to_s).to eq("i1")
       end
 
       it "generates LLVM IR for Int.negative?" do
@@ -71,8 +68,7 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        # Computed properties return i64 (function call result), not i1 directly
-        expect(result.type.to_s).to eq("i64")
+        expect(result.type.to_s).to eq("i1")
       end
 
       it "generates LLVM IR for Int.zero?" do
@@ -82,8 +78,7 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        # Computed properties return i64 (function call result), not i1 directly
-        expect(result.type.to_s).to eq("i64")
+        expect(result.type.to_s).to eq("i1")
       end
     end
 
@@ -95,7 +90,6 @@ RSpec.describe Stone::AST::PropertyAccess do
         result = node.to_llir(builder, mod)
 
         expect(result).to be_a(LLVM::Value)
-        # Computed properties return i64 (function call result), not i1 directly
         expect(result.type.to_s).to eq("i64")
       end
     end
@@ -141,7 +135,6 @@ RSpec.describe Stone::AST::PropertyAccess do
       result = outer.to_llir(builder, mod)
 
       expect(result).to be_a(LLVM::Value)
-      # Computed properties return i64 (function call result), not i1 directly
       expect(result.type.to_s).to eq("i64")
     end
   end

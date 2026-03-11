@@ -60,7 +60,59 @@ module Stone
             node.is_a?(Stone::AST::StringLiteral) ||
             reference_to_string_constant?(node) ||
             string_returning_property?(node) ||
+            computed_property_returns_pointer?(node) ||
             returns_pointer_by_type?(node)
+        end
+
+        # Check if a PropertyAccess is a computed property that returns a pointer type.
+        # Uses scope type declarations (available before compilation) to determine return type.
+        private def computed_property_returns_pointer?(node)
+          return false unless node.is_a?(Stone::AST::PropertyAccess)
+
+          receiver_type = infer_receiver_type(node.receiver)
+          return false unless receiver_type
+
+          declared_type = lookup_computed_property_declaration(receiver_type, node.property)
+          return false unless declared_type&.function?
+
+          pointer_return_type?(declared_type.return_type)
+        end
+
+        # Look up computed property type declaration, trying the type name and generic base name.
+        private def lookup_computed_property_declaration(receiver_type, property)
+          result = @scope.declared_type("#{receiver_type.name}@#{property}")
+          return result if result
+
+          base_name = receiver_type.generic_base_name if receiver_type.respond_to?(:generic_base_name)
+          @scope.declared_type("#{base_name}@#{property}") if base_name
+        end
+
+        private def pointer_return_type?(stone_type)
+          stone_type == Stone::Type::String || stone_type&.record?
+        end
+
+        # Infer the Stone type of a receiver node by scanning the program's children.
+        private def infer_receiver_type(receiver)
+          return nil unless receiver.is_a?(Stone::AST::Reference)
+
+          infer_type_from_children(receiver.identifier)
+        end
+
+        private def infer_type_from_children(identifier)
+          child = find_constant_definition(identifier)
+          return Stone::Type::String if child&.value_expression.is_a?(Stone::AST::StringLiteral)
+          return infer_type_from_instantiation(child) if child&.value_expression.is_a?(Stone::AST::FunctionCall)
+
+          nil
+        end
+
+        private def infer_type_from_instantiation(child)
+          func_name = child.value_expression.function_name
+          Stone::Type::Registry.lookup(func_name)
+        end
+
+        private def find_constant_definition(identifier)
+          @children.find { |c| c.is_a?(Stone::AST::ConstantDefinition) && c.identifier == identifier }
         end
 
         private def heap_allocated_union_field_access?(node)

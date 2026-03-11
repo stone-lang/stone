@@ -66,12 +66,22 @@ module Stone
         type_decl.type_annotation.to_type(Stone::TypeRegistry.instance)
       end
 
-      # NOTE: No scope available in eval phase; passes raw module_ref.
-      # TypeContext migration will happen when scope is threaded through ProgramUnit.
+      # NOTE: Uses raw module_ref for backward compatibility.
+      # Computed properties fall back to scope-aware lookup via safe_get_type_with_scope.
       private def safe_get_type(node)
         node.type(module_ref)
       rescue Stone::PropertyError, Stone::TypeError
-        # Type couldn't be determined (computed properties, etc.) - default to nil (becomes i64)
+        safe_get_type_with_scope(node)
+      end
+
+      # Scope-aware type resolution for computed properties.
+      # Only used as a fallback when module-only resolution fails.
+      private def safe_get_type_with_scope(node)
+        return nil unless @top_scope
+
+        context = Stone::TypeContext.new(module_ref, scope: @top_scope)
+        node.type(context)
+      rescue Stone::PropertyError, Stone::TypeError
         nil
       end
 
@@ -383,9 +393,9 @@ module Stone
       private def create_module
         reset_type_registry
         LLVM::Module.new("__program_unit__").tap do |mod|
-          scope = Stone::Scope.top_level
-          Stone::BuiltIns.new(mod, scope).setup
-          generate_top_function(mod, scope)
+          @top_scope = Stone::Scope.top_level
+          Stone::BuiltIns.new(mod, @top_scope).setup
+          generate_top_function(mod, @top_scope)
         end
       end
 

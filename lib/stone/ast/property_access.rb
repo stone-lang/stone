@@ -23,7 +23,7 @@ module Stone
         receiver_type = @receiver.type(context)
         return nil unless receiver_type
 
-        return_type = receiver_type.property_return_type(@property)
+        return_type = receiver_type.property_return_type(@property) || computed_property_return_type(context, receiver_type)
         fail Stone::PropertyError, "Property '#{@property}' not found for type '#{receiver_type.name}'" unless return_type
 
         return_type
@@ -198,7 +198,18 @@ module Stone
         return nil unless computed_func
 
         receiver_value = @receiver.to_llir(builder, mod, scope)
+        receiver_value = pass_by_pointer(builder, receiver_value, computed_func)
         builder.call(computed_func, receiver_value, "#{@property}_result")
+      end
+
+      # Convert a struct value to a pointer when the function expects pointer parameters.
+      # Used for union/generic types which use pointer-based calling convention.
+      private def pass_by_pointer(builder, value, func)
+        return value unless func.function_type.argument_types.first&.kind == :pointer && value.type.kind == :struct
+
+        alloca = builder.alloca(value.type, "receiver_ptr")
+        builder.store(value, alloca)
+        alloca
       end
 
       private def lookup_computed_property_function(mod, receiver_type)
@@ -517,13 +528,63 @@ module Stone
       def get_record_type_name(mod)
         case @receiver
         when Reference
-          mod.record_instance_type(@receiver.identifier)
+          mod.record_instance_type(@receiver.identifier) || lambda_param_record_type_name(mod)
         when FunctionCall
           @receiver.function_name
         when PropertyAccess
           # Receiver is a PropertyAccess - get the field type it returns
           get_receiver_field_type(mod)
         end
+      end
+
+      # Look up computed property return type from scope declarations or LLVM module functions.
+      private def computed_property_return_type(context, receiver_type)
+        declared_type_from_scope(context, receiver_type) || declared_type_from_module(context, receiver_type)
+      end
+
+      # Check scope type declarations for computed property return type.
+      # Works before the lambda is compiled (used by compute_return_type).
+      private def declared_type_from_scope(context, receiver_type)
+        scope = context.is_a?(Stone::TypeContext) ? context.scope : nil
+        return nil unless scope
+
+        lookup_declared_return_type(scope, receiver_type)
+      end
+
+      private def lookup_declared_return_type(scope, receiver_type)
+        declared = scope.declared_type("#{receiver_type.name}@#{@property}")
+        return declared.return_type if declared&.function?
+
+        # Fall back to generic base name for specialized union types
+        base_name = receiver_type.generic_base_name if receiver_type.respond_to?(:generic_base_name)
+        return nil unless base_name
+
+        declared = scope.declared_type("#{base_name}@#{@property}")
+        declared&.return_type if declared&.function?
+      end
+
+      # Check compiled LLVM functions for computed property return type.
+      # Works after the lambda is compiled.
+      private def declared_type_from_module(context, receiver_type)
+        mod = context.is_a?(Stone::TypeContext) ? context.llvm_module : context
+        return nil unless mod.respond_to?(:lookup_function)
+
+        func = lookup_computed_property_function(mod, receiver_type)
+        return nil unless func
+
+        llvm_return_type_to_stone_type(func.function_type.return_type)
+      end
+
+      private def llvm_return_type_to_stone_type(llvm_type)
+        case llvm_type.kind
+        when :integer then llvm_type.width == 1 ? Stone::Type::Bool : Stone::Type::Int
+        when :pointer then Stone::Type::String
+        end
+      end
+
+      private def lambda_param_record_type_name(mod)
+        stone_type = mod.lambda_param_stone_types&.dig(@receiver.identifier)
+        stone_type&.name if stone_type&.record?
       end
 
       private def lookup_record_type(record_type_name)

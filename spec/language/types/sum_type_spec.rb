@@ -179,7 +179,7 @@ RSpec.describe "Sum Types" do
     # However, these tests are pending because Stone's lambda infrastructure assumes all
     # parameters are i64. Passing record structs or union pointers to computed property
     # lambdas requires lambda parameter type generalization.
-    it "supports computed properties defined on the generic base name", pending: "requires lambda param type generalization" do
+    it "supports computed properties defined on the generic base name" do
       code = <<~STONE
         List :: (Type) -> Type
         List := λ(T) { Null | Record(first :: T, rest :: List(T)) }

@@ -55,6 +55,13 @@ module Stone
       end
 
       private def type_from_parameter(mod)
+        # Guard needed: unit tests use test doubles without LLVMModuleExtensions
+        if mod.respond_to?(:lambda_param_stone_types)
+          stone_types = mod.lambda_param_stone_types
+          return stone_types[identifier] if stone_types&.key?(identifier)
+        end
+
+        # Fall back to inferring from LLVM alloca type
         return unless mod.lambda_param_storage&.key?(identifier)
 
         llvm_type_to_stone_type(mod.lambda_param_storage[identifier].allocated_type)

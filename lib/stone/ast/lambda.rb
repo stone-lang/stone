@@ -49,37 +49,30 @@ module Stone
         LLVM::Type.function(llvm_param_types, llvm_return_type)
       end
 
-      # Stone types for each parameter (for type system)
       private def stone_param_types
-        parameters.each_with_index.map do |_param, i|
+        parameters.each_index.map do |i|
           @declared_param_types&.dig(i) || Stone::Type::Int
         end
       end
 
-      # LLVM types for each parameter (for function signature)
       private def llvm_param_types
         stone_param_types.map { |t| stone_type_to_llvm_type(t) }
       end
 
-      # LLVM return type
-      # NOTE: We don't use declared_return_type for the LLVM signature yet because
-      # that would require boxing return values into union structs. For now, we
-      # infer from the block or default to I64.
       private def llvm_return_type
-        # TODO: When the declared return type is a union, we'd need to box the
-        # actual return value. For now, keep the original inference behavior.
+        return stone_type_to_llvm_type(@declared_return_type) if @declared_return_type
         I64
       end
 
-      # Map Stone type to LLVM type for function parameters/returns
       private def stone_type_to_llvm_type(stone_type)
         return I64 unless stone_type
 
         # Function types don't have llvm_type set; at runtime they're pointers to LLVM functions
         return LLVM::Type.pointer if stone_type.function?
 
-        # Use the type's llvm_type attribute when available
-        # For records, this gives us the struct type; for unions, the tagged union struct
+        # Generic and union types use pointer passing for uniform calling convention
+        return LLVM::Type.pointer if stone_type.generic? || stone_type.union?
+
         stone_type.llvm_type || I64
       end
 
@@ -142,11 +135,18 @@ module Stone
 
       # Temporarily set module's parameter context so Reference nodes within the block can resolve parameter names.
       private def with_parameter_context(mod, args)
-        original = mod.lambda_param_storage
+        original_storage = mod.lambda_param_storage
+        original_types = mod.lambda_param_stone_types
         mod.lambda_param_storage = args
+        mod.lambda_param_stone_types = stone_param_types_by_name
         yield
       ensure
-        mod.lambda_param_storage = original
+        mod.lambda_param_storage = original_storage
+        mod.lambda_param_stone_types = original_types
+      end
+
+      private def stone_param_types_by_name
+        parameters.zip(stone_param_types).to_h
       end
 
       # Lambda parameters use lambda_param_storage (not scope) for stack alloca loading.

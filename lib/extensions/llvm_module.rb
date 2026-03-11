@@ -11,6 +11,7 @@ require "llvm/core"
 # Remaining registries:
 # - function_aliases: LLVM::Function objects for operators, computed properties, lambdas
 # - lambda_param_storage: temporary LLVM stack allocations during lambda compilation
+# - lambda_param_stone_types: temporary param name -> Stone::Type map during lambda compilation
 # - string_constants: maps constant names to StringLiteral AST nodes for type inference
 # - record_instances: maps variable names to record type names for property access
 module Stone
@@ -31,15 +32,7 @@ module Stone
       functions[name] || function_aliases[name]
     end
 
-    # Get the current lambda parameter storage context
-    def lambda_param_storage
-      @lambda_param_storage
-    end
-
-    # Set the lambda parameter storage context (used during lambda compilation)
-    def lambda_param_storage=(storage)
-      @lambda_param_storage = storage
-    end
+    attr_accessor :lambda_param_storage, :lambda_param_stone_types
 
     # Track which constants are strings (for type checking during returns)
     def string_constants

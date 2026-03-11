@@ -42,6 +42,9 @@ module Stone
           # Infer first parameter type from the receiver type name
           receiver_type = Stone::Type::Registry.lookup(@type_name)
           @lambda.declared_param_types = [receiver_type] if receiver_type
+          # Infer return type from the lambda body (nil context: may return nil for complex expressions,
+          # causing fallback to I64 in Lambda#llvm_return_type)
+          @lambda.declared_return_type = @lambda.block.type
         end
       end
 

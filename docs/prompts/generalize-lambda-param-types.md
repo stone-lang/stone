@@ -396,18 +396,18 @@ The 2 pending tests in `spec/language/types/sum_type_spec.rb` should now pass. R
 
 ## Acceptance Criteria
 
-- [ ] Computed properties work on record type receivers
-- [ ] Computed properties work on sum type receivers (union pointers)
-- [ ] Computed properties on `Int`, `Bool`, `String` still work (no regression)
-- [ ] The 2 pending sum type tests pass and are un-pended
-- [ ] Lambda LLVM function signatures reflect actual parameter types
-- [ ] Lambda LLVM return types reflect actual declared return types
-- [ ] Boolean parameters use `i1` (not widened to `i64`)
-- [ ] `Lambda#type` returns actual Stone parameter and return types
-- [ ] Lambdas without type declarations still default to `i64` params and return
-- [ ] All existing tests pass
-- [ ] `make test` passes
-- [ ] `make lint` passes
+- [x] Computed properties work on record type receivers
+- [x] Computed properties work on sum type receivers (union pointers)
+- [x] Computed properties on `Int`, `Bool`, `String` still work (no regression)
+- [x] 1 of 2 pending sum type tests passes and is un-pended (second requires union constructor dispatch)
+- [x] Lambda LLVM function signatures reflect actual parameter types
+- [x] Lambda LLVM return types reflect actual declared return types
+- [x] Boolean parameters use `i1` (not widened to `i64`)
+- [x] `Lambda#type` returns actual Stone parameter and return types
+- [x] Lambdas without type declarations still default to `i64` params and return
+- [x] All existing tests pass
+- [x] `make test` passes
+- [x] `make lint` passes
 
 ## Gotchas and Challenges
 
@@ -475,6 +475,31 @@ property tests still pass.
 - The `FunctionTypeAnnotation` infrastructure exists and already computes Stone types — bridge it to lambda codegen by looking up the declared type when a lambda is assigned to a named constant or computed property
 - When no type declaration exists, fall back to `i64` (current behavior). Type inference will be added later to eliminate the need for declarations in straightforward cases
 - Avoid over-engineering: the minimal change is making `Lambda` consult the type registry for its declared param types, and mapping those Stone types to LLVM types
+
+## As-Built Notes
+
+Changes from the original design:
+
+- **Additional files modified**: `program_unit.rb` and `top_function.rb` needed
+  scope-aware type resolution and `computed_property_returns_pointer?` detection
+  for the return value conversion (pointer vs i64) in `TopFunction`.
+- **`pass_by_pointer` in PropertyAccess**: When a computed property's function
+  expects a `ptr` parameter (union/generic types) but the receiver is a struct
+  value, the struct is stack-allocated and the pointer is passed instead.
+- **`lambda_param_stone_types` registry**: Added to `LLVMModuleExtensions`
+  alongside `lambda_param_storage` so `Reference#type_from_parameter` can
+  determine the actual Stone type of lambda parameters (needed because LLVM
+  struct types are ambiguous — both records and strings use structs).
+- **`ComputedPropertyDefinition` infers return type from block**: When no
+  explicit type declaration exists, `@lambda.block.type` (without context) is
+  used as a best-effort return type inference. Returns nil (falling back to I64)
+  when the block body requires type context to resolve.
+- **Only 1 of 2 sum type pending tests un-pended**: The "returns TRUE for an
+  empty list" test still requires union constructor dispatch (calling
+  `empty.empty?` on a bare `NULL` value).
+- **`property_access_node_spec.rb` updated**: Required `require "stone"` for
+  standalone execution; boolean-returning computed properties now correctly
+  return `i1` instead of `i64`.
 
 ## Wrap-Up
 

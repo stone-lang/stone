@@ -7,7 +7,7 @@ RSpec.describe "Lambda Parameter Types" do
   after do Stone::Scope.reset_top_level! end
 
   describe "computed properties on record types" do
-    it "passes a record to a lambda and accesses its fields", pending: "requires lambda param type generalization" do
+    it "passes a record to a lambda and accesses its fields" do
       code = <<~STONE
         Point := Record(x :: Int, y :: Int)
         Point@add :: (Point) -> Int
@@ -18,7 +18,7 @@ RSpec.describe "Lambda Parameter Types" do
       expect(Stone.eval(code)).to eq(7)
     end
 
-    it "works with single-field records", pending: "requires lambda param type generalization" do
+    it "works with single-field records" do
       code = <<~STONE
         Box := Record(value :: Int)
         Box@unwrap :: (Box) -> Int
@@ -31,7 +31,7 @@ RSpec.describe "Lambda Parameter Types" do
   end
 
   describe "computed properties on sum types" do
-    it "passes a sum type value to a lambda", pending: "requires lambda param type generalization" do
+    it "passes a sum type value to a lambda" do
       code = <<~STONE
         List :: (Type) -> Type
         List := λ(T) { Null | Record(first :: T, rest :: List(T)) }
@@ -59,7 +59,7 @@ RSpec.describe "Lambda Parameter Types" do
   end
 
   describe "string parameter handling" do
-    it "passes a string to a lambda and returns it", pending: "requires lambda param type generalization" do
+    it "passes a string to a lambda and returns it" do
       code = <<~STONE
         String@shout :: (String) -> String
         String@shout := λ(self) { self }
@@ -71,7 +71,7 @@ RSpec.describe "Lambda Parameter Types" do
   end
 
   describe "standalone lambda with type declaration" do
-    it "accepts a record parameter via explicit type declaration", pending: "requires lambda param type generalization" do
+    it "accepts a record parameter via explicit type declaration" do
       code = <<~STONE
         Point := Record(x :: Int, y :: Int)
         add_fields :: (Point) -> Int

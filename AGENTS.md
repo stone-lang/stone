@@ -492,6 +492,12 @@ Subagents should report their high-level actions, along with a list of files cre
 
 ## Troubleshooting
 
+### Intent-to-Add Git Entries
+
+Files with intent-to-add status (`A` in the working tree column of
+`git status --short`) block `git stash`. Clear them with `git reset <file>`
+to make them untracked (`??`), or fully stage them.
+
 ### Shell/Directory Issues
 
 If you encounter `cd` failures or mise/zoxide errors when trying to change directories:

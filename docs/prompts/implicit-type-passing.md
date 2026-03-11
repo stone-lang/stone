@@ -70,6 +70,9 @@ List@sorted(list)  # T resolved from list's type to Int
 The type parameter `T` is resolved at compile time from the receiver's
 record type registration, not passed as a runtime argument.
 
+**HELP**: I'm not sure that's what I want. I don't see how all calls to List@sorted
+would know what T is unless it's passed in some way. I thought that was the point of this design.
+
 ### Method Signature Analysis
 
 For `List@sorted`, the compiler:
@@ -96,15 +99,19 @@ The compiler can detect this statically.
 
 ## Implementation Steps
 
-0. **Write specs** - Follow TDD practices; write all the tests first
+0. **Write specs** - Follow TDD practices; write all the tests first.
+Mark all the newly added tests as pending initially;
+remove the pending flag as you attempt to pass each one.
 
-1. **Computed property lookup for generic types** - When accessing `list.sorted`, resolve `List(Int)` back to its generic base `List` and look up `List@sorted`
+1. **Computed property lookup for generic types** - When accessing `list.sorted`, resolve `List(Int)` back to its generic base `List` and look up `List@sorted`.
 
-2. **Type argument extraction** - Given a canonical name like `"List(Int)"`, extract the base name `"List"` and type arguments `["Int"]`
+2. **Type argument extraction** - Given a canonical name like `"List(Int)"`, extract the base name `"List"` and type arguments `["Int"]`.
 
-3. **Scope binding** - Before evaluating the method body, bind `T = Int` in the method's scope so field type annotations resolve correctly
+3. **Scope binding** - Before evaluating the method body, bind `T = Int` in the method's scope so field type annotations resolve correctly (only if `T` is used in the body).
 
-4. **Signature validation** - Verify that the method's declared parameter types match the resolved concrete types
+4. **Signature validation** - Verify that the method's declared parameter types match the resolved concrete types. **HELP**: Is this necessary for implicit type passing?
+
+5. **Update documentation** - Document the new feature in the language reference; make sure to update any documentation that no longer applies.
 
 ## Design Decisions
 
